@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { Asset, AssetType, getAssets, deleteAsset } from '@/lib/assetStorage'
 import AssetModal from './AssetModal'
+import WindfallModal from './WindfallModal'
 
 interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -44,8 +45,9 @@ function relativeDate(iso: string) {
 
 export default function AssetsTab({ statements }: Props) {
   const [assets, setAssets] = useState<Asset[]>(() => getAssets())
-  const [showModal, setShowModal]     = useState(false)
-  const [editingAsset, setEditingAsset] = useState<Asset | null>(null)
+  const [showModal, setShowModal]         = useState(false)
+  const [showWindfall, setShowWindfall]   = useState(false)
+  const [editingAsset, setEditingAsset]   = useState<Asset | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
   function reload() {
@@ -121,15 +123,30 @@ export default function AssetsTab({ statements }: Props) {
           <h2 className="text-lg font-semibold text-gray-900">Assets</h2>
           <p className="text-sm text-gray-400 mt-0.5">Track your savings, gold, investments, and goal pockets</p>
         </div>
-        <button
-          onClick={() => { setEditingAsset(null); setShowModal(true) }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Add Asset
-        </button>
+        <div className="flex items-center gap-2">
+          {assets.length > 0 && (
+            <button
+              onClick={() => setShowWindfall(true)}
+              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+              </svg>
+              <span className="hidden sm:inline">Allocate Windfall</span>
+              <span className="sm:hidden">Windfall</span>
+            </button>
+          )}
+          <button
+            onClick={() => { setEditingAsset(null); setShowModal(true) }}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span className="hidden sm:inline">Add Asset</span>
+            <span className="sm:hidden">Add</span>
+          </button>
+        </div>
       </div>
 
       {/* Net worth summary */}
@@ -253,6 +270,16 @@ export default function AssetsTab({ statements }: Props) {
         asset={editingAsset}
         onClose={() => setShowModal(false)}
         onSaved={reload}
+      />
+
+      <WindfallModal
+        isOpen={showWindfall}
+        onClose={() => setShowWindfall(false)}
+        statements={statements}
+        assets={assets}
+        avgMonthlyExpense={avgMonthlyExpense}
+        emergencyMonths={emergencyMonths}
+        emergencyFundTotal={emergencyFundTotal}
       />
     </div>
   )
