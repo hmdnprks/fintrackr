@@ -318,7 +318,8 @@ Additional rules:
 - If windfall is small (< Rp 2M), suggest 1–2 destinations max
 - Use the exact asset/pocket names from the context
 - Be direct and specific — cite actual numbers and gaps in each reason
-- All allocation amounts must sum to ≤ windfall amount; leftover = windfall − sum(allocations)
+- Format all IDR amounts using Indonesian notation with dots as thousand separators (e.g. Rp 52.136.009 not Rp 52,136,009)
+- CRITICAL: each individual allocation amount must never exceed the windfall amount, and the SUM of all allocations must never exceed the windfall amount. If a gap is larger than the windfall, allocate only what is available (cap at windfall − amounts already allocated). leftover = windfall − sum(allocations)
 
 Respond with ONLY valid JSON, no markdown:
 {
@@ -360,7 +361,31 @@ export async function generateWindfallAllocation(
     throw new Error('Unexpected response format from AI')
   }
 
-  return parsed as WindfallResult
+  // Convert English number formatting to Indonesian in reason text
+  // e.g. "Rp52,136,009" → "Rp 52.136.009"
+  function fixIDRFormat(text: string): string {
+    return text.replace(/Rp\s?(\d{1,3}(?:,\d{3})+)/g, (_, num) =>
+      'Rp ' + num.replace(/,/g, '.')
+    )
+  }
+
+  // Hard clamp: AI sometimes allocates more than the windfall when a gap
+  // exceeds the available amount. Distribute the windfall greedily in order,
+  // capping each allocation at the remaining balance.
+  const windfall = context.windfall.amount
+  let remaining = windfall
+  const clamped = (parsed.allocations as WindfallAllocation[]).map(a => {
+    const amount = Math.min(Math.max(0, a.amount), remaining)
+    remaining -= amount
+    return { ...a, amount }
+  }).filter(a => a.amount > 0)
+
+  return {
+    summary:        fixIDRFormat(parsed.summary        || ''),
+    allocations:    clamped.map(a => ({ ...a, reason: fixIDRFormat(a.reason) })),
+    leftover:       remaining,
+    leftoverAdvice: fixIDRFormat(parsed.leftoverAdvice || ''),
+  }
 }
 
 // ─── Budget Suggestions ───────────────────────────────────────────────────────

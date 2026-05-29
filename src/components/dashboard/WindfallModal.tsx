@@ -68,6 +68,19 @@ export default function WindfallModal({
     return recent.reduce((s, v) => s + v, 0) / recent.length
   }, [statements])
 
+  // Map destination name → gap amount so result cards can show gap fill progress
+  const gapMap = useMemo(() => {
+    const map: Record<string, number> = {}
+    const efGap = emergencyMonths !== null && avgMonthlyExpense > 0
+      ? Math.max(0, (6 - emergencyMonths) * avgMonthlyExpense)
+      : 0
+    assets.filter(a => a.type === 'savings' && a.isEmergencyFund)
+      .forEach(a => { map[a.name] = efGap })
+    assets.filter(a => a.type === 'pocket' && a.goalTarget)
+      .forEach(a => { map[a.name] = Math.max(0, (a.goalTarget ?? 0) - a.currentValue) })
+    return map
+  }, [assets, emergencyMonths, avgMonthlyExpense])
+
   function buildContext(): WindfallContext {
     const EXCLUDE = new Set(['Transfer', 'Bank Charges'])
     const TARGET_MONTHS = 6
@@ -283,20 +296,46 @@ export default function WindfallModal({
               {/* Allocations */}
               <div className="space-y-3">
                 {result.allocations.map((a, i) => {
-                  const pct = rawAmount > 0 ? Math.round((a.amount / rawAmount) * 100) : 0
+                  const windfallPct = rawAmount > 0 ? Math.min(100, Math.round((a.amount / rawAmount) * 100)) : 0
+                  const gap         = gapMap[a.destination] ?? 0
+                  const gapFillPct  = gap > 0 ? Math.min(100, Math.round((a.amount / gap) * 100)) : null
+                  const stillNeeded = gap > 0 ? Math.max(0, gap - a.amount) : null
                   return (
-                    <div key={i} className="border border-gray-100 rounded-xl p-4">
-                      <div className="flex items-start justify-between gap-3 mb-2">
+                    <div key={i} className="border border-gray-100 rounded-xl p-4 space-y-2.5">
+                      <div className="flex items-start justify-between gap-3">
                         <p className="text-sm font-semibold text-gray-900">{a.destination}</p>
-                        <div className="text-right shrink-0">
-                          <p className="text-sm font-bold text-blue-700">{formatIDRFull(a.amount)}</p>
-                          <p className="text-xs text-gray-400">{pct}%</p>
+                        <p className="text-sm font-bold text-blue-700 shrink-0">{formatIDRFull(a.amount)}</p>
+                      </div>
+
+                      {/* Bar 1 — % of windfall */}
+                      <div>
+                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-400 rounded-full" style={{ width: `${windfallPct}%` }} />
                         </div>
+                        <p className="text-xs text-gray-400 mt-1">{windfallPct}% of your windfall goes here</p>
                       </div>
-                      {/* Proportion bar */}
-                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2">
-                        <div className="h-full bg-blue-400 rounded-full" style={{ width: `${pct}%` }} />
-                      </div>
+
+                      {/* Bar 2 — gap fill progress (only when gap is known) */}
+                      {gapFillPct !== null && (
+                        <div>
+                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${gapFillPct >= 100 ? 'bg-green-400' : 'bg-amber-400'}`}
+                              style={{ width: `${gapFillPct}%` }}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between mt-1">
+                            <p className="text-xs text-gray-400">fills {gapFillPct}% of the gap</p>
+                            {stillNeeded !== null && stillNeeded > 0 && (
+                              <p className="text-xs text-gray-400">{formatIDRFull(stillNeeded)} still needed</p>
+                            )}
+                            {gapFillPct >= 100 && (
+                              <p className="text-xs text-green-600 font-medium">gap fully covered ✓</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       <p className="text-xs text-gray-500 leading-relaxed">{a.reason}</p>
                     </div>
                   )
