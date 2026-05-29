@@ -9,6 +9,7 @@ import {
   lockVault,
 } from '@/lib/storage/secureStorage'
 
+
 type VaultContextType = {
   initialized: boolean
   unlocked: boolean
@@ -28,43 +29,35 @@ function getVaultInitSnapshot() {
   return isVaultInitialized()
 }
 
-function subscribeToSession() {
-  return () => {}
-}
-
-function getSessionSnapshot() {
-  if (typeof window === 'undefined') return false
-  return isVaultUnlocked()
-}
-
 export function VaultProvider({ children }: { children: React.ReactNode }) {
   const initialized = useSyncExternalStore(
     subscribeToVaultInit,
     getVaultInitSnapshot,
     () => false
   )
-  const unlocked = useSyncExternalStore(
-    subscribeToSession,
-    getSessionSnapshot,
-    () => false
-  )
+  const [unlocked, setUnlocked] = useState(false)
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (isVaultUnlocked()) setUnlocked(true)
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHydrated(true)
   }, [])
 
   async function handleUnlock(password: string) {
     await unlockVault(password)
+    setUnlocked(true)
   }
 
   async function handleInitialize(password: string) {
     await initializeVault(password)
+    setUnlocked(true)
   }
 
   function handleLock() {
     lockVault()
+    setUnlocked(false)
   }
 
   const value = { initialized, unlocked, unlock: handleUnlock, initialize: handleInitialize, lock: handleLock }
