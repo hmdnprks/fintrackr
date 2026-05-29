@@ -9,11 +9,12 @@ function renderBold(text: string) {
 interface Props {
   insights: string
   isLoading: boolean
+  period: string
   onGenerate: () => void
   onClear: () => void
 }
 
-export default function AIInsightsPanel({ insights, isLoading, onGenerate, onClear }: Props) {
+export default function AIInsightsPanel({ insights, isLoading, period, onGenerate, onClear }: Props) {
   const bullets = insights
     ? insights
         .split('\n')
@@ -28,7 +29,12 @@ export default function AIInsightsPanel({ insights, isLoading, onGenerate, onCle
           <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
           </svg>
-          <h2 className="text-base font-semibold text-gray-900">AI Insights</h2>
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">AI Insights</h2>
+            {insights && !isLoading && (
+              <p className="text-xs text-gray-400 mt-0.5">{period}</p>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -80,7 +86,7 @@ export default function AIInsightsPanel({ insights, isLoading, onGenerate, onCle
         </ul>
       ) : (
         <div className="px-6 py-5 text-sm text-gray-400">
-          Generate AI insights to get a spending analysis for this period.
+          Generate insights for <span className="font-medium text-gray-500">{period}</span>.
           <p className="text-xs text-gray-300 mt-1">
             Transaction descriptions are sent to DeepSeek&apos;s API.
           </p>

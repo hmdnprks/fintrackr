@@ -197,6 +197,7 @@ export function useAICategorization(
     getInsights,
     clearCategorizedResult: () => setCategorizedResult(null),
     clearError: () => setError(null),
+    // Clears display + sessionStorage cache (used by the Clear button)
     clearInsights: () => {
       const keys = Object.keys(sessionStorage).filter((k) =>
         k.startsWith('fintrackr_insights_')
@@ -204,5 +205,7 @@ export function useAICategorization(
       keys.forEach((k) => sessionStorage.removeItem(k))
       setInsights(null)
     },
+    // Clears display only — cache stays so switching back reloads instantly
+    resetInsights: () => setInsights(null),
   }
 }

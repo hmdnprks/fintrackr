@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 
 import VaultGate from '@/components/VaultGate'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
@@ -74,13 +74,29 @@ export default function Dashboard() {
     clearCategorizedResult,
     clearError,
     clearInsights,
+    resetInsights,
   } = useAICategorization(reload)
 
   const filteredMonths = selectedYear === 'all'
     ? availableMonths
     : availableMonths.filter((m) => m.value.startsWith(selectedYear))
 
+  // Clear displayed insights whenever the filter changes
+  useEffect(() => {
+    resetInsights()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedYear, selectedMonth])
+
   const comparison = useMonthComparison(statements, selectedMonth)
+
+  const insightsPeriodLabel = useMemo(() => {
+    if (selectedMonth !== 'all') {
+      const [y, m] = selectedMonth.split('-').map(Number)
+      return new Date(y, m - 1).toLocaleString('en-US', { month: 'long', year: 'numeric' })
+    }
+    if (selectedYear !== 'all') return selectedYear
+    return 'all time'
+  }, [selectedYear, selectedMonth])
 
   const currentMonthSpending = useMemo(() => {
     const now = new Date()
@@ -198,6 +214,7 @@ export default function Dashboard() {
               <AIInsightsPanel
                 insights={insights ?? ''}
                 isLoading={isGeneratingInsights}
+                period={insightsPeriodLabel}
                 onGenerate={() => getInsights(allTransactions, selectedYear, selectedMonth)}
                 onClear={clearInsights}
               />
