@@ -34,7 +34,7 @@ export function useDashboardData(statements: any[], selectedYear: string, select
       .flatMap((s) =>
         (s.transactions || []).map((t: any) => ({
           ...t,
-          category: categorizeTransaction(t.detail, t.type),
+          category: t.category || categorizeTransaction(t.detail, t.type),
           fullDate: parseTransactionDate(
             t.transactionDate,
             s.monthDate
