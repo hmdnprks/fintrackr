@@ -25,7 +25,9 @@ export function getGoals(): Goal[] {
   return JSON.parse(localStorage.getItem(GOALS_KEY) || '[]')
 }
 
-export function addGoal(goal: Omit<Goal, 'id' | 'createdAt'>): Goal {
+type NewGoal = Omit<SavingsGoal, 'id' | 'createdAt'> | Omit<SpendingGoal, 'id' | 'createdAt'>
+
+export function addGoal(goal: NewGoal): Goal {
   const entry = { ...goal, id: crypto.randomUUID(), createdAt: new Date().toISOString() } as Goal
   localStorage.setItem(GOALS_KEY, JSON.stringify([...getGoals(), entry]))
   return entry
