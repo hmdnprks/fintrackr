@@ -122,12 +122,16 @@ export function useAICategorization(
   }, [reloadStatements])
 
   const getInsights = useCallback(
-    async (transactions: any[], year?: string, month?: string) => {
+    async (transactions: any[], year?: string, month?: string, force = false) => {
       const cacheKey = `fintrackr_insights_${year || 'all'}_${month || 'all'}`
-      const cached = sessionStorage.getItem(cacheKey)
-      if (cached) {
-        setInsights(cached)
-        return
+      if (!force) {
+        const cached = sessionStorage.getItem(cacheKey)
+        if (cached) {
+          setInsights(cached)
+          return
+        }
+      } else {
+        sessionStorage.removeItem(cacheKey)
       }
 
       if (!transactions.length) {

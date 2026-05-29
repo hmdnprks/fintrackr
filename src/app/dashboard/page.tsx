@@ -215,7 +215,7 @@ export default function Dashboard() {
                 insights={insights ?? ''}
                 isLoading={isGeneratingInsights}
                 period={insightsPeriodLabel}
-                onGenerate={() => getInsights(allTransactions, selectedYear, selectedMonth)}
+                onGenerate={(force) => getInsights(allTransactions, selectedYear, selectedMonth, force)}
                 onClear={clearInsights}
               />
 

@@ -10,7 +10,7 @@ interface Props {
   insights: string
   isLoading: boolean
   period: string
-  onGenerate: () => void
+  onGenerate: (force?: boolean) => void
   onClear: () => void
 }
 
@@ -47,7 +47,7 @@ export default function AIInsightsPanel({ insights, isLoading, period, onGenerat
             </button>
           )}
           <button
-            onClick={onGenerate}
+            onClick={() => onGenerate(!!insights)}
             disabled={isLoading}
             className="flex items-center gap-1.5 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
