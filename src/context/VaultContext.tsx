@@ -39,10 +39,10 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (isVaultUnlocked()) setUnlocked(true)
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHydrated(true)
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [])
 
   async function handleUnlock(password: string) {
