@@ -23,6 +23,7 @@ import { formatIDR } from '@/lib/formatter'
 import { getBudgets } from '@/lib/budgetStorage'
 import { downloadCSV } from '@/lib/csvExport'
 import MonthComparisonSection from '@/components/dashboard/MonthComparisonSection'
+import CalendarSection from '@/components/dashboard/CalendarSection'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 
 type Tab = 'overview' | 'budget' | 'transactions'
@@ -217,6 +218,13 @@ export default function Dashboard() {
 
               {comparison && (
                 <MonthComparisonSection comparison={comparison} />
+              )}
+
+              {selectedMonth !== 'all' && (
+                <CalendarSection
+                  allTransactions={allTransactions}
+                  selectedMonth={selectedMonth}
+                />
               )}
             </div>
           )}
