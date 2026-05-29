@@ -260,7 +260,7 @@ export default function TransactionSection({
       </div>
 
       {/* Transaction table */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden overflow-x-auto">
         {paginated.length === 0 ? (
           <div className="text-center py-16">
             <svg className="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -275,7 +275,7 @@ export default function TransactionSection({
           </div>
         ) : (
           <>
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[560px]">
               <thead>
                 <tr className="border-b border-gray-100">
                   {/* Fix 4 — sortable Date header */}

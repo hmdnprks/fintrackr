@@ -156,7 +156,7 @@ export default function CalendarSection({ allTransactions, selectedMonth, onReca
         {/* Day cells */}
         <div className="grid grid-cols-7 gap-1.5">
           {cells.map((day, i) => {
-            if (!day) return <div key={`empty-${i}`} className="h-14" />
+            if (!day) return <div key={`empty-${i}`} className="h-10 sm:h-14" />
 
             const data     = byDay[day]
             const spending = data?.spending || 0
@@ -175,7 +175,7 @@ export default function CalendarSection({ allTransactions, selectedMonth, onReca
                 onClick={() => setSelectedDay(isSelected ? null : day)}
                 title={spending > 0 ? formatIDR(spending) : undefined}
                 className={`
-                  h-14 rounded-xl flex flex-col items-center justify-center gap-0.5
+                  h-10 sm:h-14 rounded-xl flex flex-col items-center justify-center gap-0.5
                   relative transition-all duration-150 border-2
                   ${isSelected
                     ? 'border-blue-500 scale-105 shadow-md'

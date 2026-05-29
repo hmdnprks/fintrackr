@@ -158,7 +158,7 @@ export default function Dashboard() {
 
   return (
     <VaultGate>
-      <main className="min-h-screen bg-gray-50 py-10 px-6">
+      <main className="min-h-screen bg-gray-50 py-6 px-4 sm:py-10 sm:px-6">
         <div className="max-w-6xl mx-auto space-y-6">
 
           <AIModal
@@ -192,12 +192,12 @@ export default function Dashboard() {
           />
 
           {/* Tab navigation */}
-          <div className="flex gap-1 border-b border-gray-200">
+          <div className="flex border-b border-gray-200">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-5 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                className={`flex-1 sm:flex-none px-4 sm:px-5 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
                   activeTab === tab.id
                     ? 'border-blue-600 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
