@@ -59,14 +59,22 @@ Three-tab layout with shared year/month filter:
 
 ### Assets tab
 - Track all asset types in one place: **Savings**, **Gold**, **Investment**, **Pocket**, **Other**
-- **Net worth summary card** — total value across all assets, allocation breakdown bars by type with percentages
-- **Emergency fund indicator** — dedicated section below the net worth summary; five tiers: Critical (<1 mo), Low (1–3), Building (3–6), Healthy (6–9), Strong (9+); progress bar with 3-month minimum and 6-month ideal markers; contextual advice per tier written for Indonesian context (PHK, BPJS, variable income); shows amount still needed to reach 6 months and avg monthly expense baseline; note clarifying emergency fund should be liquid (tabungan/deposito), not gold or investments
-- **Asset cards** grouped by type, each showing current value, institution, last-updated timestamp, and type-specific details:
-  - Savings: interest rate (% p.a.), emergency fund badge
+- All icons use @heroicons/react — no emojis
+- **Net worth summary card** — total value across all assets, allocation breakdown bars by type with label and percentage; responsive on mobile
+- **Emergency fund section** — dedicated card below the net worth summary; five tiers: Critical (<1 mo), Low (1–3), Building (3–6), Healthy (6–9), Strong (9+); progress bar with 3-month minimum and 6-month ideal markers; contextual advice per tier written for Indonesian context (PHK, BPJS, variable income); amount still needed to reach 6 months; avg monthly expense baseline (6 most recent months, excluding Transfer and Bank Charges); note clarifying emergency fund should be liquid (tabungan/deposito), not gold or investments
+- **Asset cards** grouped by type with Heroicons, each showing current value, institution, last-updated timestamp, and type-specific details:
+  - Savings: interest rate (% p.a.), emergency fund badge, months of expenses covered
   - Gold: weight in grams, auto-computed price per gram
-  - Investment: investment type (e.g. Reksa Dana Saham, Obligasi)
+  - Investment: investment type; **contributable toggle** — mark BPJS Ketenagakerjaan JHT and other auto-managed funds as non-contributable so they are excluded from windfall allocation suggestions; badge shows "Can top up" (green) or "Auto-managed" (gray)
   - Pocket: goal name, target amount, deadline, progress bar toward target
-- Add / edit / delete assets via modal with type-specific field sets
+- Add / edit / delete assets via modal with type-specific field sets; savings and pocket field grids stack on mobile
+- **Windfall allocation** — purple "Allocate Windfall" button in the Assets header; select type (Bonus/THR/Freelance/Other), enter amount; AI analyses your full financial profile and returns a concrete allocation plan:
+  - Priority order: emergency fund gap → goal pockets by deadline → investments → reward slice
+  - Reward slice always included: 0% (Critical) / 5% (Low) / 10% (Building) / 15–20% (Healthy/Strong) — acknowledges the user earned the windfall
+  - THR type maps Lebaran spending to the reward slice
+  - Each destination shows two bars: % of windfall + gap fill progress with amount still needed
+  - AI constrained to never exceed windfall total; hard clamp on server as safety net
+  - Non-contributable investment assets filtered out of context before sending to AI
 - Assets included in JSON backup (v3); v1/v2 backups remain compatible
 
 ## Manual Transactions

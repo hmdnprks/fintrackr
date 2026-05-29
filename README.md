@@ -14,7 +14,8 @@ Built with [Next.js](https://nextjs.org) (App Router), React 19, TypeScript, Tai
 - **Budget tracking** — Monthly spend limits per category with progress bars and warnings
 - **Financial goals** — Savings targets (amount + deadline) and spending habit goals (consecutive months under limit)
 - **Month comparison** — Delta badges on summary cards + per-category breakdown vs prior month
-- **Assets profile** — Track savings accounts, gold, mutual funds, and goal pockets; net worth summary with allocation bars; emergency fund section with 5-tier status (Critical → Strong), progress bar, contextual advice, and amount-to-target calculation
+- **Assets profile** — Track savings, gold, investments, and goal pockets; net worth summary; emergency fund section with 5-tier status, contextual advice, and amount-to-target calculation; contributable flag excludes auto-managed funds (BPJS JHT) from suggestions
+- **Windfall allocation** — AI-powered plan for bonus/THR/freelance windfalls; allocates across emergency fund, goal pockets, investments, and a reward slice based on your real financial data
 - **Data backup** — Export/import full JSON backup (merge or replace); includes goals and assets; v1/v2 backups supported
 - **CSV export** — Download filtered transactions as CSV
 - **Secure vault** — AES-GCM encryption, PBKDF2 key derivation, confirm-on-create, all data local
