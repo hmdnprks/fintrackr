@@ -1,26 +1,31 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { encryptData, decryptData } from '@/lib/security/encryption'
+import { idbGet, idbSet } from '@/lib/storage/indexedDB'
 
 const VAULT_KEY = 'fintrackr_vault'
 const META_KEY = 'fintrackr_meta'
-const SESSION_KEY = 'fintrackr_session'
 
 let sessionPassword: string | null = null
+let vaultCache: VaultData | null = null
 
-function loadSession() {
-  if (typeof window === 'undefined') return null
-  return sessionStorage.getItem(SESSION_KEY)
+// The unified structure for all data in the vault
+export type VaultData = {
+  statements: any[]
+  manualTransactions: any[]
+  rules: any[]
+  budgets: Record<string, number>
+  goals: any[]
+  settings: Record<string, string> // e.g. chat API keys
 }
 
-function saveSession(password: string) {
-  if (typeof window === 'undefined') return
-  sessionStorage.setItem(SESSION_KEY, btoa(password))
-}
-
-function clearSession() {
-  if (typeof window === 'undefined') return
-  sessionStorage.removeItem(SESSION_KEY)
+const defaultVaultData: VaultData = {
+  statements: [],
+  manualTransactions: [],
+  rules: [],
+  budgets: {},
+  goals: [],
+  settings: {},
 }
 
 // ============================
@@ -33,22 +38,62 @@ export function isVaultInitialized() {
 }
 
 export function isVaultUnlocked() {
-  if (sessionPassword) return true
-  const stored = loadSession()
-  if (stored) {
-    try {
-      sessionPassword = atob(stored)
-      return true
-    } catch {
-      clearSession()
-    }
-  }
-  return false
+  return sessionPassword !== null
 }
 
 export function lockVault() {
   sessionPassword = null
-  clearSession()
+  vaultCache = null
+}
+
+// ============================
+// Migration Logic
+// ============================
+
+async function getRawEncryptedVault(): Promise<string | null> {
+  if (typeof window === 'undefined') return null
+  return await idbGet(VAULT_KEY)
+}
+
+function pullLegacyLocalStorageData(existingVault: VaultData): VaultData {
+  if (typeof window === 'undefined') return existingVault
+
+  let migrated = false
+  const updated = { ...existingVault }
+
+  const migrateKey = (key: string, field: keyof VaultData, isObj = false) => {
+    const data = localStorage.getItem(key)
+    if (data) {
+      try {
+        if (field === 'settings') {
+          // handled manually below
+        } else if (isObj) {
+          updated[field] = { ...updated[field] as Record<string, any>, ...JSON.parse(data) } as any
+        } else {
+          updated[field] = [...updated[field] as any[], ...JSON.parse(data)] as any
+        }
+        localStorage.removeItem(key)
+        migrated = true
+      } catch (e) {
+        console.error(`Failed to migrate ${key}`, e)
+      }
+    }
+  }
+
+  migrateKey('fintrackr', 'statements')
+  migrateKey('fintrackr_manual', 'manualTransactions')
+  migrateKey('fintrackr_rules', 'rules')
+  migrateKey('fintrackr_budgets', 'budgets', true)
+  migrateKey('fintrackr_goals', 'goals')
+
+  const apiKey = localStorage.getItem('fintrackr_chat_api_key')
+  if (apiKey) {
+    updated.settings = { ...updated.settings, chatApiKey: apiKey }
+    localStorage.removeItem('fintrackr_chat_api_key')
+    migrated = true
+  }
+
+  return updated
 }
 
 // ============================
@@ -56,18 +101,18 @@ export function lockVault() {
 // ============================
 
 export async function initializeVault(password: string) {
-  const emptyData: any[] = []
+  const initialData = pullLegacyLocalStorageData(defaultVaultData)
 
-  const encrypted = await encryptData(emptyData, password)
+  const encrypted = await encryptData(initialData, password)
+  await idbSet(VAULT_KEY, JSON.stringify(encrypted))
 
-  localStorage.setItem(VAULT_KEY, JSON.stringify(encrypted))
   localStorage.setItem(
     META_KEY,
     JSON.stringify({ createdAt: new Date().toISOString() })
   )
 
   sessionPassword = password
-  saveSession(password)
+  vaultCache = initialData
 }
 
 // ============================
@@ -75,79 +120,76 @@ export async function initializeVault(password: string) {
 // ============================
 
 export async function unlockVault(password: string) {
-  const encrypted = localStorage.getItem(VAULT_KEY)
+  const encrypted = await getRawEncryptedVault()
   if (!encrypted) throw new Error('Vault not found')
 
+  let parsed: any;
   try {
-    await decryptData(JSON.parse(encrypted), password)
-  sessionPassword = password
-  saveSession(password)
+    parsed = JSON.parse(encrypted)
+  } catch (e: any) {
+    throw new Error('Data corruption')
+  }
+
+  try {
+    let decrypted = await decryptData(parsed, password)
+
+    if (Array.isArray(decrypted)) {
+      decrypted = { ...defaultVaultData, statements: decrypted }
+    }
+
+    const withLegacy = pullLegacyLocalStorageData(decrypted)
+    if (JSON.stringify(decrypted) !== JSON.stringify(withLegacy)) {
+      const reEncrypted = await encryptData(withLegacy, password)
+      await idbSet(VAULT_KEY, JSON.stringify(reEncrypted))
+    }
+
+    sessionPassword = password
+    vaultCache = withLegacy
     return true
-  } catch {
+  } catch (e: any) {
     throw new Error('Invalid password')
   }
 }
 
 // ============================
-// Get Data
+// Get / Save Unified Data
 // ============================
 
-export async function getSecureStatements() {
-  if (!sessionPassword) throw new Error('Vault locked')
-
-  const encrypted = localStorage.getItem(VAULT_KEY)
-  if (!encrypted) return []
-
-  const decrypted = await decryptData(
-    JSON.parse(encrypted),
-    sessionPassword
-  )
-
-  return decrypted
+export function getVaultDataSync(): VaultData {
+  if (!sessionPassword || !vaultCache) return defaultVaultData
+  return vaultCache
 }
 
-// ============================
-// Save Data
-// ============================
+export async function getVaultData(): Promise<VaultData> {
+  if (!sessionPassword || !vaultCache) throw new Error('Vault locked')
+  return vaultCache
+}
 
-export async function saveSecureStatements(data: any[]) {
-  if (!sessionPassword) throw new Error('Vault locked')
+export async function saveVaultData(data: Partial<VaultData>) {
+  if (!sessionPassword || !vaultCache) throw new Error('Vault locked')
 
-  const encrypted = await encryptData(data, sessionPassword)
+  const updated = { ...vaultCache, ...data }
+  vaultCache = updated // Update cache immediately for sync readers
 
-  localStorage.setItem(VAULT_KEY, JSON.stringify(encrypted))
+  const encrypted = await encryptData(updated, sessionPassword)
+  await idbSet(VAULT_KEY, JSON.stringify(encrypted))
 }
 
 export async function changeMasterPassword(
   currentPassword: string,
   newPassword: string
 ) {
-  const encrypted = localStorage.getItem(VAULT_KEY)
+  const encrypted = await getRawEncryptedVault()
   if (!encrypted) throw new Error('Vault not found')
 
-  // Try decrypting with current password
   let decrypted
-
   try {
-    decrypted = await decryptData(
-      JSON.parse(encrypted),
-      currentPassword
-    )
+    decrypted = await decryptData(JSON.parse(encrypted), currentPassword)
   } catch {
     throw new Error('Current password is incorrect')
   }
 
-  // Re-encrypt with new password
-  const reEncrypted = await encryptData(
-    decrypted,
-    newPassword
-  )
-
-  localStorage.setItem(
-    VAULT_KEY,
-    JSON.stringify(reEncrypted)
-  )
-
+  const reEncrypted = await encryptData(decrypted, newPassword)
+  await idbSet(VAULT_KEY, JSON.stringify(reEncrypted))
   sessionPassword = newPassword
 }
-

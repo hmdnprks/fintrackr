@@ -23,6 +23,7 @@ import { formatIDR } from '@/lib/formatter'
 import { getBudgets } from '@/lib/budgetStorage'
 import { downloadCSV } from '@/lib/csvExport'
 import MonthComparisonSection from '@/components/dashboard/MonthComparisonSection'
+import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 
 type Tab = 'overview' | 'budget' | 'transactions'
 
@@ -97,11 +98,11 @@ export default function Dashboard() {
     return map
   }, [statements])
 
-  function handleRecategorize(txIndex: number, newCategory: string) {
+  async function handleRecategorize(txIndex: number, newCategory: string) {
     const current = allTransactions[txIndex]
     if (!current) return
 
-    const saved = JSON.parse(localStorage.getItem('fintrackr') || '[]')
+    const saved = [...getVaultDataSync().statements]
     for (const statement of saved) {
       for (const tx of statement.transactions || []) {
         if (
@@ -113,12 +114,12 @@ export default function Dashboard() {
         }
       }
     }
-    localStorage.setItem('fintrackr', JSON.stringify(saved))
+    await saveVaultData({ statements: saved })
     reload()
   }
 
-  function handleCategorizeGroup(indexes: number[], category: string) {
-    const saved = JSON.parse(localStorage.getItem('fintrackr') || '[]')
+  async function handleCategorizeGroup(indexes: number[], category: string) {
+    const saved = [...getVaultDataSync().statements]
     for (const idx of indexes) {
       const tx = allTransactions[idx]
       if (!tx) continue
@@ -134,7 +135,7 @@ export default function Dashboard() {
         }
       }
     }
-    localStorage.setItem('fintrackr', JSON.stringify(saved))
+    await saveVaultData({ statements: saved })
     reload()
   }
 

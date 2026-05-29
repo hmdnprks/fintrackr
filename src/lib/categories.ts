@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { getVaultDataSync, saveVaultData } from './storage/secureStorage'
 
 export type Category =
   | 'Income'
@@ -21,8 +22,6 @@ export type CategoryRule = {
   keyword: string
   category: Category
 }
-
-const RULES_KEY = 'fintrackr_rules'
 
 export const defaultRules: CategoryRule[] = [
   // Income
@@ -123,18 +122,17 @@ export const defaultRules: CategoryRule[] = [
 ]
 
 export function getUserRules(): CategoryRule[] {
-  if (typeof window === 'undefined') return []
-  return JSON.parse(localStorage.getItem(RULES_KEY) || '[]')
+  return getVaultDataSync().rules
 }
 
-export function saveUserRules(rules: CategoryRule[]) {
-  localStorage.setItem(RULES_KEY, JSON.stringify(rules))
+export async function saveUserRules(rules: CategoryRule[]) {
+  await saveVaultData({ rules })
 }
 
-export function deleteUserRule(id: string) {
+export async function deleteUserRule(id: string) {
   const existing = getUserRules()
   const filtered = existing.filter((r) => r.id !== id)
-  saveUserRules(filtered)
+  await saveUserRules(filtered)
 }
 
 export function getAllRules(): CategoryRule[] {

@@ -1,4 +1,4 @@
-const GOALS_KEY = 'fintrackr_goals'
+import { getVaultDataSync, saveVaultData } from './storage/secureStorage'
 
 export type SavingsGoal = {
   id: string
@@ -21,18 +21,17 @@ export type SpendingGoal = {
 export type Goal = SavingsGoal | SpendingGoal
 
 export function getGoals(): Goal[] {
-  if (typeof window === 'undefined') return []
-  return JSON.parse(localStorage.getItem(GOALS_KEY) || '[]')
+  return getVaultDataSync().goals
 }
 
 type NewGoal = Omit<SavingsGoal, 'id' | 'createdAt'> | Omit<SpendingGoal, 'id' | 'createdAt'>
 
-export function addGoal(goal: NewGoal): Goal {
+export async function addGoal(goal: NewGoal): Promise<Goal> {
   const entry = { ...goal, id: crypto.randomUUID(), createdAt: new Date().toISOString() } as Goal
-  localStorage.setItem(GOALS_KEY, JSON.stringify([...getGoals(), entry]))
+  await saveVaultData({ goals: [...getGoals(), entry] })
   return entry
 }
 
-export function deleteGoal(id: string) {
-  localStorage.setItem(GOALS_KEY, JSON.stringify(getGoals().filter((g) => g.id !== id)))
+export async function deleteGoal(id: string) {
+  await saveVaultData({ goals: getGoals().filter((g) => g.id !== id) })
 }

@@ -93,9 +93,9 @@ Two goal types, displayed as cards in the Budget tab:
 
 Available in Settings:
 
-- **Export** — downloads `fintrackr-backup-YYYY-MM-DD.json`
-- **Restore — Merge** — adds entries from backup that don't already exist (deduplicates by id); safe to run repeatedly; budget values from backup override existing for same category
-- **Restore — Replace** — wipes all current data, then writes backup
+- **Export** — dynamically decrypts the entire unified vault and downloads a single `fintrackr-backup-YYYY-MM-DD.json` file containing statements, manual transactions, budgets, rules, and goals.
+- **Restore — Merge** — accepts an uploaded JSON backup (even legacy v1 backups), safely merges it with the current data (deduplicating by ID), and immediately re-encrypts the result inside the secure IndexedDB vault.
+- **Restore — Replace** — wipes the current vault data, writes the parsed backup data, and encrypts it.
 - File validation — rejects non-Fintrackr JSON files
 - Preview before restoring: shows statement count, manual transaction count, rule count, budget count, and backup date
 
@@ -119,6 +119,18 @@ Available in Settings:
 
 - All data stored locally in browser localStorage — no server, no database, no cloud
 - Privacy notice on import page and vault creation screen
+- **AI features are opt-in** — using AI Categorize or AI Insights sends transaction descriptions and amounts to DeepSeek's API; account numbers and personal details are not included
+- AI data notice shown in Settings and next to each AI button
+
+## Settings
+
+- Add / delete custom categorization rules (keyword → category)
+- View system default rules (read-only)
+- Change vault master password with strength indicator
+- AI Categorization config — status display, API key via `.env`
+- AI Chat Assistant — save personal DeepSeek API key to localStorage
+- Data Backup & Restore section
+on screen
 - **AI features are opt-in** — using AI Categorize or AI Insights sends transaction descriptions and amounts to DeepSeek's API; account numbers and personal details are not included
 - AI data notice shown in Settings and next to each AI button
 

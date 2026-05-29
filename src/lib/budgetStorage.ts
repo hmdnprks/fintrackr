@@ -1,22 +1,21 @@
+import { getVaultDataSync, saveVaultData } from './storage/secureStorage'
+
 export type BudgetMap = Record<string, number>
 
-const BUDGET_KEY = 'fintrackr_budgets'
-
 export function getBudgets(): BudgetMap {
-  if (typeof window === 'undefined') return {}
-  return JSON.parse(localStorage.getItem(BUDGET_KEY) || '{}')
+  return getVaultDataSync().budgets
 }
 
-export function setBudget(category: string, amount: number) {
-  const existing = getBudgets()
+export async function setBudget(category: string, amount: number) {
+  const existing = { ...getBudgets() }
   if (amount <= 0) {
     delete existing[category]
   } else {
     existing[category] = amount
   }
-  localStorage.setItem(BUDGET_KEY, JSON.stringify(existing))
+  await saveVaultData({ budgets: existing })
 }
 
-export function clearBudgets() {
-  localStorage.removeItem(BUDGET_KEY)
+export async function clearBudgets() {
+  await saveVaultData({ budgets: {} })
 }

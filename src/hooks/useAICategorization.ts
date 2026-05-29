@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react'
 import { getSavedStatements } from '@/lib/storage'
 import { categorizeTransaction } from '@/lib/categorizer/mandiri/transactionCategorizer'
+import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 
 export function useAICategorization(
   reloadStatements: () => void
@@ -35,7 +36,7 @@ export function useAICategorization(
       }[] = []
 
       statements.forEach((statement: any, si: number) => {
-        ;(statement.transactions || []).forEach(
+        ; (statement.transactions || []).forEach(
           (tx: any, ti: number) => {
             const storedCategory = tx.category
             const ruleCategory = categorizeTransaction(
@@ -64,9 +65,8 @@ export function useAICategorization(
       const payload = {
         transactions: uncategorized.map((u) => ({ detail: u.detail })),
         type: 'categorize',
-        apiKey: localStorage.getItem('fintrackr_chat_api_key') || undefined,
+        apiKey: getVaultDataSync().settings?.chatApiKey || undefined,
       }
-      console.log('[AI Categorize] Prompt:', JSON.stringify(payload, null, 2))
 
       const res = await fetch('/api/categorize', {
         method: 'POST',
@@ -75,7 +75,6 @@ export function useAICategorization(
       })
 
       const data = await res.json()
-      console.log('[AI Categorize] Result:', JSON.stringify(data, null, 2))
 
       if (!data.success) {
         throw new Error(data.error || 'Categorization failed')
@@ -107,9 +106,9 @@ export function useAICategorization(
           .map((c: string, i: number) =>
             c === 'Uncategorized'
               ? {
-                  detail: uncategorized[i].detail,
-                  amount: uncategorized[i].amount,
-                }
+                detail: uncategorized[i].detail,
+                amount: uncategorized[i].amount,
+              }
               : null
           )
           .filter(Boolean),
@@ -125,7 +124,7 @@ export function useAICategorization(
   const getInsights = useCallback(
     async (year?: string, month?: string) => {
       const cacheKey = `fintrackr_insights_${year || 'all'}_${month || 'all'}`
-      const cached = localStorage.getItem(cacheKey)
+      const cached = sessionStorage.getItem(cacheKey)
       if (cached) {
         setInsights(cached)
         return
@@ -166,23 +165,20 @@ export function useAICategorization(
         const periodLabel =
           month && month !== 'all'
             ? (() => {
-                const [y, m] = month.split('-').map(Number)
-                return new Date(y, m - 1).toLocaleString('en-US', { month: 'long', year: 'numeric' })
-              })()
+              const [y, m] = month.split('-').map(Number)
+              return new Date(y, m - 1).toLocaleString('en-US', { month: 'long', year: 'numeric' })
+            })()
             : year && year !== 'all'
-            ? year
-            : 'all time'
+              ? year
+              : 'all time'
 
         const payload = {
           transactions: allTxs,
           type: 'insights',
           period: periodLabel,
-          apiKey: localStorage.getItem('fintrackr_chat_api_key') || undefined,
+          apiKey: getVaultDataSync().settings?.chatApiKey || undefined,
         }
-        console.log(
-          '[AI Insights] Prompt:',
-          JSON.stringify(payload, null, 2)
-        )
+
 
         const res = await fetch('/api/categorize', {
           method: 'POST',
@@ -191,10 +187,7 @@ export function useAICategorization(
         })
 
         const data = await res.json()
-        console.log(
-          '[AI Insights] Result:',
-          JSON.stringify(data, null, 2)
-        )
+
 
         if (!data.success) {
           throw new Error(
@@ -224,10 +217,10 @@ export function useAICategorization(
     clearCategorizedResult: () => setCategorizedResult(null),
     clearError: () => setError(null),
     clearInsights: () => {
-      const keys = Object.keys(localStorage).filter((k) =>
+      const keys = Object.keys(sessionStorage).filter((k) =>
         k.startsWith('fintrackr_insights_')
       )
-      keys.forEach((k) => localStorage.removeItem(k))
+      keys.forEach((k) => sessionStorage.removeItem(k))
       setInsights(null)
     },
   }

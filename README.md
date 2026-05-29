@@ -30,7 +30,7 @@ See [`docs/features.md`](docs/features.md) for the full feature reference.
 | AI          | DeepSeek API (optional)          |
 | PDF Parsing | pdfreader                        |
 | Security    | Web Crypto API (AES-GCM, PBKDF2) |
-| Storage     | Browser localStorage (encrypted) |
+| Storage     | Browser IndexedDB (AES-GCM encrypted unified vault) |
 
 ## Getting Started
 

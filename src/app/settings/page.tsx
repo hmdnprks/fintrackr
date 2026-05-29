@@ -6,7 +6,7 @@ import {
   Category, CategoryRule, defaultRules,
   getUserRules, saveUserRules, deleteUserRule,
 } from '@/lib/categories'
-import { changeMasterPassword } from '@/lib/storage/secureStorage'
+import { changeMasterPassword, getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 import PasswordStrength from '@/components/PasswordStrength'
 import BackupSection from '@/components/settings/BackupSection'
 
@@ -87,12 +87,13 @@ export default function SettingsPage() {
 
   // ── AI chat key ────────────────────────────────────────────────────────────
   const [chatApiKey, setChatApiKey] = useState(() =>
-    typeof window !== 'undefined' ? localStorage.getItem(CHAT_KEY) ?? '' : ''
+    typeof window !== 'undefined' ? getVaultDataSync().settings?.chatApiKey ?? '' : ''
   )
   const [chatKeySaved, setChatKeySaved] = useState(false)
 
-  function handleSaveChatKey() {
-    localStorage.setItem(CHAT_KEY, chatApiKey)
+  async function handleSaveChatKey() {
+    const currentSettings = getVaultDataSync().settings || {}
+    await saveVaultData({ settings: { ...currentSettings, chatApiKey } })
     setChatKeySaved(true)
     setTimeout(() => setChatKeySaved(false), 2500)
   }

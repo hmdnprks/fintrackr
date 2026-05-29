@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback, useRef } from 'react'
 import { getSavedStatements } from '@/lib/storage'
+import { getVaultDataSync } from '@/lib/storage/secureStorage'
 
-const CHAT_KEY_STORAGE = 'fintrackr_chat_api_key'
 const CHAT_HISTORY_KEY = 'fintrackr_chat_history'
 
 export type ChatMessage = {
@@ -55,7 +55,7 @@ export function useChat() {
 
   const sendMessage = useCallback(
     async (content: string) => {
-      const apiKey = localStorage.getItem(CHAT_KEY_STORAGE)
+      const apiKey = getVaultDataSync().settings?.chatApiKey
       if (!apiKey) {
         setError(
           'Set your DeepSeek API key in Settings to use the chat.'
@@ -116,6 +116,6 @@ export function useChat() {
     error,
     sendMessage,
     clearMessages,
-    hasApiKey: typeof window !== 'undefined' && !!localStorage.getItem(CHAT_KEY_STORAGE),
+    hasApiKey: typeof window !== 'undefined' && !!getVaultDataSync().settings?.chatApiKey,
   }
 }

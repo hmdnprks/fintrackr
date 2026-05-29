@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-const MANUAL_KEY = 'fintrackr_manual'
+import { getVaultDataSync, saveVaultData } from './storage/secureStorage'
 
 export type ManualTransaction = {
   id: string
@@ -13,11 +12,10 @@ export type ManualTransaction = {
 }
 
 export function getManualTransactions(): ManualTransaction[] {
-  if (typeof window === 'undefined') return []
-  return JSON.parse(localStorage.getItem(MANUAL_KEY) || '[]')
+  return getVaultDataSync().manualTransactions
 }
 
-export function addManualTransaction(tx: Omit<ManualTransaction, 'id' | 'createdAt'>) {
+export async function addManualTransaction(tx: Omit<ManualTransaction, 'id' | 'createdAt'>): Promise<ManualTransaction> {
   const existing = getManualTransactions()
   const entry: ManualTransaction = {
     ...tx,
@@ -25,17 +23,17 @@ export function addManualTransaction(tx: Omit<ManualTransaction, 'id' | 'created
     createdAt: new Date().toISOString(),
   }
   const updated = [...existing, entry]
-  localStorage.setItem(MANUAL_KEY, JSON.stringify(updated))
+  await saveVaultData({ manualTransactions: updated })
   return entry
 }
 
-export function deleteManualTransaction(id: string) {
+export async function deleteManualTransaction(id: string) {
   const existing = getManualTransactions()
   const updated = existing.filter((t) => t.id !== id)
-  localStorage.setItem(MANUAL_KEY, JSON.stringify(updated))
+  await saveVaultData({ manualTransactions: updated })
 }
 
-export function updateManualTransaction(
+export async function updateManualTransaction(
   id: string,
   updates: Partial<ManualTransaction>
 ) {
@@ -43,5 +41,5 @@ export function updateManualTransaction(
   const updated = existing.map((t) =>
     t.id === id ? { ...t, ...updates } : t
   )
-  localStorage.setItem(MANUAL_KEY, JSON.stringify(updated))
+  await saveVaultData({ manualTransactions: updated })
 }

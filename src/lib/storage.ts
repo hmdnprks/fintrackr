@@ -1,13 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-const STORAGE_KEY = 'fintrackr'
+import { getVaultDataSync, saveVaultData } from './storage/secureStorage'
 
 export function getSavedStatements() {
-  if (typeof window === 'undefined') return []
-  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+  return getVaultDataSync().statements
 }
 
-export function saveStatement(data: any) {
+export async function saveStatement(data: any) {
   const existing = getSavedStatements()
 
   const updated = [
@@ -19,10 +17,10 @@ export function saveStatement(data: any) {
     },
   ]
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+  await saveVaultData({ statements: updated })
 }
 
-export function deleteStatementsByMonth(monthKey: string) {
+export async function deleteStatementsByMonth(monthKey: string) {
   const existing = getSavedStatements()
 
   const filtered = existing.filter((s: any) => {
@@ -39,11 +37,9 @@ export function deleteStatementsByMonth(monthKey: string) {
     return key !== monthKey
   })
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered))
+  await saveVaultData({ statements: filtered })
 }
 
-
-export function clearAllStatements() {
-  localStorage.removeItem(STORAGE_KEY)
+export async function clearAllStatements() {
+  await saveVaultData({ statements: [] })
 }
-
