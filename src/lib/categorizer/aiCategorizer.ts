@@ -310,17 +310,26 @@ Allocation priorities (in order):
 1. Emergency fund — if below 6 months of expenses, top it up first (liquid savings account)
 2. Goal pockets with the nearest deadlines and largest gaps
 3. Investments — diversify if under-allocated vs net worth
-4. Leave a small cash buffer (0.5–1× monthly expense) for near-term spending
+4. Reward — always reserve a guilt-free slice for the user to enjoy (see reward rules below)
+5. Leave any remainder as cash buffer
+
+Reward rules (ALWAYS include a reward destination unless windfall < Rp 1M):
+- Emergency fund < 1 month (Critical): 0% reward
+- Emergency fund 1–3 months (Low): 5% of windfall
+- Emergency fund 3–6 months (Building): 10% of windfall
+- Emergency fund ≥ 6 months (Healthy/Strong): 15–20% of windfall
+- Label it exactly: "Reward" — reason should acknowledge they earned it and encourage them to spend it on something meaningful (trip, experience, gadget)
+- THR context: Lebaran spending counts as the reward slice — don't double-count
 
 Additional rules:
-- THR (Tunjangan Hari Raya) context: account for Lebaran spending — keep 20–30% liquid for seasonal expenses
+- THR (Tunjangan Hari Raya) context: account for Lebaran spending — the reward slice covers seasonal Lebaran expenses
 - Round all amounts to the nearest 100,000 IDR
 - If windfall is small (< Rp 2M), suggest 1–2 destinations max
 - Use the exact asset/pocket names from the context
 - Be direct and specific — cite actual numbers and gaps in each reason
 - Format all IDR amounts using Indonesian notation with dots as thousand separators (e.g. Rp 52.136.009 not Rp 52,136,009)
 - CRITICAL — hard budget rule: the SUM of all allocation amounts must equal exactly the windfall amount (leftover = 0) or less. Never exceed it. Work out the math before responding.
-- CRITICAL — no single destination monopoly: even if one gap is larger than the entire windfall, never allocate more than 70% of the windfall to a single destination. Always distribute the remaining 30%+ across other goals. The only exception is if there is literally only one goal in the context.
+- CRITICAL — no single destination monopoly: even if one gap is larger than the entire windfall, never allocate more than 70% of the windfall to a single destination. Always distribute the remaining 30%+ across other goals.
 - CRITICAL — summary must match allocations exactly: only mention destinations that appear in your allocations array. Do not describe a plan that differs from what you allocate.
 
 Respond with ONLY valid JSON, no markdown:
