@@ -241,6 +241,7 @@ export default function Dashboard() {
                 <CalendarSection
                   allTransactions={allTransactions}
                   selectedMonth={selectedMonth}
+                  onRecategorize={handleRecategorize}
                 />
               )}
             </div>

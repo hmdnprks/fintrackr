@@ -1,10 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { formatIDR } from '@/lib/formatter'
 
 const DAY_HEADERS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+const CATEGORIES = [
+  'Income', 'Food & Dining', 'Groceries', 'Shopping', 'Services',
+  'Transportation', 'Health & Medical', 'Entertainment', 'Education',
+  'Housing', 'Insurance', 'Bank Charges', 'Transfer', 'Uncategorized',
+]
+
+const CATEGORY_COLORS: Record<string, string> = {
+  'Income':           'bg-green-100 text-green-700',
+  'Food & Dining':    'bg-orange-100 text-orange-700',
+  'Groceries':        'bg-lime-100 text-lime-700',
+  'Shopping':         'bg-pink-100 text-pink-700',
+  'Services':         'bg-blue-100 text-blue-700',
+  'Transportation':   'bg-sky-100 text-sky-700',
+  'Health & Medical': 'bg-red-100 text-red-700',
+  'Entertainment':    'bg-purple-100 text-purple-700',
+  'Education':        'bg-indigo-100 text-indigo-700',
+  'Housing':          'bg-amber-100 text-amber-700',
+  'Insurance':        'bg-teal-100 text-teal-700',
+  'Bank Charges':     'bg-gray-100 text-gray-600',
+  'Transfer':         'bg-slate-100 text-slate-600',
+  'Uncategorized':    'bg-amber-50 text-amber-600',
+}
 
 function heatColor(amount: number, max: number): string {
   if (amount === 0 || max === 0) return ''
@@ -30,10 +53,21 @@ function abbreviate(n: number): string {
 interface Props {
   allTransactions: any[]
   selectedMonth: string  // "YYYY-MM"
+  onRecategorize: (txIndex: number, newCategory: string) => void
 }
 
-export default function CalendarSection({ allTransactions, selectedMonth }: Props) {
-  const [selectedDay, setSelectedDay] = useState<number | null>(null)
+export default function CalendarSection({ allTransactions, selectedMonth, onRecategorize }: Props) {
+  const [selectedDay, setSelectedDay]     = useState<number | null>(null)
+  const [editingIdx, setEditingIdx]       = useState<number | null>(null)
+  const selectRef = useRef<HTMLSelectElement>(null)
+
+  useEffect(() => {
+    if (editingIdx !== null) selectRef.current?.focus()
+  }, [editingIdx])
+
+  // Clear editing state when day changes
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setEditingIdx(null) }, [selectedDay])
 
   const [year, month] = selectedMonth.split('-').map(Number)
   const monthLabel = new Date(year, month - 1).toLocaleString('en-US', {
@@ -43,17 +77,17 @@ export default function CalendarSection({ allTransactions, selectedMonth }: Prop
   // Mon-first: Sun(0)→6, Mon(1)→0, Sat(6)→5
   const firstDayOffset = (new Date(year, month - 1, 1).getDay() + 6) % 7
 
-  // Aggregate by calendar day
+  // Aggregate by calendar day — store original index for recategorization
   const byDay = useMemo(() => {
-    const map: Record<number, { spending: number; income: number; txs: any[] }> = {}
-    for (const tx of allTransactions) {
-      if (!tx.fullDate) continue
+    const map: Record<number, { spending: number; income: number; txs: { tx: any; originalIdx: number }[] }> = {}
+    allTransactions.forEach((tx: any, originalIdx: number) => {
+      if (!tx.fullDate) return
       const d = (tx.fullDate as Date).getDate()
       if (!map[d]) map[d] = { spending: 0, income: 0, txs: [] }
       if (tx.type === 'debit') map[d].spending += tx.amount || 0
       else                     map[d].income   += tx.amount || 0
-      map[d].txs.push(tx)
-    }
+      map[d].txs.push({ tx, originalIdx })
+    })
     return map
   }, [allTransactions])
 
@@ -226,7 +260,7 @@ export default function CalendarSection({ allTransactions, selectedMonth }: Prop
                   </span>
                 )}
                 <span className="text-xs text-gray-400">
-                  {selectedData.txs.length} transaction{selectedData.txs.length !== 1 ? 's' : ''}
+                  {selectedData.txs.length} transaction{selectedData.txs.length !== 1 ? 's' : ''} — click a category to change it
                 </span>
               </div>
             </div>
@@ -242,23 +276,57 @@ export default function CalendarSection({ allTransactions, selectedMonth }: Prop
 
           <div className="bg-white rounded-xl overflow-hidden border border-gray-100">
             {[...selectedData.txs]
-              .sort((a, b) => b.amount - a.amount)
-              .map((tx: any, i: number) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-0"
-                >
-                  <span className={`text-sm font-semibold tabular-nums shrink-0 ${
-                    tx.type === 'credit' ? 'text-green-600' : 'text-red-500'
-                  }`}>
-                    {tx.type === 'credit' ? '+' : '−'}{formatIDR(tx.amount)}
-                  </span>
-                  <span className="flex-1 text-sm text-gray-700 truncate">{tx.detail}</span>
-                  <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full shrink-0">
-                    {tx.category || 'Uncategorized'}
-                  </span>
-                </div>
-              ))}
+              .sort((a, b) => b.tx.amount - a.tx.amount)
+              .map(({ tx, originalIdx }) => {
+                const isEditing = editingIdx === originalIdx
+                const colorClass = CATEGORY_COLORS[tx.category] ?? CATEGORY_COLORS['Uncategorized']
+                return (
+                  <div
+                    key={originalIdx}
+                    className="flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-0"
+                    onClick={() => setEditingIdx(null)}
+                  >
+                    <span className={`text-sm font-semibold tabular-nums shrink-0 ${
+                      tx.type === 'credit' ? 'text-green-600' : 'text-red-500'
+                    }`}>
+                      {tx.type === 'credit' ? '+' : '−'}{formatIDR(tx.amount)}
+                    </span>
+
+                    <span className="flex-1 text-sm text-gray-700 truncate">{tx.detail}</span>
+
+                    {/* Editable category */}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      {isEditing ? (
+                        <select
+                          ref={selectRef}
+                          defaultValue={tx.category || 'Uncategorized'}
+                          onChange={(e) => {
+                            onRecategorize(originalIdx, e.target.value)
+                            setEditingIdx(null)
+                          }}
+                          onBlur={() => setEditingIdx(null)}
+                          className="text-xs border border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          {CATEGORIES.map((cat) => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <button
+                          onClick={() => setEditingIdx(originalIdx)}
+                          title="Click to change category"
+                          className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full transition hover:opacity-80 ${colorClass}`}
+                        >
+                          {tx.category || 'Uncategorized'}
+                          <svg className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
           </div>
         </div>
       )}
