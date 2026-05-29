@@ -18,8 +18,8 @@ export default function AIInsightsPanel({ insights, isLoading, period, onGenerat
   const bullets = insights
     ? insights
         .split('\n')
-        .map((l) => l.replace(/^[•\-*\d.\s]+/, '').trim())
-        .filter((l) => l.length > 0)
+        .map((l) => l.replace(/^[•\-]\s*/, '').trim())  // strip ONE bullet char + spaces, keep **bold**
+        .filter((l) => l.length > 2)                    // filter empty lines and lone punctuation
     : []
 
   return (
