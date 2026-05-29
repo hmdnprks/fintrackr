@@ -8,8 +8,8 @@ const WINDOW = 12  // months visible at once
 const STEP   = 6   // months to jump per arrow click
 
 function shortLabel(label: string): string {
-  // "January 2025" → "Jan '25"
-  return label.replace(/^(\w{3})\w+\s(\d{4})$/, "$1 '$2").replace(/'(\d{2})\d{2}$/, "'$1")
+  // "January 2024" → "Jan '24"
+  return label.replace(/^(\w{3})\w+\s\d{2}(\d{2})$/, "$1 '$2")
 }
 
 interface Props {
