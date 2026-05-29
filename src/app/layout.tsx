@@ -2,6 +2,9 @@ import type { Metadata } from "next"
 import { Poppins } from "next/font/google"
 import "./globals.css"
 import Link from "next/link"
+import { VaultProvider } from '@/context/VaultContext'
+import Image from "next/image"
+// app/layout.tsx
 
 const poppins = Poppins({
   weight: ['400', '600'],
@@ -30,7 +33,7 @@ export default function RootLayout({
             <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
 
               <div className="font-semibold text-lg text-gray-800">
-                FinTrackr
+                <Image alt="logo fintrackr" src={'/logo-fintrackr.png'} height={80} width={120} />
               </div>
 
               <div className="flex gap-6 text-sm text-gray-600">
@@ -60,7 +63,9 @@ export default function RootLayout({
 
           {/* Page Content */}
           <div className="max-w-6xl mx-auto px-6 py-10">
-            {children}
+            <VaultProvider>
+              {children}
+            </VaultProvider>
           </div>
 
         </div>
