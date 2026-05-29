@@ -262,6 +262,107 @@ export async function generateInsights(
   return json.choices?.[0]?.message?.content || ''
 }
 
+// ─── Windfall Allocation ─────────────────────────────────────────────────────
+
+export type WindfallAllocation = {
+  destination: string
+  amount: number
+  reason: string
+}
+
+export type WindfallResult = {
+  summary: string
+  allocations: WindfallAllocation[]
+  leftover: number
+  leftoverAdvice: string
+}
+
+export type WindfallContext = {
+  windfall: { amount: number; type: string }
+  income:   { avgMonthly: number }
+  expenses: { avgMonthly: number }
+  emergencyFund: {
+    currentMonths: number
+    targetMonths: number
+    gapAmount: number
+    accounts: { name: string; institution: string }[]
+  }
+  assets: {
+    totalNetWorth: number
+    byType: Record<string, number>
+    pockets: {
+      name: string
+      goalName?: string
+      currentValue: number
+      goalTarget?: number
+      goalDeadline?: string
+      gapAmount: number
+    }[]
+    investments: { name: string; institution: string; currentValue: number; platform?: string }[]
+  }
+}
+
+const WINDFALL_PROMPT = `You are a personal financial advisor for an Indonesian user. Currency is IDR (Indonesian Rupiah).
+
+The user received a windfall and wants a concrete allocation plan based on their real financial data.
+
+Allocation priorities (in order):
+1. Emergency fund — if below 6 months of expenses, top it up first (liquid savings account)
+2. Goal pockets with the nearest deadlines and largest gaps
+3. Investments — diversify if under-allocated vs net worth
+4. Leave a small cash buffer (0.5–1× monthly expense) for near-term spending
+
+Additional rules:
+- THR (Tunjangan Hari Raya) context: account for Lebaran spending — keep 20–30% liquid for seasonal expenses
+- Round all amounts to the nearest 100,000 IDR
+- If windfall is small (< Rp 2M), suggest 1–2 destinations max
+- Use the exact asset/pocket names from the context
+- Be direct and specific — cite actual numbers and gaps in each reason
+- All allocation amounts must sum to ≤ windfall amount; leftover = windfall − sum(allocations)
+
+Respond with ONLY valid JSON, no markdown:
+{
+  "summary": "one sentence overall rationale",
+  "allocations": [
+    { "destination": "exact name from context", "amount": number, "reason": "1–2 sentences with specific numbers" }
+  ],
+  "leftover": number,
+  "leftoverAdvice": "one sentence on what to do with any remainder, or empty string if leftover is 0"
+}`
+
+export async function generateWindfallAllocation(
+  context: WindfallContext,
+  apiKey: string,
+  model = 'deepseek-chat'
+): Promise<WindfallResult> {
+  const messages: DeepSeekMessage[] = [
+    { role: 'system', content: WINDFALL_PROMPT },
+    { role: 'user',   content: JSON.stringify(context) },
+  ]
+
+  const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens: 1024 }),
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`DeepSeek API error: ${res.status} - ${err}`)
+  }
+
+  const json = await res.json()
+  let content: string = json.choices?.[0]?.message?.content || ''
+  content = content.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```\s*$/g, '').trim()
+
+  const parsed = JSON.parse(content)
+  if (!parsed.allocations || !Array.isArray(parsed.allocations)) {
+    throw new Error('Unexpected response format from AI')
+  }
+
+  return parsed as WindfallResult
+}
+
 // ─── Budget Suggestions ───────────────────────────────────────────────────────
 
 export type BudgetSuggestion = {
