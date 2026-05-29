@@ -62,10 +62,9 @@ export function useAICategorization(
       }
 
       const payload = {
-        transactions: uncategorized.map((u) => ({
-          detail: u.detail,
-        })),
+        transactions: uncategorized.map((u) => ({ detail: u.detail })),
         type: 'categorize',
+        apiKey: localStorage.getItem('fintrackr_chat_api_key') || undefined,
       }
       console.log('[AI Categorize] Prompt:', JSON.stringify(payload, null, 2))
 
@@ -167,6 +166,7 @@ export function useAICategorization(
         const payload = {
           transactions: allTxs,
           type: 'insights',
+          apiKey: localStorage.getItem('fintrackr_chat_api_key') || undefined,
         }
         console.log(
           '[AI Insights] Prompt:',

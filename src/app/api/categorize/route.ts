@@ -4,13 +4,14 @@ import { categorizeWithAI, generateInsights } from '@/lib/categorizer/aiCategori
 
 export async function POST(req: NextRequest) {
   try {
-    const { transactions, type } = await req.json()
+    const { transactions, type, apiKey: clientKey } = await req.json()
 
-    const apiKey = process.env.DEEPSEEK_API_KEY
+    // Env var takes priority (server operator); client-provided key is fallback (production users)
+    const apiKey = process.env.DEEPSEEK_API_KEY || clientKey
     if (!apiKey) {
       return NextResponse.json(
-        { success: false, error: 'DEEPSEEK_API_KEY not configured' },
-        { status: 500 }
+        { success: false, error: 'No DeepSeek API key configured. Add one in Settings.' },
+        { status: 400 }
       )
     }
 
