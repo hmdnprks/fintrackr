@@ -319,7 +319,9 @@ Additional rules:
 - Use the exact asset/pocket names from the context
 - Be direct and specific — cite actual numbers and gaps in each reason
 - Format all IDR amounts using Indonesian notation with dots as thousand separators (e.g. Rp 52.136.009 not Rp 52,136,009)
-- CRITICAL: each individual allocation amount must never exceed the windfall amount, and the SUM of all allocations must never exceed the windfall amount. If a gap is larger than the windfall, allocate only what is available (cap at windfall − amounts already allocated). leftover = windfall − sum(allocations)
+- CRITICAL — hard budget rule: the SUM of all allocation amounts must equal exactly the windfall amount (leftover = 0) or less. Never exceed it. Work out the math before responding.
+- CRITICAL — no single destination monopoly: even if one gap is larger than the entire windfall, never allocate more than 70% of the windfall to a single destination. Always distribute the remaining 30%+ across other goals. The only exception is if there is literally only one goal in the context.
+- CRITICAL — summary must match allocations exactly: only mention destinations that appear in your allocations array. Do not describe a plan that differs from what you allocate.
 
 Respond with ONLY valid JSON, no markdown:
 {
