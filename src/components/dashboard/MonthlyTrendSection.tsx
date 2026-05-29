@@ -7,7 +7,8 @@ import MonthlyTrendLineChart from '@/components/charts/MonthlyTrendLineChart'
 const WINDOW = 12  // months visible at once
 const STEP   = 6   // months to jump per arrow click
 
-function shortLabel(label: string): string {
+function shortLabel(label: string | undefined): string {
+  if (!label) return '…'
   // "January 2024" → "Jan '24"
   return label.replace(/^(\w{3})\w+\s\d{2}(\d{2})$/, "$1 '$2")
 }
@@ -41,7 +42,7 @@ export default function MonthlyTrendSection({ data }: Props) {
 
   const canBack    = start > 0
   const canForward = end < total
-  const rangeLabel = needsNav && total > 0
+  const rangeLabel = needsNav && end > 0
     ? `${shortLabel(data.labels[start])} – ${shortLabel(data.labels[end - 1])}`
     : null
 
