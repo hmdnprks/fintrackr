@@ -6,7 +6,7 @@ Built with [Next.js](https://nextjs.org) (App Router), React 19, TypeScript, Tai
 
 ## Features
 
-- **PDF Import** — Parse Mandiri bank statement PDFs; built-in guide for finding the e-statement email and PDF password
+- **PDF Import** — Parse Mandiri bank statements; drop multiple PDFs at once for batch import with live progress list
 - **Categorization** — 50+ Indonesian default rules + AI-powered (DeepSeek) + manual inline override
 - **Dashboard tabs** — Overview (charts, calendar, AI insights, month comparison) · Budget (limits, goals) · Transactions (search, filter, sort, recategorize)
 - **Daily calendar** — Heat map calendar showing spending intensity per day; click any day to see its transactions
@@ -18,6 +18,7 @@ Built with [Next.js](https://nextjs.org) (App Router), React 19, TypeScript, Tai
 - **CSV export** — Download filtered transactions as CSV
 - **Secure vault** — AES-GCM encryption, PBKDF2 key derivation, confirm-on-create, all data local
 - **Privacy-first** — No server, no database, no tracking; AI features are explicitly opt-in
+- **Mobile-friendly** — Responsive layout, horizontally scrollable tables, compact calendar cells
 
 See [`docs/features.md`](docs/features.md) for the full feature reference.
 
@@ -75,7 +76,8 @@ src/
 ├── components/
 │   ├── charts/               # Chart.js wrappers
 │   ├── dashboard/            # Dashboard sections & modals
-│   │   ├── CalendarSection.tsx       # Daily heat map calendar
+│   │   ├── CalendarSection.tsx       # Daily heat map calendar (with inline recategorize)
+│   ├── BatchProgress.tsx         # Multi-file import progress list
 │   │   ├── GoalSection.tsx           # Financial goals
 │   │   ├── MonthComparisonSection.tsx
 │   │   ├── BudgetSection.tsx

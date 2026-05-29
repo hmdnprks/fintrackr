@@ -2,7 +2,8 @@
 
 ## Import
 
-- Upload Mandiri bank statement PDFs (password-protected supported)
+- Upload one or multiple Mandiri PDF bank statements at once (password-protected supported)
+- **Multi-file batch import** — drop several PDFs at once; files processed sequentially with one shared password; live progress list shows per-file status (pending / processing / saved / duplicate / error) with period and transaction count on completion; duplicates skipped automatically; single file keeps the existing parse → preview → save flow
 - Collapsible guide: how to find the e-statement email, correct subject line (`[WARNING: MESSAGE ENCRYPTED] Consolidated Statement Bank Mandiri - Apr 2026`), filename format (`ConsolidatedStatement_Apr_2026.pdf`), and default PDF password hint (date of birth, DDMMYYYY)
 - Password field shows inline hint "Usually your date of birth — DDMMYYYY"
 - Auto-extract account summary: account number, product name, branch, period, balance
@@ -27,7 +28,7 @@ Three-tab layout with shared year/month filter:
 ### Overview tab
 - Summary cards — total income, expense, net with month-over-month delta badges (↑/↓ % vs last month); net card turns red when negative
 - Income vs Expense — CSS progress bars showing income, expense, and net with savings rate badge (e.g. "Saved 25%")
-- Monthly trend line chart — IDR-abbreviated Y-axis (1.5M/500K), smooth curves, green/red dataset colors, filled area; guards for single or zero data points
+- Monthly trend line chart — respects the active year filter (shows only the selected year's months); IDR-abbreviated Y-axis (1.5M/500K), smooth curves, green/red dataset colors, filled area; when data spans more than 12 months, shows a 12-month sliding window with ← → navigation (steps 6 months per click) and a range label (e.g. "Jan '25 – Dec '25"); guards for single or zero data points
 - **Daily spending calendar** — heat map grid (Mon–Sun) when a specific month is selected; cells colored white→amber→red by daily spend; shows abbreviated amount per day; income dot, today indicator, click to expand full transaction list for that day
 - AI Insights — persistent card with Generate/Regenerate/Clear; sends pre-aggregated category summary + period label (not raw rows) to DeepSeek; structured 4-bullet output: top spending, concern, positive, action
 - Month comparison section — per-category breakdown vs prior month; expense categories only; sorted by biggest % change; dual bars (prev/current); amber highlight for increases ≥30%
@@ -157,3 +158,12 @@ Available in Settings:
 - Change vault master password with show/hide toggle and strength indicator; Enter submits
 - Success (green) / error (red) feedback on password change
 - Data Backup & Restore section
+
+## Mobile
+
+- Responsive layout across all pages — `px-4 py-6` on mobile, `sm:px-6 sm:py-10` on desktop
+- Navigation bar: sticky top, compact height, responsive link spacing
+- Dashboard header: action button labels hidden on mobile (icon + tooltip only); tab navigation fills full width on mobile
+- Transaction table: horizontally scrollable on mobile with `min-w-[560px]` so columns never collapse
+- Calendar day cells: `h-10` on mobile, `h-14` on desktop
+- All modals: constrained width with `p-4` backdrop padding to prevent viewport overflow
