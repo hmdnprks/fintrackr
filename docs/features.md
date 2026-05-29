@@ -60,7 +60,7 @@ Three-tab layout with shared year/month filter:
 ### Assets tab
 - Track all asset types in one place: **Savings**, **Gold**, **Investment**, **Pocket**, **Other**
 - **Net worth summary card** — total value across all assets, allocation breakdown bars by type with percentages
-- **Emergency fund indicator** — automatically calculates months of expenses covered from the last 6 months of statement data; color-coded green (≥6 months), amber (≥3), red (<3)
+- **Emergency fund indicator** — dedicated section below the net worth summary; five tiers: Critical (<1 mo), Low (1–3), Building (3–6), Healthy (6–9), Strong (9+); progress bar with 3-month minimum and 6-month ideal markers; contextual advice per tier written for Indonesian context (PHK, BPJS, variable income); shows amount still needed to reach 6 months and avg monthly expense baseline; note clarifying emergency fund should be liquid (tabungan/deposito), not gold or investments
 - **Asset cards** grouped by type, each showing current value, institution, last-updated timestamp, and type-specific details:
   - Savings: interest rate (% p.a.), emergency fund badge
   - Gold: weight in grams, auto-computed price per gram
