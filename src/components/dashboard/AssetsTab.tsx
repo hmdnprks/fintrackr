@@ -152,22 +152,23 @@ export default function AssetsTab({ statements }: Props) {
       {/* Net worth summary */}
       {assets.length > 0 && (
         <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-baseline justify-between mb-4">
-            <div>
-              <p className="text-sm text-gray-500">Total Net Worth</p>
-              <p className="text-3xl font-bold text-gray-900 mt-0.5">{formatIDRFull(totalNetWorth)}</p>
-            </div>
+          <div className="mb-4">
+            <p className="text-sm text-gray-500">Total Net Worth</p>
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-0.5 break-all">{formatIDRFull(totalNetWorth)}</p>
           </div>
 
           {/* Breakdown bars */}
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {TYPE_ORDER.filter(t => totalByType[t] > 0).map(t => {
               const meta = TYPE_META[t]
               const pct = totalNetWorth > 0 ? (totalByType[t] / totalNetWorth) * 100 : 0
               return (
-                <div key={t} className="flex items-center gap-3">
-                  <span className="text-sm w-24 text-gray-500 shrink-0">{meta.emoji} {meta.label}</span>
-                  <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div key={t}>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-gray-500">{meta.emoji} {meta.label}</span>
+                    <span className="text-gray-400">{formatIDR(totalByType[t])} · {Math.round(pct)}%</span>
+                  </div>
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full ${
                         t === 'savings'    ? 'bg-blue-400'   :
@@ -179,12 +180,6 @@ export default function AssetsTab({ statements }: Props) {
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <span className="text-sm font-medium text-gray-700 w-28 text-right shrink-0">
-                    {formatIDR(totalByType[t])}
-                  </span>
-                  <span className="text-xs text-gray-400 w-10 text-right shrink-0">
-                    {Math.round(pct)}%
-                  </span>
                 </div>
               )
             })}
@@ -202,7 +197,7 @@ export default function AssetsTab({ statements }: Props) {
 
       {/* Asset cards grouped by type */}
       {assets.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
+        <div className="bg-white rounded-2xl shadow-sm p-8 sm:p-12 text-center">
           <div className="text-4xl mb-3">💼</div>
           <h3 className="text-base font-semibold text-gray-700">No assets yet</h3>
           <p className="text-sm text-gray-400 mt-1 max-w-xs mx-auto">
