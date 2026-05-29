@@ -11,6 +11,7 @@ export function parseTransactionDate(
 }
 
 export function formatIDR(amount: number) {
+  if (amount === undefined || amount === null || isNaN(amount)) return 'Rp 0'
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',

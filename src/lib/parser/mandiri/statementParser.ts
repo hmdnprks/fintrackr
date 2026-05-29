@@ -166,7 +166,12 @@ export function parseTransactions(rows: Row[]): Transaction[] {
 
   if (current) transactions.push(current)
 
-  return transactions
+  return transactions.filter(
+    (tx) =>
+      !tx.detail.trim().toUpperCase().includes('SALDO AWAL') &&
+      tx.amount !== undefined &&
+      !isNaN(tx.amount)
+  )
 }
 
 function buildFullDate(dateStr: string, period: string) {
