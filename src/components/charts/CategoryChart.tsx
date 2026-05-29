@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import '@/lib/chartjs'
 import { Bar, Pie } from 'react-chartjs-2'
 
 interface Props {

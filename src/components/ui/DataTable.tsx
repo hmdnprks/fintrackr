@@ -1,6 +1,6 @@
 interface Column<T> {
   header: string
-  render: (row: T) => React.ReactNode
+  render: (row: T, index: number) => React.ReactNode
   className?: string
 }
 
@@ -37,7 +37,7 @@ export default function DataTable<T>({
             >
               {columns.map((col, j) => (
                 <td key={j} className="p-3">
-                  {col.render(row)}
+                  {col.render(row, i)}
                 </td>
               ))}
             </tr>

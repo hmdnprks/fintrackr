@@ -1,3 +1,4 @@
+import '@/lib/chartjs'
 import { Bar } from 'react-chartjs-2'
 
 interface Props {
