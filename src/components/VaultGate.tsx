@@ -26,6 +26,7 @@ export default function VaultGate({
     }
   }
 
+  if (initialized === null) return null
   if (unlocked) return <>{children}</>
 
   return (

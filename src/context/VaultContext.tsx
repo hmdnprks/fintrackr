@@ -1,8 +1,9 @@
 'use client'
 
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useSyncExternalStore, useState } from 'react'
 import {
   isVaultInitialized,
+  isVaultUnlocked,
   unlockVault,
   initializeVault,
   lockVault,
@@ -18,36 +19,58 @@ type VaultContextType = {
 
 const VaultContext = createContext<VaultContextType | null>(null)
 
+function subscribeToVaultInit(callback: () => void) {
+  window.addEventListener('storage', callback)
+  return () => window.removeEventListener('storage', callback)
+}
+
+function getVaultInitSnapshot() {
+  return isVaultInitialized()
+}
+
+function subscribeToSession() {
+  return () => {}
+}
+
+function getSessionSnapshot() {
+  if (typeof window === 'undefined') return false
+  return isVaultUnlocked()
+}
+
 export function VaultProvider({ children }: { children: React.ReactNode }) {
-  const [initialized] = useState(isVaultInitialized())
-  const [unlocked, setUnlocked] = useState(false)
+  const initialized = useSyncExternalStore(
+    subscribeToVaultInit,
+    getVaultInitSnapshot,
+    () => false
+  )
+  const unlocked = useSyncExternalStore(
+    subscribeToSession,
+    getSessionSnapshot,
+    () => false
+  )
+  const [hydrated, setHydrated] = useState(false)
+
+  useState(() => {
+    setHydrated(true)
+  })
 
   async function handleUnlock(password: string) {
     await unlockVault(password)
-    setUnlocked(true)
   }
 
   async function handleInitialize(password: string) {
     await initializeVault(password)
-    setUnlocked(true)
   }
 
   function handleLock() {
     lockVault()
-    setUnlocked(false)
   }
 
+  const value = { initialized, unlocked, unlock: handleUnlock, initialize: handleInitialize, lock: handleLock }
+
   return (
-    <VaultContext.Provider
-      value={{
-        initialized,
-        unlocked,
-        unlock: handleUnlock,
-        initialize: handleInitialize,
-        lock: handleLock,
-      }}
-    >
-      {children}
+    <VaultContext.Provider value={value}>
+      {hydrated ? children : null}
     </VaultContext.Provider>
   )
 }

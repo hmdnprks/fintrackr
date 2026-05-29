@@ -4,8 +4,24 @@ import { encryptData, decryptData } from '@/lib/security/encryption'
 
 const VAULT_KEY = 'fintrackr_vault'
 const META_KEY = 'fintrackr_meta'
+const SESSION_KEY = 'fintrackr_session'
 
 let sessionPassword: string | null = null
+
+function loadSession() {
+  if (typeof window === 'undefined') return null
+  return sessionStorage.getItem(SESSION_KEY)
+}
+
+function saveSession(password: string) {
+  if (typeof window === 'undefined') return
+  sessionStorage.setItem(SESSION_KEY, btoa(password))
+}
+
+function clearSession() {
+  if (typeof window === 'undefined') return
+  sessionStorage.removeItem(SESSION_KEY)
+}
 
 // ============================
 // Vault Status
@@ -17,11 +33,22 @@ export function isVaultInitialized() {
 }
 
 export function isVaultUnlocked() {
-  return !!sessionPassword
+  if (sessionPassword) return true
+  const stored = loadSession()
+  if (stored) {
+    try {
+      sessionPassword = atob(stored)
+      return true
+    } catch {
+      clearSession()
+    }
+  }
+  return false
 }
 
 export function lockVault() {
   sessionPassword = null
+  clearSession()
 }
 
 // ============================
@@ -40,6 +67,7 @@ export async function initializeVault(password: string) {
   )
 
   sessionPassword = password
+  saveSession(password)
 }
 
 // ============================
@@ -52,7 +80,8 @@ export async function unlockVault(password: string) {
 
   try {
     await decryptData(JSON.parse(encrypted), password)
-    sessionPassword = password
+  sessionPassword = password
+  saveSession(password)
     return true
   } catch {
     throw new Error('Invalid password')
