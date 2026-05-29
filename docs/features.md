@@ -57,6 +57,18 @@ Three-tab layout with shared year/month filter:
 - Recurring uncategorized pattern panel — bulk-assign categories
 - AI Categorize button — sends descriptions to DeepSeek
 
+### Assets tab
+- Track all asset types in one place: **Savings**, **Gold**, **Investment**, **Pocket**, **Other**
+- **Net worth summary card** — total value across all assets, allocation breakdown bars by type with percentages
+- **Emergency fund indicator** — automatically calculates months of expenses covered from the last 6 months of statement data; color-coded green (≥6 months), amber (≥3), red (<3)
+- **Asset cards** grouped by type, each showing current value, institution, last-updated timestamp, and type-specific details:
+  - Savings: interest rate (% p.a.), emergency fund badge
+  - Gold: weight in grams, auto-computed price per gram
+  - Investment: investment type (e.g. Reksa Dana Saham, Obligasi)
+  - Pocket: goal name, target amount, deadline, progress bar toward target
+- Add / edit / delete assets via modal with type-specific field sets
+- Assets included in JSON backup (v3); v1/v2 backups remain compatible
+
 ## Manual Transactions
 
 - Add transactions manually via modal (no PDF required)
@@ -118,8 +130,8 @@ Available in Settings:
 - **Restore — Merge** — adds entries from backup that don't already exist (deduplicates by id); budget values from backup override existing for same category
 - **Restore — Replace** — wipes current data and writes backup
 - File validation — rejects non-Fintrackr JSON
-- Preview before restoring: statement count, manual transactions, rules, budgets, goals, export date
-- Backwards-compatible: v1 backups (without goals field) restore cleanly
+- Preview before restoring: statement count, manual transactions, rules, budgets, goals, assets, export date
+- Backwards-compatible: v1 (no goals) and v2 (no assets) backups restore cleanly
 
 ## Recurring Transaction Detection
 

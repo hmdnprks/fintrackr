@@ -14,7 +14,8 @@ Built with [Next.js](https://nextjs.org) (App Router), React 19, TypeScript, Tai
 - **Budget tracking** — Monthly spend limits per category with progress bars and warnings
 - **Financial goals** — Savings targets (amount + deadline) and spending habit goals (consecutive months under limit)
 - **Month comparison** — Delta badges on summary cards + per-category breakdown vs prior month
-- **Data backup** — Export/import full JSON backup (merge or replace); includes goals; v1 backups supported
+- **Assets profile** — Track savings accounts, gold, mutual funds, and goal pockets; net worth summary with allocation bars and emergency fund months indicator
+- **Data backup** — Export/import full JSON backup (merge or replace); includes goals and assets; v1/v2 backups supported
 - **CSV export** — Download filtered transactions as CSV
 - **Secure vault** — AES-GCM encryption, PBKDF2 key derivation, confirm-on-create, all data local
 - **Privacy-first** — No server, no database, no tracking; AI features are explicitly opt-in
