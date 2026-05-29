@@ -52,21 +52,30 @@ export default function AssetsTab({ statements }: Props) {
     setAssets(getAssets())
   }
 
-  // Average monthly expense from last 6 months of statements
+  // Average real monthly expense from the 6 most recent months.
+  // Excludes Transfer and Bank Charges — these are financial movements
+  // (credit card payments, e-wallet top-ups) not actual spending.
   const avgMonthlyExpense = useMemo(() => {
     if (!statements.length) return 0
+    const EXCLUDE = new Set(['Transfer', 'Bank Charges'])
     const monthlyTotals: Record<string, number> = {}
     for (const s of statements) {
       if (!s.monthKey) continue
       let total = 0
       for (const tx of s.transactions || []) {
-        if (tx.type === 'debit') total += tx.amount || 0
+        if (tx.type === 'debit' && !EXCLUDE.has(tx.category)) {
+          total += tx.amount || 0
+        }
       }
       monthlyTotals[s.monthKey] = total
     }
-    const values = Object.values(monthlyTotals).filter(v => v > 0)
-    if (!values.length) return 0
-    const recent = values.sort().reverse().slice(0, 6)
+    // Sort by monthKey (YYYY-MM) chronologically, take the 6 most recent
+    const recent = Object.entries(monthlyTotals)
+      .filter(([, v]) => v > 0)
+      .sort(([a], [b]) => b.localeCompare(a))  // descending → most recent first
+      .slice(0, 6)
+      .map(([, v]) => v)
+    if (!recent.length) return 0
     return recent.reduce((s, v) => s + v, 0) / recent.length
   }, [statements])
 
