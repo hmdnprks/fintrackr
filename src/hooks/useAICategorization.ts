@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react'
 import { getSavedStatements } from '@/lib/storage'
 import { categorizeTransaction } from '@/lib/categorizer/mandiri/transactionCategorizer'
-import { getVaultDataSync } from '@/lib/storage/secureStorage'
+import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 
 // Strip numbers, punctuation, and extra whitespace so "ALFAMART 001 JAKARTA"
 // and "ALFAMART 002 BEKASI" normalize to the same key "alfamart  jakarta" → "alfamart jakarta"
@@ -171,7 +171,7 @@ export function useAICategorization(
         })
       }
 
-      localStorage.setItem('fintrackr', JSON.stringify(updated))
+      await saveVaultData({ statements: updated })
       setCategorizedResult({
         total: uncategorized.length,
         learnedCount,

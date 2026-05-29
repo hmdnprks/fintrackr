@@ -26,6 +26,7 @@ import { downloadCSV } from '@/lib/csvExport'
 import MonthComparisonSection from '@/components/dashboard/MonthComparisonSection'
 import CalendarSection from '@/components/dashboard/CalendarSection'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
+import { useVault } from '@/context/VaultContext'
 
 type Tab = 'overview' | 'budget' | 'transactions' | 'assets'
 
@@ -56,6 +57,18 @@ export default function Dashboard() {
     clearAll,
     reload,
   } = useStatements()
+
+  // useStatements initializes before the vault is unlocked (VaultGate is in JSX, not
+  // wrapping the component). Reload once as soon as the vault becomes unlocked so
+  // the dashboard doesn't show empty data on first visit.
+  const { unlocked } = useVault()
+  useEffect(() => {
+    if (unlocked) {
+      reload()
+      setBudgets(getBudgets())
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unlocked])
 
   const {
     totalIncome,
