@@ -4,7 +4,7 @@ import { categorizeWithAI, generateInsights } from '@/lib/categorizer/aiCategori
 
 export async function POST(req: NextRequest) {
   try {
-    const { transactions, type, apiKey: clientKey } = await req.json()
+    const { transactions, type, period, apiKey: clientKey } = await req.json()
 
     // Env var takes priority (server operator); client-provided key is fallback (production users)
     const apiKey = process.env.DEEPSEEK_API_KEY || clientKey
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (type === 'insights') {
-      const insights = await generateInsights(transactions, apiKey)
+      const insights = await generateInsights(transactions, apiKey, 'deepseek-chat', period)
       return NextResponse.json({ success: true, insights })
     }
 

@@ -163,9 +163,20 @@ export function useAICategorization(
           }))
         )
 
+        const periodLabel =
+          month && month !== 'all'
+            ? (() => {
+                const [y, m] = month.split('-').map(Number)
+                return new Date(y, m - 1).toLocaleString('en-US', { month: 'long', year: 'numeric' })
+              })()
+            : year && year !== 'all'
+            ? year
+            : 'all time'
+
         const payload = {
           transactions: allTxs,
           type: 'insights',
+          period: periodLabel,
           apiKey: localStorage.getItem('fintrackr_chat_api_key') || undefined,
         }
         console.log(

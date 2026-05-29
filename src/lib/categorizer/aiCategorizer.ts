@@ -12,25 +12,31 @@ type DeepSeekMessage = {
   content: string
 }
 
-const SYSTEM_PROMPT = `You are a transaction categorizer. Categorize each transaction into exactly one of: ${CATEGORIES.join(', ')}.
+// ─── Categorization ──────────────────────────────────────────────────────────
+
+const CATEGORIZE_PROMPT = `You are a transaction categorizer for Indonesian bank statements (Bank Mandiri).
+Categorize each transaction into exactly one of: ${CATEGORIES.join(', ')}.
 
 Rules:
-- "Income" for any money coming in (salary, transfer in, interest)
-- "Food & Dining" for restaurants, cafes, food delivery
-- "Groceries" for supermarkets, minimarkets, grocery stores
-- "Shopping" for retail, e-commerce, online shopping
-- "Services" for bills, subscriptions, utilities, insurance
-- "Transportation" for fuel, tolls, parking, ride-hailing
-- "Health & Medical" for pharmacy, doctor, hospital
-- "Entertainment" for streaming, games, hobbies
-- "Education" for courses, books, training
-- "Housing" for rent, electricity, water, internet
-- "Insurance" for health, vehicle, life insurance premiums
-- "Bank Charges" for admin fees, ATM fees, penalties
-- "Transfer" for transfers between accounts
-- "Uncategorized" only if truly unable to determine
+- "Income": money received — salary, transfers in (DARI, CR), interest (Bunga, Gaji)
+- "Food & Dining": restaurants, cafes, food delivery (GoFood, GrabFood, Warung, Kopi, Resto)
+- "Groceries": supermarkets and minimarkets (Alfamart, Indomaret, Superindo, Hypermart, Carrefour, QRIS at stores)
+- "Shopping": e-commerce and retail (Tokopedia, Shopee, Lazada, Blibli, Bukalapak, Zalora)
+- "Transportation": ride-hailing, fuel, toll, parking (Gojek, Grab, inDrive, Pertamina, KAI, Transjakarta, Toll, Parkir)
+- "Housing": rent, electricity, water, internet (PLN, PDAM, Sewa, Indihome, Biznet, Kontrakan, Listrik)
+- "Services": telco, subscriptions, travel bookings (Telkomsel, Indosat, XL, Tri, Traveloka, Tiket.com)
+- "Health & Medical": pharmacy, clinic, hospital (Apotek, Kimia Farma, K24, Klinik, Halodoc, Alodokter)
+- "Entertainment": streaming, games (Netflix, Spotify, YouTube, Disney, Steam, Vidio)
+- "Education": courses, books, training (Udemy, Coursera, buku)
+- "Insurance": insurance premiums (Asuransi, Premi)
+- "Bank Charges": admin fees, ATM fees, penalties (Biaya Adm, Biaya Transfer, Denda)
+- "Transfer": transfers between accounts or e-wallets (GoPay, OVO, DANA, ShopeePay, LinkAja)
+- "Uncategorized": only if truly unable to determine
 
-Respond with ONLY a JSON array of category strings, one per transaction in order. Example: ["Food & Dining", "Shopping", "Income"]`
+Indonesian context: descriptions mix Indonesian and English. QRIS is a QR payment method — use surrounding context to determine the category.
+
+Respond with ONLY a JSON array of category strings, one per transaction in order.
+Example: ["Food & Dining", "Shopping", "Income"]`
 
 const BATCH_SIZE = 25
 
@@ -42,34 +48,25 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   return chunks
 }
 
+async function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 async function categorizeBatch(
   batch: { detail: string }[],
   apiKey: string,
   model: string
 ): Promise<string[]> {
-  const userPrompt = JSON.stringify(batch.map((t) => t.detail))
-
   const messages: DeepSeekMessage[] = [
-    { role: 'system', content: SYSTEM_PROMPT },
-    { role: 'user', content: userPrompt },
+    { role: 'system', content: CATEGORIZE_PROMPT },
+    { role: 'user',   content: JSON.stringify(batch.map((t) => t.detail)) },
   ]
 
-  const res = await fetch(
-    'https://api.deepseek.com/v1/chat/completions',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        temperature: 0.1,
-        max_tokens: 4096,
-      }),
-    }
-  )
+  const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({ model, messages, temperature: 0.1, max_tokens: 4096 }),
+  })
 
   if (!res.ok) {
     const err = await res.text()
@@ -77,7 +74,7 @@ async function categorizeBatch(
   }
 
   const json = await res.json()
-  let content = json.choices?.[0]?.message?.content || ''
+  let content: string = json.choices?.[0]?.message?.content || ''
 
   content = content
     .replace(/^```json\s*/i, '')
@@ -86,18 +83,13 @@ async function categorizeBatch(
     .trim()
 
   const parsed = JSON.parse(content)
-
   if (!Array.isArray(parsed)) {
-    throw new Error(
-      `Expected JSON array, got ${typeof parsed}: ${content.slice(0, 200)}`
-    )
+    throw new Error(`Expected JSON array, got ${typeof parsed}`)
   }
 
+  // If AI returned fewer items than sent, retry for the missing ones
   if (parsed.length < batch.length) {
     const missing = batch.slice(parsed.length)
-    console.log(
-      `[AI Categorize] Batch got ${parsed.length}/${batch.length}, retrying ${missing.length} missing`
-    )
     const filled = await categorizeBatch(missing, apiKey, model)
     return [...parsed, ...filled].map((c: string) =>
       CATEGORIES.includes(c as any) ? c : 'Uncategorized'
@@ -109,77 +101,139 @@ async function categorizeBatch(
   )
 }
 
+async function categorizeBatchWithRetry(
+  batch: { detail: string }[],
+  apiKey: string,
+  model: string,
+  maxRetries = 3
+): Promise<string[]> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await categorizeBatch(batch, apiKey, model)
+    } catch (err: any) {
+      const isRateLimit = err.message?.includes('429')
+      const isLast = attempt === maxRetries - 1
+      if (isRateLimit && !isLast) {
+        await sleep(1000 * Math.pow(2, attempt))  // 1s, 2s, 4s
+        continue
+      }
+      throw err
+    }
+  }
+  throw new Error('Max retries exceeded')
+}
+
+// Sequential (not parallel) to avoid rate limit bursts
 export async function categorizeWithAI(
   transactions: { detail: string; amount: number; type: string }[],
   apiKey: string,
   model = 'deepseek-chat'
 ): Promise<string[]> {
   const batches = chunkArray(transactions, BATCH_SIZE)
-  console.log(
-    `[AI Categorize] ${transactions.length} transactions, ${batches.length} batches of ${BATCH_SIZE}`
-  )
+  const results: string[][] = []
 
-  const results = await Promise.all(
-    batches.map((batch, i) => {
-      console.log(
-        `[AI Categorize] Sending batch ${i + 1}/${batches.length} (${
-          batch.length
-        } txs)`
-      )
-      return categorizeBatch(
-        batch.map((t) => ({ detail: t.detail })),
-        apiKey,
-        model
-      )
-    })
-  )
+  for (let i = 0; i < batches.length; i++) {
+    const result = await categorizeBatchWithRetry(
+      batches[i].map((t) => ({ detail: t.detail })),
+      apiKey,
+      model
+    )
+    results.push(result)
+    // Small pause between batches to be gentle on the API
+    if (i < batches.length - 1) await sleep(300)
+  }
 
   return results.flat()
 }
 
+// ─── Insights ────────────────────────────────────────────────────────────────
+
+function formatIDRShort(amount: number): string {
+  if (amount >= 1_000_000) return `Rp ${(amount / 1_000_000).toFixed(1)}M`
+  if (amount >= 1_000)     return `Rp ${(amount / 1_000).toFixed(0)}K`
+  return `Rp ${amount}`
+}
+
+function aggregateTransactions(
+  transactions: { detail: string; amount: number; type: string; category: string }[],
+  period: string
+) {
+  const income   = transactions.filter(t => t.type === 'credit').reduce((s, t) => s + t.amount, 0)
+  const expenses = transactions.filter(t => t.type === 'debit').reduce((s, t) => s + t.amount, 0)
+  const net      = income - expenses
+
+  const byCat: Record<string, { amount: number; count: number }> = {}
+  for (const t of transactions) {
+    if (t.type !== 'debit') continue
+    const cat = t.category || 'Uncategorized'
+    if (!byCat[cat]) byCat[cat] = { amount: 0, count: 0 }
+    byCat[cat].amount += t.amount
+    byCat[cat].count++
+  }
+
+  const categoryBreakdown = Object.entries(byCat)
+    .sort((a, b) => b[1].amount - a[1].amount)
+    .map(([cat, { amount, count }]) => ({
+      category: cat,
+      amount: formatIDRShort(amount),
+      count,
+      pct: expenses > 0 ? Math.round((amount / expenses) * 100) : 0,
+    }))
+
+  const topExpenses = [...transactions]
+    .filter(t => t.type === 'debit')
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 5)
+    .map(t => `${t.detail}: ${formatIDRShort(t.amount)} (${t.category})`)
+
+  return {
+    period,
+    currency: 'IDR (Indonesian Rupiah)',
+    income:   formatIDRShort(income),
+    expenses: formatIDRShort(expenses),
+    net:      formatIDRShort(Math.abs(net)),
+    netDirection: net >= 0 ? 'saved' : 'overspent',
+    savingsRate: income > 0 ? `${Math.round(((income - expenses) / income) * 100)}%` : 'N/A',
+    transactionCount: transactions.length,
+    categoryBreakdown,
+    topExpenses,
+  }
+}
+
+const INSIGHTS_PROMPT = `You are a personal finance advisor for an Indonesian user.
+Currency is IDR (Indonesian Rupiah). Format amounts as "Rp X.XXX.XXX" when giving exact figures.
+
+Analyze the financial summary provided and respond with exactly 4 bullet points using this structure:
+• **Top spending:** [category] — [amount] ([pct]% of expenses). [one sentence observation]
+• **Watch out:** [specific concern with actual numbers from the data — overspending, large single transaction, or negative savings]
+• **Good news:** [one genuinely positive thing — if savings rate is negative, skip this and add a second concern instead]
+• **Action for next month:** [one concrete suggestion with a specific target amount based on the actual data]
+
+Rules:
+- Use actual numbers from the data, never generic advice
+- Be direct and conversational — like a trusted friend, not a financial report
+- If the user overspent (netDirection is "overspent"), address that prominently
+- Indonesian context: account for local prices (food Rp 20K–100K, ride Rp 15K–50K, etc.)
+- Keep each bullet to 1–2 sentences maximum`
+
 export async function generateInsights(
   transactions: { detail: string; amount: number; type: string; category: string }[],
   apiKey: string,
-  model = 'deepseek-chat'
+  model = 'deepseek-chat',
+  period = 'this period'
 ): Promise<string> {
-  const systemPrompt = `You are a personal finance analyst. Analyze these transactions and provide:
-1. Top spending categories this month
-2. Notable changes or patterns
-3. Money-saving suggestions
-4. Any unusual transactions
-
-Keep it concise, 3-5 bullet points. Be direct and helpful.`
-
-  const userPrompt = JSON.stringify(
-    transactions.map((t) => ({
-      detail: t.detail,
-      amount: t.amount,
-      type: t.type,
-      category: t.category,
-    }))
-  )
+  const summary = aggregateTransactions(transactions, period)
 
   const messages: DeepSeekMessage[] = [
-    { role: 'system', content: systemPrompt },
-    { role: 'user', content: userPrompt },
+    { role: 'system', content: INSIGHTS_PROMPT },
+    { role: 'user',   content: JSON.stringify(summary) },
   ]
 
-  const res = await fetch(
-    'https://api.deepseek.com/v1/chat/completions',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        temperature: 0.3,
-        max_tokens: 2048,
-      }),
-    }
-  )
+  const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({ model, messages, temperature: 0.1, max_tokens: 1024 }),
+  })
 
   if (!res.ok) {
     const err = await res.text()
