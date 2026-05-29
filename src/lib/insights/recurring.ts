@@ -5,6 +5,7 @@ export type RecurringSuggestion = {
   occurrences: number
   totalAmount: number
   sampleDetail: string
+  transactionIndexes: number[]
 }
 
 export function normalizeDetail(detail: string) {
@@ -25,9 +26,11 @@ export function detectRecurringUncategorized(
     count: number
     totalAmount: number
     sampleDetail: string
+    indexes: number[]
   }> = {}
 
-  for (const tx of transactions) {
+  for (let i = 0; i < transactions.length; i++) {
+    const tx = transactions[i]
     if (tx.category !== 'Uncategorized') continue
 
     const key = normalizeDetail(tx.detail)
@@ -37,12 +40,14 @@ export function detectRecurringUncategorized(
       map[key] = {
         count: 0,
         totalAmount: 0,
-        sampleDetail: tx.detail
+        sampleDetail: tx.detail,
+        indexes: [],
       }
     }
 
     map[key].count += 1
     map[key].totalAmount += tx.amount || 0
+    map[key].indexes.push(i)
   }
 
   return Object.entries(map)
@@ -51,7 +56,8 @@ export function detectRecurringUncategorized(
       normalizedDetail,
       occurrences: value.count,
       totalAmount: value.totalAmount,
-      sampleDetail: value.sampleDetail
+      sampleDetail: value.sampleDetail,
+      transactionIndexes: value.indexes,
     }))
     .sort((a, b) => b.occurrences - a.occurrences)
 }
