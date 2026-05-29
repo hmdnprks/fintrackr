@@ -52,6 +52,17 @@ export function lockVault() {
 
 async function getRawEncryptedVault(): Promise<string | null> {
   if (typeof window === 'undefined') return null
+
+  // Check localStorage first for legacy production data
+  const legacyData = localStorage.getItem(VAULT_KEY)
+  if (legacyData) {
+    console.log('[Vault] Found legacy data in localStorage. Migrating to IndexedDB...')
+    await idbSet(VAULT_KEY, legacyData)
+    localStorage.removeItem(VAULT_KEY)
+    return legacyData
+  }
+
+  // Fallback to IndexedDB
   return await idbGet(VAULT_KEY)
 }
 
