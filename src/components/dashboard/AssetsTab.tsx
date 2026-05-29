@@ -131,16 +131,6 @@ export default function AssetsTab({ statements }: Props) {
               <p className="text-sm text-gray-500">Total Net Worth</p>
               <p className="text-3xl font-bold text-gray-900 mt-0.5">{formatIDRFull(totalNetWorth)}</p>
             </div>
-            {emergencyMonths !== null && (
-              <div className={`text-right px-3 py-2 rounded-xl text-sm ${
-                emergencyMonths >= 6 ? 'bg-green-50 text-green-700' :
-                emergencyMonths >= 3 ? 'bg-amber-50 text-amber-700' :
-                'bg-red-50 text-red-700'
-              }`}>
-                <p className="font-semibold">{emergencyMonths.toFixed(1)} months</p>
-                <p className="text-xs opacity-75">emergency fund</p>
-              </div>
-            )}
           </div>
 
           {/* Breakdown bars */}
@@ -174,6 +164,14 @@ export default function AssetsTab({ statements }: Props) {
             })}
           </div>
         </div>
+      )}
+
+      {/* Emergency fund detail */}
+      {emergencyMonths !== null && (
+        <EmergencyFundSection
+          months={emergencyMonths}
+          avgMonthlyExpense={avgMonthlyExpense}
+        />
       )}
 
       {/* Asset cards grouped by type */}
@@ -247,6 +245,110 @@ export default function AssetsTab({ statements }: Props) {
         onClose={() => setShowModal(false)}
         onSaved={reload}
       />
+    </div>
+  )
+}
+
+// ── Emergency Fund Section ────────────────────────────────────────────────────
+
+type EFStatus = 'critical' | 'low' | 'building' | 'healthy' | 'strong'
+
+const EF_STATUS: Record<EFStatus, {
+  label: string; color: string; bg: string; border: string; bar: string; icon: string
+}> = {
+  critical: { label: 'Critical',  icon: '🚨', color: 'text-red-700',    bg: 'bg-red-50',    border: 'border-red-200',   bar: 'bg-red-500'    },
+  low:      { label: 'Low',       icon: '⚠️',  color: 'text-orange-700', bg: 'bg-orange-50', border: 'border-orange-200',bar: 'bg-orange-400' },
+  building: { label: 'Building',  icon: '🔨', color: 'text-amber-700',  bg: 'bg-amber-50',  border: 'border-amber-200', bar: 'bg-amber-400'  },
+  healthy:  { label: 'Healthy',   icon: '✅', color: 'text-green-700',  bg: 'bg-green-50',  border: 'border-green-200', bar: 'bg-green-500'  },
+  strong:   { label: 'Strong',    icon: '💪', color: 'text-emerald-700',bg: 'bg-emerald-50',border: 'border-emerald-200',bar: 'bg-emerald-500'},
+}
+
+const EF_ADVICE: Record<EFStatus, string> = {
+  critical: 'Less than 1 month of coverage is a serious vulnerability. A single major expense — hospital visit, job loss, car breakdown — could push you into debt immediately. Start with a small, consistent monthly transfer to a dedicated savings account, even Rp 200–500K/month helps.',
+  low:      'At this level, one disruption (PHK, medical emergency, appliance breakdown) could wipe your buffer. Focus on reaching 3 months first before aggressively investing elsewhere — the stability is worth more than the extra returns.',
+  building: 'You have a working buffer for short emergencies. Good progress. Keep adding to it until you hit 6 months, especially if you have variable income, dependents, or a single-income household.',
+  healthy:  'You\'ve hit the classic 6-month target — enough to cover job transitions, unexpected medical costs, or major home repairs without going into debt. Maintain it; inflation quietly erodes its value over time.',
+  strong:   'Excellent cushion. This level is especially valuable for freelancers, entrepreneurs, or anyone with irregular income. Consider whether excess beyond 12 months could be working harder in higher-yield instruments (e.g., Reksa Dana Pasar Uang).',
+}
+
+function EmergencyFundSection({
+  months,
+  avgMonthlyExpense,
+}: {
+  months: number
+  avgMonthlyExpense: number
+}) {
+  const TARGET = 6
+  const status: EFStatus =
+    months >= 9 ? 'strong' :
+    months >= 6 ? 'healthy' :
+    months >= 3 ? 'building' :
+    months >= 1 ? 'low' : 'critical'
+
+  const s = EF_STATUS[status]
+  const pct = Math.min(100, (months / TARGET) * 100)
+  const amountToTarget = Math.max(0, TARGET - months) * avgMonthlyExpense
+
+  return (
+    <div className={`rounded-2xl border p-5 ${s.bg} ${s.border}`}>
+      {/* Header row */}
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="flex items-center gap-2.5">
+          <span className="text-xl">{s.icon}</span>
+          <div>
+            <p className="text-sm font-semibold text-gray-900">Emergency Fund</p>
+            <p className={`text-xs font-semibold ${s.color}`}>{s.label}</p>
+          </div>
+        </div>
+        <div className="text-right shrink-0">
+          <p className={`text-2xl font-bold ${s.color}`}>{months.toFixed(1)}</p>
+          <p className="text-xs text-gray-500">months covered</p>
+        </div>
+      </div>
+
+      {/* Progress bar — 0 to 6 months, min marker at 3 */}
+      <div className="mb-4">
+        <div className="relative h-3 bg-white/70 rounded-full overflow-visible mb-1.5">
+          <div
+            className={`h-full rounded-full transition-all ${s.bar}`}
+            style={{ width: `${pct}%` }}
+          />
+          {/* 3-month minimum marker */}
+          <div className="absolute top-0 bottom-0 w-0.5 bg-gray-400/50 rounded" style={{ left: '50%' }} />
+        </div>
+        <div className="flex justify-between text-xs text-gray-400">
+          <span>0</span>
+          <span>3 mo <span className="text-gray-300">(min)</span></span>
+          <span>6 mo <span className="text-gray-300">(ideal)</span></span>
+        </div>
+      </div>
+
+      {/* Advice */}
+      <p className="text-xs text-gray-600 leading-relaxed mb-3">
+        {EF_ADVICE[status]}
+      </p>
+
+      {/* Amount needed / context row */}
+      <div className="flex flex-wrap gap-3">
+        {amountToTarget > 0 && (
+          <div className="bg-white/60 rounded-lg px-3 py-2 text-xs">
+            <span className="text-gray-500">To reach 6 months: </span>
+            <span className="font-semibold text-gray-800">{formatIDRFull(amountToTarget)}</span>
+          </div>
+        )}
+        {avgMonthlyExpense > 0 && (
+          <div className="bg-white/60 rounded-lg px-3 py-2 text-xs">
+            <span className="text-gray-500">Avg monthly expenses: </span>
+            <span className="font-semibold text-gray-800">{formatIDRFull(avgMonthlyExpense)}</span>
+          </div>
+        )}
+      </div>
+
+      {/* What counts as emergency fund */}
+      <p className="text-xs text-gray-400 mt-3 leading-relaxed">
+        Calculated from savings accounts marked as emergency fund. Ideal: liquid, low-risk accounts
+        (tabungan, deposito) — not gold or investments that take time to liquidate.
+      </p>
     </div>
   )
 }
