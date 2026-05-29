@@ -326,6 +326,7 @@ Additional rules:
 - Round all amounts to the nearest 100,000 IDR
 - If windfall is small (< Rp 2M), suggest 1–2 destinations max
 - Use the exact asset/pocket names from the context
+- Only recommend investment assets that appear in the context — these have already been filtered to exclude auto-managed funds the user cannot deposit into
 - Be direct and specific — cite actual numbers and gaps in each reason
 - Format all IDR amounts using Indonesian notation with dots as thousand separators (e.g. Rp 52.136.009 not Rp 52,136,009)
 - CRITICAL — hard budget rule: the SUM of all allocation amounts must equal exactly the windfall amount (leftover = 0) or less. Never exceed it. Work out the math before responding.

@@ -55,7 +55,8 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
   const [interestRate, setInterestRate] = useState('')
   const [isEmergencyFund, setIsEmergencyFund] = useState(false)
   const [goldGrams, setGoldGrams]     = useState('')
-  const [platform, setPlatform]       = useState('')
+  const [platform, setPlatform]           = useState('')
+  const [contributable, setContributable] = useState(true)
   const [goalName, setGoalName]       = useState('')
   const [goalTarget, setGoalTarget]   = useState('')
   const [goalDeadline, setGoalDeadline] = useState('')
@@ -74,6 +75,7 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
       setIsEmergencyFund(asset.isEmergencyFund ?? false)
       setGoldGrams(asset.goldGrams != null ? String(asset.goldGrams) : '')
       setPlatform(asset.platform ?? '')
+      setContributable(asset.contributable ?? true)
       setGoalName(asset.goalName ?? '')
       setGoalTarget(asset.goalTarget != null ? formatThousands(asset.goalTarget) : '')
       setGoalDeadline(asset.goalDeadline ?? '')
@@ -87,6 +89,7 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
       setIsEmergencyFund(false)
       setGoldGrams('')
       setPlatform('')
+      setContributable(true)
       setGoalName('')
       setGoalTarget('')
       setGoalDeadline('')
@@ -128,6 +131,7 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
       }),
       ...(type === 'investment' && {
         platform: platform.trim() || undefined,
+        contributable,
       }),
       ...(type === 'pocket' && {
         goalName: goalName.trim() || undefined,
@@ -308,15 +312,35 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
 
           {/* Investment-specific */}
           {type === 'investment' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Investment Type</label>
-              <input
-                type="text"
-                placeholder="e.g. Reksa Dana Saham, Obligasi"
-                value={platform}
-                onChange={e => setPlatform(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Investment Type</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Reksa Dana Saham, Obligasi"
+                  value={platform}
+                  onChange={e => setPlatform(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <label className="flex items-start gap-3 cursor-pointer select-none">
+                <div
+                  onClick={() => setContributable(v => !v)}
+                  className={`w-10 h-5 rounded-full transition-colors relative shrink-0 mt-0.5 ${
+                    contributable ? 'bg-green-500' : 'bg-gray-200'
+                  }`}
+                >
+                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                    contributable ? 'translate-x-5' : 'translate-x-0.5'
+                  }`} />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-700 font-medium">I can manually add funds</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Turn off for auto-managed assets like BPJS Ketenagakerjaan JHT — the windfall allocator will skip them.
+                  </p>
+                </div>
+              </label>
             </div>
           )}
 

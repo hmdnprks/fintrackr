@@ -12,6 +12,7 @@ export interface Asset {
   isEmergencyFund?: boolean
   goldGrams?: number       // optional display field for gold
   platform?: string        // investment platform e.g. "Bibit"
+  contributable?: boolean  // false = auto-managed, can't manually deposit (e.g. JHT, BPJS)
   goalName?: string        // pocket: what is this for
   goalTarget?: number      // pocket: target IDR
   goalDeadline?: string    // pocket: YYYY-MM

@@ -102,7 +102,7 @@ export default function WindfallModal({
       }))
 
     const investments = assets
-      .filter(a => a.type === 'investment')
+      .filter(a => a.type === 'investment' && a.contributable !== false)
       .map(a => ({
         name: a.name,
         institution: a.institution,
