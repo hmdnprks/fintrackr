@@ -13,6 +13,8 @@ import {
 import { changeMasterPassword } from '@/lib/storage/secureStorage'
 import PasswordStrength from '@/components/PasswordStrength'
 
+const CHAT_KEY_STORAGE = 'fintrackr_chat_api_key'
+
 export default function SettingsPage() {
   const [userRules, setUserRules] = useState<CategoryRule[]>(() => {
     if (typeof window === 'undefined') return []
@@ -24,6 +26,22 @@ export default function SettingsPage() {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [message, setMessage] = useState('')
+  const [aiConfigured, setAiConfigured] = useState(false)
+  const [chatApiKey, setChatApiKey] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    return localStorage.getItem(CHAT_KEY_STORAGE) || ''
+  })
+  const [chatKeySaved, setChatKeySaved] = useState(false)
+
+  useState(() => {
+    setAiConfigured(!!process.env.DEEPSEEK_API_KEY)
+  })
+
+  function handleSaveChatKey() {
+    localStorage.setItem(CHAT_KEY_STORAGE, chatApiKey)
+    setChatKeySaved(true)
+    setTimeout(() => setChatKeySaved(false), 2000)
+  }
 
 
 
@@ -101,15 +119,21 @@ export default function SettingsPage() {
               className="border p-2 rounded-lg text-sm"
             >
               {[
-                'Income',
-                'Food & Dining',
-                'Groceries',
-                'Shopping',
-                'Services',
-                'Bank Charges',
-                'Transfer',
-                'Uncategorized',
-              ].map((cat) => (
+                  'Income',
+                  'Food & Dining',
+                  'Groceries',
+                  'Shopping',
+                  'Services',
+                  'Transportation',
+                  'Health & Medical',
+                  'Entertainment',
+                  'Education',
+                  'Housing',
+                  'Insurance',
+                  'Bank Charges',
+                  'Transfer',
+                  'Uncategorized',
+                ].map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
                 </option>
@@ -189,6 +213,59 @@ export default function SettingsPage() {
             Default rules cannot be deleted. Custom rules
             override them.
           </p>
+        </div>
+
+        {/* AI Settings */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border">
+          <h2 className="text-lg font-semibold mb-4">
+            AI Categorization
+          </h2>
+
+          <p className="text-sm text-gray-500 mb-4">
+            Transactions categorized as &quot;Uncategorized&quot; can be
+            auto-categorized using DeepSeek AI.
+          </p>
+
+          <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+            API key is set via <code className="bg-gray-200 px-1 rounded">DEEPSEEK_API_KEY</code> in your <code className="bg-gray-200 px-1 rounded">.env</code> file.
+            Currently {aiConfigured ? 'configured' : 'not configured'}.
+          </p>
+        </div>
+
+        {/* Chat AI Settings */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border">
+          <h2 className="text-lg font-semibold mb-4">
+            AI Chat Assistant
+          </h2>
+
+          <p className="text-sm text-gray-500 mb-4">
+            Chat with an AI assistant about your transactions. Uses your own DeepSeek API key.
+          </p>
+
+          <div className="flex items-end gap-3">
+            <div className="flex-1">
+              <label className="block text-xs text-gray-500 mb-1">
+                DeepSeek API Key
+              </label>
+              <input
+                type="password"
+                value={chatApiKey}
+                onChange={(e) => {
+                  setChatApiKey(e.target.value)
+                  setChatKeySaved(false)
+                }}
+                placeholder="sk-..."
+                className="w-full border p-2 rounded-lg text-sm"
+              />
+            </div>
+
+            <button
+              onClick={handleSaveChatKey}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
+            >
+              {chatKeySaved ? 'Saved' : 'Save'}
+            </button>
+          </div>
         </div>
 
         <div className="bg-white p-6 rounded-2xl shadow-sm border">

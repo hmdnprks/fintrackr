@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google"
 import "./globals.css"
 import Link from "next/link"
 import { VaultProvider } from '@/context/VaultContext'
+import ChatBubble from '@/components/ChatBubble'
 import Image from "next/image"
 // app/layout.tsx
 
@@ -67,6 +68,8 @@ export default function RootLayout({
               {children}
             </VaultProvider>
           </div>
+
+          <ChatBubble />
 
         </div>
       </body>
