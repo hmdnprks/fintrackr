@@ -30,7 +30,7 @@ Rules:
 - "Education": courses, books, training (Udemy, Coursera, buku)
 - "Insurance": insurance premiums (Asuransi, Premi)
 - "Bank Charges": admin fees, ATM fees, penalties (Biaya Adm, Biaya Transfer, Denda)
-- "Transfer": transfers between accounts or e-wallets (GoPay, OVO, DANA, ShopeePay, LinkAja)
+- "Transfer": transfers between accounts, e-wallets, and credit card bill payments (GoPay, OVO, DANA, ShopeePay, LinkAja, KARTU KREDIT, Bayar CC — credit card payments are NOT expenses, they settle a liability)
 - "Uncategorized": only if truly unable to determine
 
 Indonesian context: descriptions mix Indonesian and English. QRIS is a QR payment method — use surrounding context to determine the category.

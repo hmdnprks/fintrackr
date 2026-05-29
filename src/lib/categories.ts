@@ -115,6 +115,12 @@ export const defaultRules: CategoryRule[] = [
   { id: '103', keyword: 'ShopeePay',  category: 'Transfer' },
   { id: '104', keyword: 'LinkAja',    category: 'Transfer' },
 
+  // Credit card payments (transfer, not an expense)
+  { id: '120', keyword: 'KARTU KREDIT',  category: 'Transfer' },
+  { id: '121', keyword: 'Bayar CC',      category: 'Transfer' },
+  { id: '122', keyword: 'BAYAR CC',      category: 'Transfer' },
+  { id: '123', keyword: 'CC MANDIRI',    category: 'Transfer' },
+
   // Bank Charges
   { id: '9',   keyword: 'Biaya Adm',  category: 'Bank Charges' },
   { id: '110', keyword: 'Biaya Transfer', category: 'Bank Charges' },
