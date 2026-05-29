@@ -243,3 +243,64 @@ export async function generateInsights(
   const json = await res.json()
   return json.choices?.[0]?.message?.content || ''
 }
+
+// ─── Budget Suggestions ───────────────────────────────────────────────────────
+
+export type BudgetSuggestion = {
+  category: string
+  suggested: number
+  reason: string
+}
+
+const BUDGET_PROMPT = `You are a personal finance advisor for an Indonesian user (currency: IDR).
+Based on the average monthly spending history below, suggest a realistic monthly budget limit for each category.
+
+Rules:
+- For necessities (Housing, Transportation, Groceries, Health & Medical): suggest 5–10% above the average
+- For discretionary spending (Shopping, Entertainment, Food & Dining): suggest at the average or slightly below if high
+- For variable essentials (Services, Education, Insurance): match the average
+- Round all amounts to the nearest 25,000 IDR
+- Skip any category with average below 50,000 IDR
+- One concise reason per category (max 10 words), referencing the actual average
+
+Respond with ONLY a JSON array — no markdown, no explanation:
+[{"category":"Food & Dining","suggested":1500000,"reason":"10% buffer above your Rp 1.3M average"}]`
+
+export async function generateBudgetSuggestions(
+  averages: { category: string; average: number; months: number }[],
+  apiKey: string,
+  model = 'deepseek-chat'
+): Promise<BudgetSuggestion[]> {
+  const messages: DeepSeekMessage[] = [
+    { role: 'system', content: BUDGET_PROMPT },
+    { role: 'user',   content: JSON.stringify(
+      averages.map((a) => ({
+        category: a.category,
+        averageMonthly: formatIDRShort(a.average),
+        monthsOfData: a.months,
+      }))
+    )},
+  ]
+
+  const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({ model, messages, temperature: 0.1, max_tokens: 1024 }),
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`DeepSeek API error: ${res.status} - ${err}`)
+  }
+
+  const json   = await res.json()
+  let content: string = json.choices?.[0]?.message?.content || ''
+  content = content.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```\s*$/g, '').trim()
+
+  const parsed = JSON.parse(content)
+  if (!Array.isArray(parsed)) throw new Error('Expected JSON array from budget suggestions')
+
+  return parsed.filter(
+    (s: any) => s.category && typeof s.suggested === 'number' && s.suggested > 0
+  )
+}

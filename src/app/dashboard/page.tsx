@@ -235,6 +235,8 @@ export default function Dashboard() {
               <BudgetSection
                 budgets={budgets}
                 spending={currentMonthSpending}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                statements={statements as any[]}
                 onBudgetChange={() => setBudgets(getBudgets())}
               />
 
