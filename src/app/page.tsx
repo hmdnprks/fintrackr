@@ -8,20 +8,20 @@ import { saveStatement, getSavedStatements } from '@/lib/storage'
 import VaultGate from '@/components/VaultGate'
 
 const CATEGORY_COLOR: Record<string, string> = {
-  'Income':           '#22c55e',
-  'Food & Dining':    '#f97316',
-  'Groceries':        '#84cc16',
-  'Shopping':         '#ec4899',
-  'Services':         '#3b82f6',
-  'Transportation':   '#0ea5e9',
+  'Income': '#22c55e',
+  'Food & Dining': '#f97316',
+  'Groceries': '#84cc16',
+  'Shopping': '#ec4899',
+  'Services': '#3b82f6',
+  'Transportation': '#0ea5e9',
   'Health & Medical': '#ef4444',
-  'Entertainment':    '#a855f7',
-  'Education':        '#6366f1',
-  'Housing':          '#f59e0b',
-  'Insurance':        '#14b8a6',
-  'Bank Charges':     '#6b7280',
-  'Transfer':         '#94a3b8',
-  'Uncategorized':    '#fbbf24',
+  'Entertainment': '#a855f7',
+  'Education': '#6366f1',
+  'Housing': '#f59e0b',
+  'Insurance': '#14b8a6',
+  'Bank Charges': '#6b7280',
+  'Transfer': '#94a3b8',
+  'Uncategorized': '#fbbf24',
 }
 
 function extractMonthKey(period: string): string | null {
@@ -37,14 +37,15 @@ function formatFileSize(bytes: number): string {
 }
 
 export default function Home() {
-  const [file, setFile]           = useState<File | null>(null)
+  const [file, setFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
-  const [password, setPassword]   = useState('')
-  const [result, setResult]       = useState<any>(null)
-  const [loading, setLoading]     = useState(false)
-  const [error, setError]         = useState<string | null>(null)
-  const [saved, setSaved]         = useState(false)
+  const [password, setPassword] = useState('')
+  const [result, setResult] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
   const [showDupWarning, setShowDupWarning] = useState(false)
+  const [showGuide, setShowGuide] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // ── derived ────────────────────────────────────────────────────────────────
@@ -75,7 +76,7 @@ export default function Home() {
         map[cat] = (map[cat] ?? 0) + (t.amount ?? 0)
       })
     const sorted = Object.entries(map).sort((a, b) => b[1] - a[1])
-    const total  = sorted.reduce((s, [, v]) => s + v, 0)
+    const total = sorted.reduce((s, [, v]) => s + v, 0)
     return sorted.map(([cat, amt]) => ({
       cat, amt,
       pct: total > 0 ? (amt / total) * 100 : 0,
@@ -84,11 +85,11 @@ export default function Home() {
 
   const parsedPeriod = result?.accountSummary?.period
     ? (() => {
-        const mk = extractMonthKey(result.accountSummary.period)
-        if (!mk) return null
-        const [y, m] = mk.split('-').map(Number)
-        return new Date(y, m - 1).toLocaleString('en-US', { month: 'long', year: 'numeric' })
-      })()
+      const mk = extractMonthKey(result.accountSummary.period)
+      if (!mk) return null
+      const [y, m] = mk.split('-').map(Number)
+      return new Date(y, m - 1).toLocaleString('en-US', { month: 'long', year: 'numeric' })
+    })()
     : null
 
   // ── file handling ─────────────────────────────────────────────────────────
@@ -132,7 +133,7 @@ export default function Home() {
     formData.append('password', password)
 
     try {
-      const res  = await fetch('/api/parse-pdf', { method: 'POST', body: formData })
+      const res = await fetch('/api/parse-pdf', { method: 'POST', body: formData })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Something went wrong')
       setResult(data)
@@ -186,6 +187,84 @@ export default function Home() {
             </Link>
           </div>
 
+          {/* How to get your statement */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <button
+              onClick={() => setShowGuide((v) => !v)}
+              className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
+                  <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">Where do I get my Mandiri statement?</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Mandiri sends monthly e-statements to your email</p>
+                </div>
+              </div>
+              <svg
+                className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${showGuide ? 'rotate-180' : ''}`}
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+
+            {showGuide && (
+              <div className="border-t border-gray-100 px-5 py-5 space-y-4">
+                <ol className="space-y-3">
+                  {[
+                    {
+                      step: '1',
+                      title: 'Check your email inbox',
+                      desc: 'Mandiri automatically sends a monthly e-statement to your registered email address, usually in the first few days of the next month.',
+                    },
+                    {
+                      step: '2',
+                      title: 'Search for the email',
+                      desc: 'Search your inbox for "Consolidated Statement Bank Mandiri". The subject line looks like: "[WARNING: MESSAGE ENCRYPTED] Consolidated Statement Bank Mandiri". Check your spam/junk folder if you don\'t see it.',
+                    },
+                    {
+                      step: '3',
+                      title: 'Download the PDF attachment',
+                      desc: 'The email has a PDF attachment named "ConsolidatedStatement_Apr_2026.pdf" (month and year will vary). Download it to your device.',
+                    },
+                    {
+                      step: '4',
+                      title: 'Upload it here',
+                      desc: 'Drag and drop (or click) the PDF into the upload area below.',
+                    },
+                  ].map(({ step, title, desc }) => (
+                    <li key={step} className="flex items-start gap-3">
+                      <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                        {step}
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">{title}</p>
+                        <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{desc}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+
+                <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 flex items-start gap-2">
+                  <svg className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                  </svg>
+                  <div className="text-xs text-amber-800">
+                    <span className="font-semibold">PDF password tip:</span> Mandiri e-statement PDFs are usually password-protected with your <span className="font-semibold">date of birth in DDMMYYYY format</span> (e.g. if born 15 March 1995, try <code className="bg-amber-100 px-1 rounded">15031995</code>). Some accounts use the last 4 digits of your account number instead.
+                  </div>
+                </div>
+
+                <p className="text-xs text-gray-400">
+                  Don&apos;t receive e-statements? Log in to <span className="font-medium">Livin&apos; by Mandiri</span> app → Account → Statement, or visit your nearest Mandiri branch to enable e-statement delivery.
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Privacy notice */}
           <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4">
             <svg className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -208,13 +287,12 @@ export default function Home() {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onClick={() => !file && fileInputRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl transition cursor-pointer ${
-                isDragging
+              className={`border-2 border-dashed rounded-xl transition cursor-pointer ${isDragging
                   ? 'border-blue-400 bg-blue-50'
                   : file
-                  ? 'border-green-300 bg-green-50 cursor-default'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-              }`}
+                    ? 'border-green-300 bg-green-50 cursor-default'
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                }`}
             >
               <input
                 ref={fileInputRef}
@@ -257,7 +335,10 @@ export default function Home() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">PDF Password</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-sm font-medium text-gray-700">PDF Password</label>
+                <span className="text-xs text-gray-400">Usually your date of birth — <span className="font-medium">DDMMYYYY</span></span>
+              </div>
               <input
                 type="password"
                 placeholder="Leave blank if no password"
@@ -384,10 +465,10 @@ export default function Home() {
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Account Summary</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   {[
-                    { label: 'Account',  value: result.accountSummary.accountNumber },
-                    { label: 'Product',  value: result.accountSummary.productName },
-                    { label: 'Period',   value: result.accountSummary.period },
-                    { label: 'Balance',  value: formatIDR(result.accountSummary.balance), highlight: true },
+                    { label: 'Account', value: result.accountSummary.accountNumber },
+                    { label: 'Product', value: result.accountSummary.productName },
+                    { label: 'Period', value: result.accountSummary.period },
+                    { label: 'Balance', value: formatIDR(result.accountSummary.balance), highlight: true },
                   ].map(({ label, value, highlight }) => (
                     <div key={label}>
                       <p className="text-xs text-gray-400 mb-0.5">{label}</p>
@@ -401,17 +482,16 @@ export default function Home() {
               <div className="bg-white rounded-2xl shadow-sm px-6 py-5">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-semibold text-gray-900">Income vs Expense</h2>
-                  <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
-                    net >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
-                  }`}>
+                  <span className={`text-sm font-semibold px-3 py-1 rounded-full ${net >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+                    }`}>
                     {net >= 0 ? `Saved ${savingsRate}%` : `Over by ${Math.abs(savingsRate)}%`}
                   </span>
                 </div>
                 <div className="space-y-3">
                   {[
-                    { label: 'Income',  value: totalIncome,  color: 'bg-green-500',  textColor: 'text-gray-800' },
-                    { label: 'Expense', value: totalExpense, color: 'bg-red-400',    textColor: 'text-gray-800' },
-                    { label: 'Net',     value: Math.abs(net), color: net >= 0 ? 'bg-blue-400' : 'bg-red-500', textColor: net >= 0 ? 'text-gray-800' : 'text-red-500' },
+                    { label: 'Income', value: totalIncome, color: 'bg-green-500', textColor: 'text-gray-800' },
+                    { label: 'Expense', value: totalExpense, color: 'bg-red-400', textColor: 'text-gray-800' },
+                    { label: 'Net', value: Math.abs(net), color: net >= 0 ? 'bg-blue-400' : 'bg-red-500', textColor: net >= 0 ? 'text-gray-800' : 'text-red-500' },
                   ].map(({ label, value, color, textColor }) => (
                     <div key={label} className="flex items-center gap-3">
                       <span className="text-xs text-gray-500 w-14 shrink-0">{label}</span>
