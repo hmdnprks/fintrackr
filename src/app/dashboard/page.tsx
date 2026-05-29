@@ -14,6 +14,7 @@ import AIModal from '@/components/ui/AIModal'
 import AddTransactionModal from '@/components/dashboard/AddTransactionModal'
 import BudgetSection from '@/components/dashboard/BudgetSection'
 import GoalSection from '@/components/dashboard/GoalSection'
+import AssetsTab from '@/components/dashboard/AssetsTab'
 
 import { useStatements } from '@/hooks/useStatements'
 import { useDashboardData } from '@/hooks/useDashboardData'
@@ -26,12 +27,13 @@ import MonthComparisonSection from '@/components/dashboard/MonthComparisonSectio
 import CalendarSection from '@/components/dashboard/CalendarSection'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 
-type Tab = 'overview' | 'budget' | 'transactions'
+type Tab = 'overview' | 'budget' | 'transactions' | 'assets'
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'budget', label: 'Budget' },
-  { id: 'transactions', label: 'Transactions' },
+  { id: 'overview',     label: 'Overview'      },
+  { id: 'budget',       label: 'Budget'        },
+  { id: 'transactions', label: 'Transactions'  },
+  { id: 'assets',       label: 'Assets'        },
 ]
 
 export default function Dashboard() {
@@ -277,6 +279,12 @@ export default function Dashboard() {
               onAICategorize={categorizeAll}
               isAICategorizing={isCategorizing}
             />
+          )}
+
+          {/* Assets tab */}
+          {activeTab === 'assets' && (
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            <AssetsTab statements={statements as any[]} />
           )}
 
         </div>
