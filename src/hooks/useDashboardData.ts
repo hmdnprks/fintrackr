@@ -64,7 +64,9 @@ export function useDashboardData(statements: any[], selectedYear: string, select
       { label: string; income: number; expense: number }
     > = {}
 
-    statements.forEach((s) => {
+    // Use year-filtered statements so the trend respects the year selector,
+    // but intentionally ignore the month filter (a trend of one month is useless)
+    yearFilteredStatements.forEach((s) => {
       if (!map[s.monthKey]) {
         map[s.monthKey] = {
           label: s.monthLabel,
@@ -100,7 +102,7 @@ export function useDashboardData(statements: any[], selectedYear: string, select
         },
       ],
     }
-  }, [statements])
+  }, [yearFilteredStatements])
 
   /**
    * Recurring Detection
