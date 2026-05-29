@@ -122,7 +122,7 @@ export default function CalendarSection({ allTransactions, selectedMonth }: Prop
         {/* Day cells */}
         <div className="grid grid-cols-7 gap-1.5">
           {cells.map((day, i) => {
-            if (!day) return <div key={`empty-${i}`} className="aspect-square" />
+            if (!day) return <div key={`empty-${i}`} className="h-14" />
 
             const data     = byDay[day]
             const spending = data?.spending || 0
@@ -141,7 +141,7 @@ export default function CalendarSection({ allTransactions, selectedMonth }: Prop
                 onClick={() => setSelectedDay(isSelected ? null : day)}
                 title={spending > 0 ? formatIDR(spending) : undefined}
                 className={`
-                  aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5
+                  h-14 rounded-xl flex flex-col items-center justify-center gap-0.5
                   relative transition-all duration-150 border-2
                   ${isSelected
                     ? 'border-blue-500 scale-105 shadow-md'
