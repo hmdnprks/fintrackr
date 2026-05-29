@@ -16,7 +16,11 @@
 
 - **Rule-based** — keyword matching against configurable rules (user rules override system defaults)
 - **50+ Indonesian default rules** covering: Alfamart/Indomaret/Superindo (Groceries), Gojek/Grab/Pertamina/KAI (Transportation), PLN/PDAM/Indihome (Housing), Shopee/Lazada/Blibli (Shopping), Telkomsel/Indosat/XL (Services), Netflix/Spotify/Steam (Entertainment), GoPay/OVO/DANA/ShopeePay (Transfer), Apotek/Halodoc/Klinik (Health), and more
-- **AI-powered** — DeepSeek API batch-categorizes uncategorized transactions with Indonesian-context prompt; sequential batching with exponential backoff on rate limits
+- **AI-powered** — DeepSeek API categorizes uncategorized transactions with Indonesian-context prompt; three-phase smart pipeline:
+  1. **Learned rules** — builds a map of normalized descriptions from already-categorized transactions; same merchant across different branch codes or reference numbers reuses the known category with zero API calls
+  2. **Deduplication** — groups remaining transactions by normalized description (numbers/punctuation stripped); only unique merchant names are sent to AI — 2,000 transactions with 20 unique merchants become 20 API rows, not 2,000; AI result is applied back to all matching transactions
+  3. **AI fallback** — novel descriptions that passed both prior phases are batch-sent to DeepSeek with exponential backoff on rate limits
+- Live status text during processing shows each phase; result modal breaks down counts: "X from learned rules · Y via AI"
 - **Manual override** — click any category badge in the transaction table to reassign inline
 - **Recurring batch** — detect repeating uncategorized transactions and assign category to all occurrences at once
 - 14 categories: Income, Food & Dining, Groceries, Shopping, Services, Transportation, Health & Medical, Entertainment, Education, Housing, Insurance, Bank Charges, Transfer, Uncategorized
