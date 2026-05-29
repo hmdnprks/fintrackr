@@ -28,7 +28,6 @@ export const defaultRules: CategoryRule[] = [
   { id: '7', keyword: 'Warung', category: 'Food & Dining' },
   { id: '8', keyword: 'Tokopedia', category: 'Shopping' },
   { id: '9', keyword: 'Biaya Adm', category: 'Bank Charges' },
-  { id: '10', keyword: 'Fee', category: 'Bank Charges' },
 ]
 
 export function getUserRules(): CategoryRule[] {
