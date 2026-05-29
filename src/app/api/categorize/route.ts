@@ -15,6 +15,18 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // budget-suggestions uses averages, not transactions — handle before the transactions guard
+    if (type === 'budget-suggestions') {
+      if (!averages || !Array.isArray(averages) || averages.length === 0) {
+        return NextResponse.json(
+          { success: false, error: 'No spending history available to generate suggestions.' },
+          { status: 400 }
+        )
+      }
+      const suggestions = await generateBudgetSuggestions(averages, apiKey)
+      return NextResponse.json({ success: true, suggestions })
+    }
+
     if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
       return NextResponse.json(
         { success: false, error: 'No transactions provided' },
@@ -25,11 +37,6 @@ export async function POST(req: NextRequest) {
     if (type === 'insights') {
       const insights = await generateInsights(transactions, apiKey, 'deepseek-chat', period)
       return NextResponse.json({ success: true, insights })
-    }
-
-    if (type === 'budget-suggestions') {
-      const suggestions = await generateBudgetSuggestions(averages, apiKey)
-      return NextResponse.json({ success: true, suggestions })
     }
 
     const categories = await categorizeWithAI(transactions, apiKey)
