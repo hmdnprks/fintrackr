@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import { useState } from 'react'
@@ -9,6 +10,8 @@ import {
   saveUserRules,
   deleteUserRule,
 } from '@/lib/categories'
+import { changeMasterPassword } from '@/lib/storage/secureStorage'
+import PasswordStrength from '@/components/PasswordStrength'
 
 export default function SettingsPage() {
   const [userRules, setUserRules] = useState<CategoryRule[]>(() => {
@@ -17,6 +20,11 @@ export default function SettingsPage() {
   })
   const [keyword, setKeyword] = useState('')
   const [category, setCategory] = useState<Category>('Uncategorized')
+
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [message, setMessage] = useState('')
+
 
 
   function handleAddRule() {
@@ -40,6 +48,22 @@ export default function SettingsPage() {
     deleteUserRule(id)
     setUserRules(getUserRules())
   }
+
+  async function handleChangePassword() {
+    try {
+      await changeMasterPassword(
+        currentPassword,
+        newPassword
+      )
+
+      setMessage('Password updated successfully.')
+      setCurrentPassword('')
+      setNewPassword('')
+    } catch (e: any) {
+      setMessage(e.message)
+    }
+  }
+
 
   return (
     <main className="min-h-screen bg-gray-50 py-10 px-6">
@@ -166,6 +190,45 @@ export default function SettingsPage() {
             override them.
           </p>
         </div>
+
+        <div className="bg-white p-6 rounded-2xl shadow-sm border">
+          <h2 className="text-lg font-semibold mb-4">
+            Change Master Password
+          </h2>
+
+          <div className="space-y-4">
+
+            <input
+              type="password"
+              placeholder="Current Password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full border p-2 rounded-lg text-sm"
+            />
+
+            <input
+              type="password"
+              placeholder="New Password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full border p-2 rounded-lg text-sm"
+            />
+
+            <PasswordStrength password={newPassword} />
+
+            <button
+              onClick={handleChangePassword}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
+            >
+              Update Password
+            </button>
+
+            {message && (
+              <p className="text-sm text-gray-600">{message}</p>
+            )}
+          </div>
+        </div>
+
 
       </div>
     </main>
