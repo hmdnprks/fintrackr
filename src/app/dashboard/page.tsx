@@ -65,6 +65,7 @@ export default function Dashboard() {
 
   const {
     isCategorizing,
+    categorizingStatus,
     isGeneratingInsights,
     error,
     insights,
@@ -164,6 +165,7 @@ export default function Dashboard() {
           <AIModal
             isOpen={isCategorizing || !!categorizedResult || !!error}
             isProcessing={isCategorizing}
+            processingStatus={categorizingStatus}
             error={error}
             result={categorizedResult}
             onClose={() => {

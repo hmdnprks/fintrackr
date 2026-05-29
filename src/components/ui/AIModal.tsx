@@ -1,9 +1,12 @@
 interface Props {
   isOpen: boolean
   isProcessing: boolean
+  processingStatus?: string | null
   error: string | null
   result: {
     total: number
+    learnedCount: number
+    aiCount: number
     success: number
     remaining: { detail: string; amount: number }[]
   } | null
@@ -13,6 +16,7 @@ interface Props {
 export default function AIModal({
   isOpen,
   isProcessing,
+  processingStatus,
   error,
   result,
   onClose,
@@ -33,8 +37,8 @@ export default function AIModal({
             <h3 className="text-lg font-semibold text-gray-800">
               Categorizing Transactions
             </h3>
-            <p className="text-sm text-gray-500 mt-2">
-              Sending your uncategorized transactions to DeepSeek AI...
+            <p className="text-sm text-gray-500 mt-2 min-h-[20px]">
+              {processingStatus ?? 'Processing…'}
             </p>
           </div>
         )}
@@ -61,9 +65,29 @@ export default function AIModal({
                 Categorization Complete
               </h3>
               <p className="text-sm text-gray-500 mt-2">
-                {result.success} of {result.total} transactions
-                categorized successfully.
+                {result.success.toLocaleString('id-ID')} of {result.total.toLocaleString('id-ID')} transactions categorized.
               </p>
+              {(result.learnedCount > 0 || result.aiCount > 0) && (
+                <div className="flex items-center justify-center gap-3 mt-3">
+                  {result.learnedCount > 0 && (
+                    <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full">
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
+                        <circle cx="12" cy="12" r="10" />
+                      </svg>
+                      {result.learnedCount.toLocaleString('id-ID')} from learned rules
+                    </span>
+                  )}
+                  {result.aiCount > 0 && (
+                    <span className="inline-flex items-center gap-1 text-xs bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full">
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                      </svg>
+                      {result.aiCount.toLocaleString('id-ID')} via AI
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {result.remaining.length > 0 && (
@@ -87,7 +111,7 @@ export default function AIModal({
                         {tx.detail}
                       </span>
                       <span className="text-gray-400 shrink-0">
-                        {tx.amount?.toLocaleString()}
+                        {tx.amount != null ? `Rp ${Math.round(tx.amount).toLocaleString('id-ID')}` : '-'}
                       </span>
                     </div>
                   ))}
