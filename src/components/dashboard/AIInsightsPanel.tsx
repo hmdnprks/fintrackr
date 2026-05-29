@@ -18,8 +18,8 @@ export default function AIInsightsPanel({ insights, isLoading, period, onGenerat
   const bullets = insights
     ? insights
         .split('\n')
-        .filter((l) => l.trim().length > 0)
-        .map((l) => l.replace(/^[-*\d.]+/, '').trim())
+        .map((l) => l.replace(/^[•\-*\d.\s]+/, '').trim())
+        .filter((l) => l.length > 0)
     : []
 
   return (

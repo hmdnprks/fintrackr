@@ -149,27 +149,41 @@ export async function categorizeWithAI(
 // ─── Insights ────────────────────────────────────────────────────────────────
 
 function formatIDRShort(amount: number): string {
+  if (!amount || isNaN(amount)) return 'Rp 0'
   if (amount >= 1_000_000) return `Rp ${(amount / 1_000_000).toFixed(1)}M`
   if (amount >= 1_000)     return `Rp ${(amount / 1_000).toFixed(0)}K`
   return `Rp ${amount}`
 }
 
+// These are financial movements, not actual spending — exclude from spending analysis
+const EXCLUDE_FROM_SPENDING = new Set(['Transfer', 'Bank Charges'])
+
 function aggregateTransactions(
   transactions: { detail: string; amount: number; type: string; category: string }[],
   period: string
 ) {
-  const income   = transactions.filter(t => t.type === 'credit').reduce((s, t) => s + t.amount, 0)
-  const expenses = transactions.filter(t => t.type === 'debit').reduce((s, t) => s + t.amount, 0)
-  const net      = income - expenses
+  const income   = transactions.filter(t => t.type === 'credit').reduce((s, t) => s + (t.amount || 0), 0)
+  const allDebit = transactions.filter(t => t.type === 'debit').reduce((s, t) => s + (t.amount || 0), 0)
 
+  // Separate real spending from transfers/bank charges
   const byCat: Record<string, { amount: number; count: number }> = {}
+  let transferTotal = 0
+
   for (const t of transactions) {
     if (t.type !== 'debit') continue
     const cat = t.category || 'Uncategorized'
+    const amt = t.amount || 0
+    if (EXCLUDE_FROM_SPENDING.has(cat)) {
+      transferTotal += amt
+      continue
+    }
     if (!byCat[cat]) byCat[cat] = { amount: 0, count: 0 }
-    byCat[cat].amount += t.amount
+    byCat[cat].amount += amt
     byCat[cat].count++
   }
+
+  const realExpenses = allDebit - transferTotal
+  const net = income - allDebit
 
   const categoryBreakdown = Object.entries(byCat)
     .sort((a, b) => b[1].amount - a[1].amount)
@@ -177,23 +191,24 @@ function aggregateTransactions(
       category: cat,
       amount: formatIDRShort(amount),
       count,
-      pct: expenses > 0 ? Math.round((amount / expenses) * 100) : 0,
+      pct: realExpenses > 0 ? Math.round((amount / realExpenses) * 100) : 0,
     }))
 
   const topExpenses = [...transactions]
-    .filter(t => t.type === 'debit')
-    .sort((a, b) => b.amount - a.amount)
+    .filter(t => t.type === 'debit' && !EXCLUDE_FROM_SPENDING.has(t.category))
+    .sort((a, b) => (b.amount || 0) - (a.amount || 0))
     .slice(0, 5)
     .map(t => `${t.detail}: ${formatIDRShort(t.amount)} (${t.category})`)
 
   return {
     period,
     currency: 'IDR (Indonesian Rupiah)',
-    income:   formatIDRShort(income),
-    expenses: formatIDRShort(expenses),
-    net:      formatIDRShort(Math.abs(net)),
-    netDirection: net >= 0 ? 'saved' : 'overspent',
-    savingsRate: income > 0 ? `${Math.round(((income - expenses) / income) * 100)}%` : 'N/A',
+    income:        formatIDRShort(income),
+    realExpenses:  formatIDRShort(realExpenses),
+    transfers:     transferTotal > 0 ? formatIDRShort(transferTotal) : null,
+    net:           formatIDRShort(Math.abs(net)),
+    netDirection:  net >= 0 ? 'saved' : 'overspent',
+    savingsRate:   income > 0 ? `${Math.round(((income - allDebit) / income) * 100)}%` : 'N/A',
     transactionCount: transactions.length,
     categoryBreakdown,
     topExpenses,
@@ -203,18 +218,21 @@ function aggregateTransactions(
 const INSIGHTS_PROMPT = `You are a personal finance advisor for an Indonesian user.
 Currency is IDR (Indonesian Rupiah). Format amounts as "Rp X.XXX.XXX" when giving exact figures.
 
-Analyze the financial summary provided and respond with exactly 4 bullet points using this structure:
-• **Top spending:** [category] — [amount] ([pct]% of expenses). [one sentence observation]
-• **Watch out:** [specific concern with actual numbers from the data — overspending, large single transaction, or negative savings]
-• **Good news:** [one genuinely positive thing — if savings rate is negative, skip this and add a second concern instead]
-• **Action for next month:** [one concrete suggestion with a specific target amount based on the actual data]
+The data uses realExpenses (actual spending on goods/services) separate from transfers (credit card payments, e-wallet top-ups, bank charges). Focus your analysis on realExpenses and categoryBreakdown — not transfers.
+
+Respond with exactly 4 bullet points, each on its own line, starting with "• ":
+• **Top spending:** [category] — [amount] ([pct]% of real expenses). [one sentence observation]
+• **Watch out:** [specific concern with actual numbers — overspending category, large transaction, or negative savings rate]
+• **Good news:** [one genuinely positive thing — if savings rate is very negative, replace with a second concern]
+• **Action for next month:** [one concrete suggestion with a specific target amount from the data]
 
 Rules:
-- Use actual numbers from the data, never generic advice
-- Be direct and conversational — like a trusted friend, not a financial report
-- If the user overspent (netDirection is "overspent"), address that prominently
-- Indonesian context: account for local prices (food Rp 20K–100K, ride Rp 15K–50K, etc.)
-- Keep each bullet to 1–2 sentences maximum`
+- Base all observations on realExpenses and categoryBreakdown, not the transfers field
+- Use actual numbers, never generic advice
+- Be direct — like a trusted friend, not a financial report
+- If income is missing or zero, focus only on spending patterns
+- Indonesian context: food Rp 20K–100K/meal, ride Rp 15K–50K, groceries Rp 500K–1.5M/month
+- Each bullet: 1–2 sentences only`
 
 export async function generateInsights(
   transactions: { detail: string; amount: number; type: string; category: string }[],
