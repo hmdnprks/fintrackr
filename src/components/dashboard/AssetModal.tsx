@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Asset, AssetType, NewAsset, saveAsset, updateAsset } from '@/lib/assetStorage'
+import { BanknotesIcon, StarIcon, ArrowTrendingUpIcon, WalletIcon, ArchiveBoxIcon } from '@heroicons/react/24/outline'
 
 interface Props {
   isOpen: boolean
@@ -10,12 +11,14 @@ interface Props {
   onSaved: () => void
 }
 
-const TYPE_OPTIONS: { id: AssetType; label: string; emoji: string }[] = [
-  { id: 'savings',    label: 'Savings',    emoji: '🏦' },
-  { id: 'gold',       label: 'Gold',       emoji: '🥇' },
-  { id: 'investment', label: 'Investment', emoji: '📈' },
-  { id: 'pocket',     label: 'Pocket',     emoji: '🎯' },
-  { id: 'other',      label: 'Other',      emoji: '📦' },
+type IconComponent = React.ComponentType<{ className?: string }>
+
+const TYPE_OPTIONS: { id: AssetType; label: string; Icon: IconComponent }[] = [
+  { id: 'savings',    label: 'Savings',    Icon: BanknotesIcon      },
+  { id: 'gold',       label: 'Gold',       Icon: StarIcon           },
+  { id: 'investment', label: 'Investment', Icon: ArrowTrendingUpIcon},
+  { id: 'pocket',     label: 'Pocket',     Icon: WalletIcon         },
+  { id: 'other',      label: 'Other',      Icon: ArchiveBoxIcon     },
 ]
 
 function formatThousands(n: number): string {
@@ -190,7 +193,7 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
                       : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  {opt.emoji} {opt.label}
+                  <span className="flex items-center gap-1.5"><opt.Icon className="w-4 h-4" />{opt.label}</span>
                 </button>
               ))}
             </div>

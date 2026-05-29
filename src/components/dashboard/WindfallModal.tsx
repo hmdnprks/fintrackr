@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { Asset } from '@/lib/assetStorage'
 import { WindfallResult, WindfallContext } from '@/lib/categorizer/aiCategorizer'
+import { CheckIcon } from '@heroicons/react/24/outline'
 import { getVaultDataSync } from '@/lib/storage/secureStorage'
 
 interface Props {
@@ -330,7 +331,7 @@ export default function WindfallModal({
                               <p className="text-xs text-gray-400">{formatIDRFull(stillNeeded)} still needed</p>
                             )}
                             {gapFillPct >= 100 && (
-                              <p className="text-xs text-green-600 font-medium">gap fully covered ✓</p>
+                              <p className="inline-flex items-center gap-1 text-xs text-green-600 font-medium"><CheckIcon className="w-3.5 h-3.5" />gap fully covered</p>
                             )}
                           </div>
                         </div>

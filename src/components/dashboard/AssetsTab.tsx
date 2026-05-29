@@ -21,12 +21,20 @@ function formatIDRFull(n: number) {
   return `Rp ${Math.round(n).toLocaleString('id-ID')}`
 }
 
-const TYPE_META: Record<AssetType, { label: string; emoji: string; color: string; bg: string }> = {
-  savings:    { label: 'Savings',    emoji: '🏦', color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-100'    },
-  gold:       { label: 'Gold',       emoji: '🥇', color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-100'},
-  investment: { label: 'Investment', emoji: '📈', color: 'text-green-700',  bg: 'bg-green-50 border-green-100'  },
-  pocket:     { label: 'Pocket',     emoji: '🎯', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-100'},
-  other:      { label: 'Other',      emoji: '📦', color: 'text-gray-700',   bg: 'bg-gray-50 border-gray-200'   },
+import {
+  BanknotesIcon, StarIcon, ArrowTrendingUpIcon, WalletIcon, ArchiveBoxIcon,
+  ExclamationCircleIcon, ExclamationTriangleIcon, CheckCircleIcon, ShieldCheckIcon,
+  BriefcaseIcon, CheckIcon, LockClosedIcon,
+} from '@heroicons/react/24/outline'
+
+type IconComponent = React.ComponentType<{ className?: string }>
+
+const TYPE_META: Record<AssetType, { label: string; color: string; bg: string; Icon: IconComponent }> = {
+  savings:    { label: 'Savings',    color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-100',    Icon: BanknotesIcon       },
+  gold:       { label: 'Gold',       color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-100', Icon: StarIcon             },
+  investment: { label: 'Investment', color: 'text-green-700',  bg: 'bg-green-50 border-green-100',   Icon: ArrowTrendingUpIcon  },
+  pocket:     { label: 'Pocket',     color: 'text-purple-700', bg: 'bg-purple-50 border-purple-100', Icon: WalletIcon           },
+  other:      { label: 'Other',      color: 'text-gray-700',   bg: 'bg-gray-50 border-gray-200',     Icon: ArchiveBoxIcon       },
 }
 
 const TYPE_ORDER: AssetType[] = ['savings', 'gold', 'investment', 'pocket', 'other']
@@ -165,7 +173,7 @@ export default function AssetsTab({ statements }: Props) {
               return (
                 <div key={t}>
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="text-gray-500">{meta.emoji} {meta.label}</span>
+                    <span className="flex items-center gap-1 text-gray-500"><meta.Icon className="w-3 h-3" />{meta.label}</span>
                     <span className="text-gray-400">{formatIDR(totalByType[t])} · {Math.round(pct)}%</span>
                   </div>
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -198,7 +206,11 @@ export default function AssetsTab({ statements }: Props) {
       {/* Asset cards grouped by type */}
       {assets.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm p-8 sm:p-12 text-center">
-          <div className="text-4xl mb-3">💼</div>
+          <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gray-100 mx-auto mb-3">
+            <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
+            </svg>
+          </div>
           <h3 className="text-base font-semibold text-gray-700">No assets yet</h3>
           <p className="text-sm text-gray-400 mt-1 max-w-xs mx-auto">
             Add your savings accounts, gold, investments, and Jago pockets to see your full financial picture.
@@ -215,8 +227,8 @@ export default function AssetsTab({ statements }: Props) {
           const meta = TYPE_META[t]
           return (
             <div key={t}>
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                {meta.emoji} {meta.label}
+              <h3 className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                <meta.Icon className="w-3.5 h-3.5" />{meta.label}
               </h3>
               <div className="grid gap-3 sm:grid-cols-2">
                 {groupedAssets[t].map(asset => (
@@ -285,13 +297,13 @@ export default function AssetsTab({ statements }: Props) {
 type EFStatus = 'critical' | 'low' | 'building' | 'healthy' | 'strong'
 
 const EF_STATUS: Record<EFStatus, {
-  label: string; color: string; bg: string; border: string; bar: string; icon: string
+  label: string; color: string; bg: string; border: string; bar: string; Icon: IconComponent
 }> = {
-  critical: { label: 'Critical',  icon: '🚨', color: 'text-red-700',    bg: 'bg-red-50',    border: 'border-red-200',   bar: 'bg-red-500'    },
-  low:      { label: 'Low',       icon: '⚠️',  color: 'text-orange-700', bg: 'bg-orange-50', border: 'border-orange-200',bar: 'bg-orange-400' },
-  building: { label: 'Building',  icon: '🔨', color: 'text-amber-700',  bg: 'bg-amber-50',  border: 'border-amber-200', bar: 'bg-amber-400'  },
-  healthy:  { label: 'Healthy',   icon: '✅', color: 'text-green-700',  bg: 'bg-green-50',  border: 'border-green-200', bar: 'bg-green-500'  },
-  strong:   { label: 'Strong',    icon: '💪', color: 'text-emerald-700',bg: 'bg-emerald-50',border: 'border-emerald-200',bar: 'bg-emerald-500'},
+  critical: { label: 'Critical', Icon: ExclamationCircleIcon,   color: 'text-red-700',    bg: 'bg-red-50',    border: 'border-red-200',    bar: 'bg-red-500'    },
+  low:      { label: 'Low',      Icon: ExclamationTriangleIcon,  color: 'text-orange-700', bg: 'bg-orange-50', border: 'border-orange-200', bar: 'bg-orange-400' },
+  building: { label: 'Building', Icon: ArrowTrendingUpIcon,      color: 'text-amber-700',  bg: 'bg-amber-50',  border: 'border-amber-200',  bar: 'bg-amber-400'  },
+  healthy:  { label: 'Healthy',  Icon: CheckCircleIcon,          color: 'text-green-700',  bg: 'bg-green-50',  border: 'border-green-200',  bar: 'bg-green-500'  },
+  strong:   { label: 'Strong',   Icon: ShieldCheckIcon,          color: 'text-emerald-700',bg: 'bg-emerald-50',border: 'border-emerald-200', bar: 'bg-emerald-500'},
 }
 
 const EF_ADVICE: Record<EFStatus, string> = {
@@ -325,7 +337,7 @@ function EmergencyFundSection({
       {/* Header row */}
       <div className="flex items-start justify-between gap-4 mb-4">
         <div className="flex items-center gap-2.5">
-          <span className="text-xl">{s.icon}</span>
+          <s.Icon className={`w-5 h-5 ${s.color}`} />
           <div>
             <p className="text-sm font-semibold text-gray-900">Emergency Fund</p>
             <p className={`text-xs font-semibold ${s.color}`}>{s.label}</p>
@@ -388,7 +400,7 @@ function EmergencyFundSection({
 
 interface CardProps {
   asset: Asset
-  meta: { label: string; emoji: string; color: string; bg: string }
+  meta: { label: string; color: string; bg: string; Icon: IconComponent }
   avgMonthlyExpense: number
   onEdit: () => void
   onDelete: () => void
@@ -408,8 +420,8 @@ function AssetCard({ asset, meta, avgMonthlyExpense, onEdit, onDelete }: CardPro
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${meta.bg} ${meta.color}`}>
-              {meta.emoji} {meta.label}
+            <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border ${meta.bg} ${meta.color}`}>
+              <meta.Icon className="w-3 h-3" />{meta.label}
             </span>
             {asset.isEmergencyFund && (
               <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 border border-green-100 text-green-700">
@@ -485,7 +497,9 @@ function AssetCard({ asset, meta, avgMonthlyExpense, onEdit, onDelete }: CardPro
               ? 'bg-green-50 border-green-100 text-green-700'
               : 'bg-gray-50 border-gray-200 text-gray-500'
           }`}>
-            {asset.contributable !== false ? '✓ Can top up' : '🔒 Auto-managed'}
+            {asset.contributable !== false
+              ? <><CheckIcon className="w-3 h-3" /> Can top up</>
+              : <><LockClosedIcon className="w-3 h-3" /> Auto-managed</>}
           </span>
         )}
 
