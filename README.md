@@ -1,36 +1,37 @@
 # Fintrackr
 
-Personal finance tracker for Indonesian bank statements. Import Mandiri PDFs, categorize transactions automatically, track budgets and goals, and get AI-powered spending insights — all stored locally in your browser.
+Personal finance tracker for Indonesian bank statements. Import Mandiri PDFs, categorize transactions automatically, track budgets and goals, visualize daily spending on a heat map calendar, and get AI-powered insights — all stored locally in your browser.
 
 Built with [Next.js](https://nextjs.org) (App Router), React 19, TypeScript, Tailwind CSS v4, Chart.js.
 
 ## Features
 
-- **PDF Import** — Parse Mandiri bank statement PDFs (password-protected), auto-extract transactions
-- **Categorization** — Rule-based + AI-powered (DeepSeek) + manual inline override
-- **Dashboard tabs** — Overview (charts, AI insights, month comparison) · Budget (limits, goals) · Transactions (search, filter, recategorize)
+- **PDF Import** — Parse Mandiri bank statement PDFs; built-in guide for finding the e-statement email and PDF password
+- **Categorization** — 50+ Indonesian default rules + AI-powered (DeepSeek) + manual inline override
+- **Dashboard tabs** — Overview (charts, calendar, AI insights, month comparison) · Budget (limits, goals) · Transactions (search, filter, sort, recategorize)
+- **Daily calendar** — Heat map calendar showing spending intensity per day; click any day to see its transactions
 - **Manual transactions** — Add expenses/income manually without a PDF
 - **Budget tracking** — Monthly spend limits per category with progress bars and warnings
 - **Financial goals** — Savings targets (amount + deadline) and spending habit goals (consecutive months under limit)
 - **Month comparison** — Delta badges on summary cards + per-category breakdown vs prior month
-- **Data backup** — Export/import full JSON backup with merge or replace restore modes
+- **Data backup** — Export/import full JSON backup (merge or replace); includes goals; v1 backups supported
 - **CSV export** — Download filtered transactions as CSV
-- **Secure vault** — AES-GCM encryption, PBKDF2 key derivation, all data stays in your browser
+- **Secure vault** — AES-GCM encryption, PBKDF2 key derivation, confirm-on-create, all data local
 - **Privacy-first** — No server, no database, no tracking; AI features are explicitly opt-in
 
 See [`docs/features.md`](docs/features.md) for the full feature reference.
 
 ## Tech Stack
 
-| Layer        | Technology                      |
-|-------------|----------------------------------|
-| Framework   | Next.js 16 (App Router)          |
-| UI          | React 19, Tailwind CSS v4        |
-| Charts      | Chart.js 4, react-chartjs-2      |
-| AI          | DeepSeek API (optional)          |
-| PDF Parsing | pdfreader                        |
-| Security    | Web Crypto API (AES-GCM, PBKDF2) |
-| Storage     | Browser IndexedDB (AES-GCM encrypted unified vault) |
+| Layer        | Technology                        |
+|-------------|-----------------------------------|
+| Framework   | Next.js 16 (App Router)           |
+| UI          | React 19, Tailwind CSS v4         |
+| Charts      | Chart.js 4, react-chartjs-2       |
+| AI          | DeepSeek API (optional)           |
+| PDF Parsing | pdfreader                         |
+| Security    | Web Crypto API (AES-GCM, PBKDF2)  |
+| Storage     | Browser localStorage (encrypted)  |
 
 ## Getting Started
 
@@ -43,13 +44,13 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ### AI features (optional)
 
-Add your DeepSeek API key to `.env`:
+AI categorization and insights require a DeepSeek API key. Add it in **Settings → AI Features**, or set it server-side in `.env`:
 
 ```
 DEEPSEEK_API_KEY=sk-...
 ```
 
-AI categorization and insights work without this key if you enter it manually in Settings.
+The env var takes priority. If not set, the key entered in Settings is used.
 
 ## Scripts
 
@@ -65,18 +66,25 @@ AI categorization and insights work without this key if you enter it manually in
 ```
 src/
 ├── app/
-│   ├── page.tsx              # Import page (PDF upload)
+│   ├── page.tsx              # Import page (PDF upload + statement guide)
 │   ├── dashboard/            # Main dashboard (tabs)
 │   ├── settings/             # Settings page
 │   └── api/
 │       ├── parse-pdf/        # PDF parsing endpoint
-│       └── categorize/       # AI categorization endpoint
+│       └── categorize/       # AI categorization & insights endpoint
 ├── components/
 │   ├── charts/               # Chart.js wrappers
 │   ├── dashboard/            # Dashboard sections & modals
-│   ├── settings/             # Settings components
+│   │   ├── CalendarSection.tsx       # Daily heat map calendar
+│   │   ├── GoalSection.tsx           # Financial goals
+│   │   ├── MonthComparisonSection.tsx
+│   │   ├── BudgetSection.tsx
+│   │   ├── TransactionSection.tsx
+│   │   ├── AIInsightsPanel.tsx
+│   │   └── ...
+│   ├── settings/             # Settings components (BackupSection)
 │   ├── ui/                   # Shared UI primitives
-│   └── VaultGate.tsx         # Auth gate
+│   └── VaultGate.tsx         # Auth gate with confirm-password on create
 ├── context/
 │   └── VaultContext.tsx      # Vault state & encryption
 ├── hooks/
@@ -85,13 +93,13 @@ src/
 │   ├── useAICategorization.ts
 │   └── useMonthComparison.ts # Month-over-month deltas
 └── lib/
-    ├── backup.ts             # Export/import backup
+    ├── backup.ts             # Export/import backup (v2, includes goals)
     ├── budgetStorage.ts      # Budget CRUD
-    ├── categories.ts         # Category types & rules
+    ├── categories.ts         # Category types & 50+ Indonesian rules
     ├── goalStorage.ts        # Goals CRUD
     ├── manualStorage.ts      # Manual transactions CRUD
     ├── csvExport.ts          # CSV download
-    ├── formatter.ts          # IDR formatting, date parsing
+    ├── formatter.ts          # IDR formatting, NaN guard
     ├── finance.ts            # Transaction aggregation
     ├── categorizer/          # Rule-based + AI categorizers
     ├── insights/             # Recurring detection

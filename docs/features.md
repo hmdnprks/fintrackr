@@ -3,15 +3,19 @@
 ## Import
 
 - Upload Mandiri bank statement PDFs (password-protected supported)
+- Collapsible guide: how to find the e-statement email, correct subject line (`[WARNING: MESSAGE ENCRYPTED] Consolidated Statement Bank Mandiri - Apr 2026`), filename format (`ConsolidatedStatement_Apr_2026.pdf`), and default PDF password hint (date of birth, DDMMYYYY)
+- Password field shows inline hint "Usually your date of birth — DDMMYYYY"
 - Auto-extract account summary: account number, product name, branch, period, balance
-- Auto-extract full transaction list with dates, references, descriptions, amounts
-- Preview parsed results (income/expense summary, category breakdown, transaction table) before saving
-- Save statement to encrypted local storage
+- Auto-extract full transaction list with dates, descriptions, amounts, auto-categorization
+- Preview parsed results (income/expense CSS bars, ranked category breakdown, full transaction table) before saving
+- Duplicate period detection — warns before saving a month already in the vault
+- Save statement to encrypted local vault
 
 ## Transaction Categorization
 
 - **Rule-based** — keyword matching against configurable rules (user rules override system defaults)
-- **AI-powered** — DeepSeek API batch-categorizes all uncategorized transactions
+- **50+ Indonesian default rules** covering: Alfamart/Indomaret/Superindo (Groceries), Gojek/Grab/Pertamina/KAI (Transportation), PLN/PDAM/Indihome (Housing), Shopee/Lazada/Blibli (Shopping), Telkomsel/Indosat/XL (Services), Netflix/Spotify/Steam (Entertainment), GoPay/OVO/DANA/ShopeePay (Transfer), Apotek/Halodoc/Klinik (Health), and more
+- **AI-powered** — DeepSeek API batch-categorizes uncategorized transactions with Indonesian-context prompt; sequential batching with exponential backoff on rate limits
 - **Manual override** — click any category badge in the transaction table to reassign inline
 - **Recurring batch** — detect repeating uncategorized transactions and assign category to all occurrences at once
 - 14 categories: Income, Food & Dining, Groceries, Shopping, Services, Transportation, Health & Medical, Entertainment, Education, Housing, Insurance, Bank Charges, Transfer, Uncategorized
@@ -21,29 +25,32 @@
 Three-tab layout with shared year/month filter:
 
 ### Overview tab
-- Summary cards — total income, expense, net with month-over-month delta badges (↑/↓ % vs last month)
-- Income vs Expense bar chart
-- Monthly trend line chart (all available months)
-- AI Insights — generates natural language spending analysis via DeepSeek (top categories, patterns, suggestions)
-- Month comparison section — per-category breakdown of biggest spending movers vs prior month, with dual progress bars and delta badges; highlights increases ≥30% in amber
+- Summary cards — total income, expense, net with month-over-month delta badges (↑/↓ % vs last month); net card turns red when negative
+- Income vs Expense — CSS progress bars showing income, expense, and net with savings rate badge (e.g. "Saved 25%")
+- Monthly trend line chart — IDR-abbreviated Y-axis (1.5M/500K), smooth curves, green/red dataset colors, filled area; guards for single or zero data points
+- **Daily spending calendar** — heat map grid (Mon–Sun) when a specific month is selected; cells colored white→amber→red by daily spend; shows abbreviated amount per day; income dot, today indicator, click to expand full transaction list for that day
+- AI Insights — persistent card with Generate/Regenerate/Clear; sends pre-aggregated category summary + period label (not raw rows) to DeepSeek; structured 4-bullet output: top spending, concern, positive, action
+- Month comparison section — per-category breakdown vs prior month; expense categories only; sorted by biggest % change; dual bars (prev/current); amber highlight for increases ≥30%
 
 ### Budget tab
 - Monthly budget tracker — set spending limits per category, progress bars with green/amber/red thresholds (80% warning, 100% over)
 - Budget input uses IDR thousand-separator formatting (e.g. 1.500.000)
 - Add/edit via modal showing current month's actual spending as context
 - Budgets always compare against current calendar month, regardless of dashboard filter
-- **Goals** — savings goals and spending habit goals (see Goals section)
-- Category breakdown chart (bar/donut toggle)
+- **Financial goals** — savings goals and spending habit goals (see Goals section)
+- Category breakdown — donut chart + ranked list showing color dot, name, proportional bar, amount, percentage; Expenses/Income toggle
 
 ### Transactions tab
-- Full transaction list with category color badges, green/red amount coloring (credit/debit)
-- Search by description, filter by category dropdown, filter by type (All / ↑ In / ↓ Out)
-- Active filters highlighted; clear button
-- Paginated (50 per page) with "Load more" — no fixed-height scroll box
-- Click any category badge to reassign inline (dropdown on click, blur to close)
+- Full transaction list with category color badges, green credit / red debit amounts
+- Sortable column headers: Date (newest first by default), Amount
+- Search by description, filter by category, filter by type (All / ↑ In / ↓ Out)
+- Subtitle shows filtered transaction count and total amount
+- Date column shows year when transactions span multiple years
+- Paginated (50 per page) with "Load more"
+- Click any category badge to reassign inline
 - Uncategorized rows highlighted with amber left border
-- Recurring uncategorized pattern panel — detect and batch-assign categories
-- AI Categorize button — sends uncategorized transaction descriptions to DeepSeek
+- Recurring uncategorized pattern panel — bulk-assign categories
+- AI Categorize button — sends descriptions to DeepSeek
 
 ## Manual Transactions
 
@@ -56,48 +63,58 @@ Three-tab layout with shared year/month filter:
 
 ## Financial Goals
 
-Two goal types, displayed as cards in the Budget tab:
+Two goal types displayed as cards in the Budget tab:
 
 ### Savings Goal
 - Set a target amount and deadline (month + year)
 - Set start month for counting
-- Progress: cumulative net (income − expense) across all imported months within the range
+- Progress: cumulative net (income − expense) across imported months in the range
 - Shows: progress bar, amount saved, amount remaining, months left
 - States: in-progress / achieved (green) / overdue (red)
 
 ### Spending Goal
-- Set a category, monthly limit, and target number of consecutive months
-- Progress: check each available month's spending in that category against the limit
+- Set a category, monthly limit, and target consecutive months
+- Progress: checks each month's category spending against the limit
 - Shows: streak circles (●●○), per-month pass/fail rows with mini bars and amounts
-- Streak resets on any month that exceeds the limit
-- State: achieved when streak ≥ target months
+- Streak resets on any month over the limit
+- Achieved when streak ≥ target months
+
+## Daily Spending Calendar
+
+- Heat map calendar grid (Mon–Sun first day) rendered when a specific month is selected
+- Cell color: white → amber → deep red, scaled to the busiest day (sqrt curve so small amounts show color)
+- Each cell shows day number and abbreviated amount (e.g. 150K, 1.5M)
+- Green dot = income received that day; blue dot = today
+- Click any cell → expands transaction panel showing each transaction sorted by amount
+- Header stats: average spend per active day, busiest day of month
+- Legend: color scale, income dot, today dot
 
 ## Month-over-Month Comparison
 
 - Automatically computes previous month when a specific month is selected
-- Summary cards show delta badges: income ↑ green, expense ↑ red, expense ↓ green
-- MonthComparisonSection shows per-category spending changes:
-  - Sorted by absolute % change (biggest movers first)
-  - Dual progress bars (gray = last month, blue = this month)
-  - Delta badges: red ↑, green ↓, amber ↑ for big increases (≥30%)
-  - "New" badge for first-time categories, "Gone" for categories that disappeared
-- Hidden when "All" or year-only view is selected
+- Summary card delta badges: income ↑ green, expense ↑ red, expense ↓ green
+- Per-category breakdown: expense categories only, sorted by biggest % change
+- Dual progress bars (gray = last month, blue = this month)
+- Delta badges: red ↑, green ↓, amber ↑ for big increases (≥30%)
+- New/Gone badges for categories that appeared or disappeared
+- Hidden on "All" or year-only view
 
 ## Data Export
 
-- **CSV export** — download currently filtered transactions as a CSV file (Date, Description, Amount, Type, Category, Balance)
-- **JSON backup** — full data export including statements, manual transactions, rules, and budgets
-- Vault credentials are excluded from backup (device-specific)
+- **CSV export** — download currently filtered transactions (Date, Description, Amount, Type, Category, Balance)
+- **JSON backup** — full vault export: statements, manual transactions, rules, budgets, goals
+- Vault credentials excluded (device-specific)
 
 ## Data Backup & Restore
 
 Available in Settings:
 
-- **Export** — dynamically decrypts the entire unified vault and downloads a single `fintrackr-backup-YYYY-MM-DD.json` file containing statements, manual transactions, budgets, rules, and goals.
-- **Restore — Merge** — accepts an uploaded JSON backup (even legacy v1 backups), safely merges it with the current data (deduplicating by ID), and immediately re-encrypts the result inside the secure IndexedDB vault.
-- **Restore — Replace** — wipes the current vault data, writes the parsed backup data, and encrypts it.
-- File validation — rejects non-Fintrackr JSON files
-- Preview before restoring: shows statement count, manual transaction count, rule count, budget count, and backup date
+- **Export** — downloads `fintrackr-backup-YYYY-MM-DD.json` containing all app data
+- **Restore — Merge** — adds entries from backup that don't already exist (deduplicates by id); budget values from backup override existing for same category
+- **Restore — Replace** — wipes current data and writes backup
+- File validation — rejects non-Fintrackr JSON
+- Preview before restoring: statement count, manual transactions, rules, budgets, goals, export date
+- Backwards-compatible: v1 backups (without goals field) restore cleanly
 
 ## Recurring Transaction Detection
 
@@ -106,39 +123,37 @@ Available in Settings:
 - Configurable minimum occurrence threshold
 - Displayed as a panel above the transaction list for bulk categorization
 
+## AI Features
+
+- **AI Categorize** — batch-categorizes uncategorized transactions; sequential processing with exponential backoff retry on rate limits; Indonesian-context system prompt with local service names
+- **AI Insights** — pre-aggregates data (category totals, top expenses, savings rate) before sending; period label and IDR currency context included; structured 4-bullet output; temperature 0.1 for consistent factual output
+- User-provided DeepSeek API key stored in vault and sent with each AI request — works in production without env vars
+- Server-side `DEEPSEEK_API_KEY` env var takes priority over user-provided key
+- AI data notice shown in Settings and next to each AI button in the dashboard
+
 ## Secure Vault
 
 - AES-GCM encryption via Web Crypto API
 - PBKDF2 key derivation from master password
+- Vault creation requires password confirmation to prevent lockout from typos
+- Password show/hide toggle and strength indicator on create/unlock screen
 - Vault state: uninitialized → initialized+locked → unlocked
-- Session password held in memory only (not persisted across hard refreshes)
+- Session restored from sessionStorage on page refresh
 - Change master password in Settings (re-encrypts all data)
 - VaultGate blocks all pages until vault is unlocked
 
 ## Privacy
 
-- All data stored locally in browser localStorage — no server, no database, no cloud
+- All data stored locally — no server, no database, no cloud
 - Privacy notice on import page and vault creation screen
-- **AI features are opt-in** — using AI Categorize or AI Insights sends transaction descriptions and amounts to DeepSeek's API; account numbers and personal details are not included
+- **AI features are opt-in** — transaction descriptions and amounts are sent to DeepSeek's API when AI features are used; account numbers not included
 - AI data notice shown in Settings and next to each AI button
 
 ## Settings
 
-- Add / delete custom categorization rules (keyword → category)
-- View system default rules (read-only)
-- Change vault master password with strength indicator
-- AI Categorization config — status display, API key via `.env`
-- AI Chat Assistant — save personal DeepSeek API key to localStorage
-- Data Backup & Restore section
-on screen
-- **AI features are opt-in** — using AI Categorize or AI Insights sends transaction descriptions and amounts to DeepSeek's API; account numbers and personal details are not included
-- AI data notice shown in Settings and next to each AI button
-
-## Settings
-
-- Add / delete custom categorization rules (keyword → category)
-- View system default rules (read-only)
-- Change vault master password with strength indicator
-- AI Categorization config — status display, API key via `.env`
-- AI Chat Assistant — save personal DeepSeek API key to localStorage
+- Add / delete custom categorization rules (keyword → category); Enter key submits
+- Collapsible system default rules (50+ Indonesian-specific)
+- Single DeepSeek API key input — covers AI categorize, insights, and chat
+- Change vault master password with show/hide toggle and strength indicator; Enter submits
+- Success (green) / error (red) feedback on password change
 - Data Backup & Restore section
