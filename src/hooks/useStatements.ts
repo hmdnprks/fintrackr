@@ -90,6 +90,15 @@ export function useStatements() {
     )
   }, [statements])
 
+  const availableYears = useMemo(() => {
+    const years = new Set<string>()
+    statements.forEach((s: any) => {
+      const year = s.monthKey?.split('-')[0]
+      if (year) years.add(year)
+    })
+    return Array.from(years).sort()
+  }, [statements])
+
   const deleteMonth = useCallback(
     (monthKey: string) => {
       if (!monthKey || monthKey === 'all') return
@@ -118,6 +127,7 @@ export function useStatements() {
   return {
     statements,
     availableMonths,
+    availableYears,
     deleteMonth,
     clearAll,
     reload,

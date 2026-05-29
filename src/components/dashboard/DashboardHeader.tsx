@@ -7,6 +7,9 @@ interface MonthOption {
 }
 
 interface DashboardHeaderProps {
+  selectedYear: string
+  years: string[]
+  onYearChange: (value: string) => void
   selectedMonth: string
   months: MonthOption[]
   onMonthChange: (value: string) => void
@@ -15,6 +18,9 @@ interface DashboardHeaderProps {
 }
 
 export default function DashboardHeader({
+  selectedYear,
+  years,
+  onYearChange,
   selectedMonth,
   months,
   onMonthChange,
@@ -36,6 +42,15 @@ export default function DashboardHeader({
 
       {/* Right: Controls */}
       <div className="flex items-center gap-3">
+
+        <SelectField
+          value={selectedYear}
+          onChange={onYearChange}
+          options={[
+            { label: 'All Years', value: 'all' },
+            ...years.map((y) => ({ label: y, value: y })),
+          ]}
+        />
 
         <SelectField
           value={selectedMonth}

@@ -5,15 +5,26 @@ import { aggregateTransactions } from '@/lib/finance'
 import { parseTransactionDate } from '@/lib/formatter'
 import { detectRecurringUncategorized } from '@/lib/insights/recurring'
 
-export function useDashboardData(statements: any[], selectedMonth: string) {
+export function useDashboardData(statements: any[], selectedYear: string, selectedMonth: string) {
+
+  /**
+   * Filter by year
+   */
+  const yearFilteredStatements = useMemo(() => {
+    if (selectedYear === 'all') return statements
+    return statements.filter((s) => {
+      const year = s.monthKey?.split('-')[0]
+      return year === selectedYear
+    })
+  }, [statements, selectedYear])
 
   /**
    * Filter by month
    */
   const filteredStatements = useMemo(() => {
-    if (selectedMonth === 'all') return statements
-    return statements.filter((s) => s.monthKey === selectedMonth)
-  }, [statements, selectedMonth])
+    if (selectedMonth === 'all') return yearFilteredStatements
+    return yearFilteredStatements.filter((s) => s.monthKey === selectedMonth)
+  }, [yearFilteredStatements, selectedMonth])
 
   /**
    * Flatten & enrich transactions

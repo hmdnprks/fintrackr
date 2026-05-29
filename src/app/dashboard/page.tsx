@@ -16,7 +16,13 @@ import { formatIDR } from '@/lib/formatter'
 import '@/lib/chartjs'
 
 export default function Dashboard() {
+  const [selectedYear, setSelectedYear] = useState('all')
   const [selectedMonth, setSelectedMonth] = useState('all')
+
+  function handleYearChange(year: string) {
+    setSelectedYear(year)
+    setSelectedMonth('all')
+  }
 
   /**
    * Storage Layer
@@ -24,6 +30,7 @@ export default function Dashboard() {
   const {
     statements,
     availableMonths,
+    availableYears,
     deleteMonth,
     clearAll,
   } = useStatements()
@@ -39,7 +46,11 @@ export default function Dashboard() {
     categoryPercentages,
     recurringSuggestions,
     allTransactions,
-  } = useDashboardData(statements, selectedMonth)
+  } = useDashboardData(statements, selectedYear, selectedMonth)
+
+  const filteredMonths = selectedYear === 'all'
+    ? availableMonths
+    : availableMonths.filter((m) => m.value.startsWith(selectedYear))
 
   return (
     <VaultGate>
@@ -47,8 +58,11 @@ export default function Dashboard() {
         <div className="max-w-6xl mx-auto space-y-8">
 
           <DashboardHeader
+            selectedYear={selectedYear}
+            years={availableYears}
+            onYearChange={handleYearChange}
             selectedMonth={selectedMonth}
-            months={availableMonths}
+            months={filteredMonths}
             onMonthChange={setSelectedMonth}
             onDeleteMonth={() => deleteMonth(selectedMonth)}
             onClearAll={clearAll}
