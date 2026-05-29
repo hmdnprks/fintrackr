@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useSyncExternalStore, useState } from 'react'
+import { createContext, useContext, useEffect, useSyncExternalStore, useState } from 'react'
 import {
   isVaultInitialized,
   isVaultUnlocked,
@@ -50,9 +50,10 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   )
   const [hydrated, setHydrated] = useState(false)
 
-  useState(() => {
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHydrated(true)
-  })
+  }, [])
 
   async function handleUnlock(password: string) {
     await unlockVault(password)
