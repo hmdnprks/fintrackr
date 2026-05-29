@@ -484,6 +484,16 @@ function AssetCard({ asset, meta, avgMonthlyExpense, onEdit, onDelete }: CardPro
           </p>
         )}
 
+        {asset.type === 'investment' && (
+          <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border ${
+            asset.contributable !== false
+              ? 'bg-green-50 border-green-100 text-green-700'
+              : 'bg-gray-50 border-gray-200 text-gray-500'
+          }`}>
+            {asset.contributable !== false ? '✓ Can top up' : '🔒 Auto-managed'}
+          </span>
+        )}
+
         {asset.type === 'pocket' && asset.goalName && (
           <p className="text-xs text-gray-500">
             Goal: <span className="font-medium">{asset.goalName}</span>
