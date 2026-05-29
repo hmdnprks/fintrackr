@@ -103,56 +103,6 @@ export function useDashboardData(statements: any[], selectedYear: string, select
   }, [statements])
 
   /**
-   * Category Aggregation
-   */
-  const {
-    categoryChartData,
-    categoryPercentages,
-  } = useMemo(() => {
-
-    const map: Record<string, number> = {}
-
-    allTransactions.forEach((tx) => {
-      const category = tx.category || 'Uncategorized'
-      map[category] = (map[category] || 0) + (tx.amount || 0)
-    })
-
-    const entries = Object.entries(map).sort((a, b) => b[1] - a[1])
-    const total = entries.reduce((sum, [, val]) => sum + val, 0)
-
-    const labels = entries.map(([label]) => label)
-    const values = entries.map(([, value]) => value)
-
-    return {
-      categoryChartData: {
-        labels,
-        datasets: [
-          {
-            data: values,
-            backgroundColor: [
-              '#ef4444',
-              '#f97316',
-              '#eab308',
-              '#22c55e',
-              '#3b82f6',
-              '#a855f7',
-              '#14b8a6',
-              '#f43f5e',
-              '#6366f1',
-            ],
-            borderWidth: 1,
-          },
-        ],
-      },
-      categoryPercentages: entries.map(([, value]) =>
-        total === 0
-          ? '0'
-          : ((value / total) * 100).toFixed(1)
-      ),
-    }
-  }, [allTransactions])
-
-  /**
    * Recurring Detection
    */
   const recurringSuggestions = useMemo(() => {
@@ -163,8 +113,6 @@ export function useDashboardData(statements: any[], selectedYear: string, select
     totalIncome,
     totalExpense,
     trendChartData,
-    categoryChartData,
-    categoryPercentages,
     allTransactions,
     recurringSuggestions,
   }
