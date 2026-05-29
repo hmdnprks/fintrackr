@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getVaultData, saveVaultData, VaultData } from '@/lib/storage/secureStorage'
 
-const BACKUP_VERSION = 2
+const BACKUP_VERSION = 3
 
 export type BackupData = {
   version: number
@@ -13,6 +13,7 @@ export type BackupData = {
     rules: any[]
     budgets: Record<string, number>
     goals: any[]
+    assets: any[]
   }
 }
 
@@ -23,6 +24,7 @@ export type BackupSummary = {
   ruleCount: number
   budgetCount: number
   goalCount: number
+  assetCount: number
 }
 
 export async function exportBackup(): Promise<BackupData> {
@@ -37,6 +39,7 @@ export async function exportBackup(): Promise<BackupData> {
       rules:              vault.rules,
       budgets:            vault.budgets,
       goals:              vault.goals,
+      assets:             vault.assets ?? [],
     },
   }
 }
@@ -60,6 +63,7 @@ export function getBackupSummary(backup: BackupData): BackupSummary {
     ruleCount:      backup.data.rules?.length || 0,
     budgetCount:    Object.keys(backup.data.budgets || {}).length,
     goalCount:      (backup.data.goals || []).length,
+    assetCount:     (backup.data.assets || []).length,
   }
 }
 
@@ -80,13 +84,16 @@ export function validateBackup(raw: any): raw is BackupData {
 export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge') {
   const goals = backup.data.goals ?? []
 
+  const assets = backup.data.assets ?? []
+
   if (mode === 'replace') {
     await saveVaultData({
       statements: backup.data.statements,
       manualTransactions: backup.data.manualTransactions,
       rules: backup.data.rules,
       budgets: backup.data.budgets,
-      goals: goals
+      goals,
+      assets,
     })
     return
   }
@@ -98,12 +105,14 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
   const existingManual = existingVault.manualTransactions || []
   const existingRules = existingVault.rules || []
   const existingBudgets = existingVault.budgets || {}
-  const existingGoals = existingVault.goals || []
+  const existingGoals  = existingVault.goals  || []
+  const existingAssets = existingVault.assets || []
 
   const existingStatementIds = new Set(existingStatements.map((s: any) => s.id))
   const existingManualIds    = new Set(existingManual.map((t: any) => t.id))
   const existingRuleIds      = new Set(existingRules.map((r: any) => r.id))
   const existingGoalIds      = new Set(existingGoals.map((g: any) => g.id))
+  const existingAssetIds     = new Set(existingAssets.map((a: any) => a.id))
 
   const newVaultState: Partial<VaultData> = {
     statements: [
@@ -122,7 +131,11 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
     goals: [
       ...existingGoals,
       ...goals.filter((g) => !existingGoalIds.has(g.id)),
-    ]
+    ],
+    assets: [
+      ...existingAssets,
+      ...assets.filter((a) => !existingAssetIds.has(a.id)),
+    ],
   }
 
   await saveVaultData(newVaultState)

@@ -161,6 +161,7 @@ export default function BackupSection({ onRestored }: { onRestored?: () => void 
                     { label: 'Categorization rules', value: summary.ruleCount },
                     { label: 'Budget entries',       value: summary.budgetCount },
                     { label: 'Goals',                value: summary.goalCount },
+                    { label: 'Assets',               value: summary.assetCount ?? 0 },
                   ].map(({ label, value }) => (
                     <div key={label} className="bg-white px-4 py-3">
                       <p className="text-xl font-bold text-gray-800">{value}</p>
