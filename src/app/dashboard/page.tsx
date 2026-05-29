@@ -198,7 +198,7 @@ export default function Dashboard() {
               <AIInsightsPanel
                 insights={insights ?? ''}
                 isLoading={isGeneratingInsights}
-                onGenerate={() => getInsights(selectedYear, selectedMonth)}
+                onGenerate={() => getInsights(allTransactions, selectedYear, selectedMonth)}
                 onClear={clearInsights}
               />
 

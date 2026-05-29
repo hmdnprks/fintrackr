@@ -122,11 +122,16 @@ export function useAICategorization(
   }, [reloadStatements])
 
   const getInsights = useCallback(
-    async (year?: string, month?: string) => {
+    async (transactions: any[], year?: string, month?: string) => {
       const cacheKey = `fintrackr_insights_${year || 'all'}_${month || 'all'}`
       const cached = sessionStorage.getItem(cacheKey)
       if (cached) {
         setInsights(cached)
+        return
+      }
+
+      if (!transactions.length) {
+        setError('No transactions for this period.')
         return
       }
 
@@ -135,42 +140,22 @@ export function useAICategorization(
       setInsights(null)
 
       try {
-        const statements = getSavedStatements()
-        if (!statements.length) return
-
-        let filtered = [...statements]
-
-        if (year && year !== 'all') {
-          filtered = filtered.filter((s: any) => {
-            const sy = s.monthKey?.split('-')[0]
-            return sy === year
-          })
-        }
-
-        if (month && month !== 'all') {
-          filtered = filtered.filter(
-            (s: any) => s.monthKey === month
-          )
-        }
-
-        const allTxs = filtered.flatMap((s: any) =>
-          (s.transactions || []).map((tx: any) => ({
-            detail: tx.detail,
-            amount: tx.amount,
-            type: tx.type,
-            category: tx.category || 'Uncategorized',
-          }))
-        )
+        const allTxs = transactions.map((tx: any) => ({
+          detail: tx.detail,
+          amount: tx.amount,
+          type: tx.type,
+          category: tx.category || 'Uncategorized',
+        }))
 
         const periodLabel =
           month && month !== 'all'
             ? (() => {
-              const [y, m] = month.split('-').map(Number)
-              return new Date(y, m - 1).toLocaleString('en-US', { month: 'long', year: 'numeric' })
-            })()
+                const [y, m] = month.split('-').map(Number)
+                return new Date(y, m - 1).toLocaleString('en-US', { month: 'long', year: 'numeric' })
+              })()
             : year && year !== 'all'
-              ? year
-              : 'all time'
+            ? year
+            : 'all time'
 
         const payload = {
           transactions: allTxs,
@@ -178,7 +163,6 @@ export function useAICategorization(
           period: periodLabel,
           apiKey: getVaultDataSync().settings?.chatApiKey || undefined,
         }
-
 
         const res = await fetch('/api/categorize', {
           method: 'POST',
@@ -188,14 +172,11 @@ export function useAICategorization(
 
         const data = await res.json()
 
-
         if (!data.success) {
-          throw new Error(
-            data.error || 'Failed to generate insights'
-          )
+          throw new Error(data.error || 'Failed to generate insights')
         }
 
-        localStorage.setItem(cacheKey, data.insights)
+        sessionStorage.setItem(cacheKey, data.insights)
         setInsights(data.insights)
       } catch (err: any) {
         setError(err.message)
