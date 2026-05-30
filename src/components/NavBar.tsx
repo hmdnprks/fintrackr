@@ -75,8 +75,6 @@ export default function NavBar() {
         </div>
       </nav>
 
-      {/* Spacer so bottom nav doesn't cover page content on mobile */}
-      <div className="h-16 sm:hidden" />
     </>
   )
 }

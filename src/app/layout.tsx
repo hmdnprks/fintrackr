@@ -41,6 +41,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Pages manage their own padding — no extra wrapper here */}
           <VaultProvider>
             {children}
+            {/* Bottom padding on mobile so fixed bottom nav never covers page content */}
+            <div className="h-16 sm:hidden" />
           </VaultProvider>
 
           <ChatBubble />
