@@ -217,6 +217,7 @@ export function useDashboardData(statements: any[], selectedYear: string, select
   const INVESTMENT_KEYWORDS = [
     'BIBIT', 'STOCKBIT', 'AJAIB', 'BAREKSA', 'IPOT', 'INDOPREMIER',
     'MOST ', 'MANDIRI SEKURITAS', 'PLUANG', 'REKSADANA', 'REKSA DANA',
+    'LAKU EMAS', 'LAKUEMAS', 'PEGADAIAN', 'TREASURY', 'LOGAM MULIA',
   ]
 
   const investmentRate = useMemo(() => {

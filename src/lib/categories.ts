@@ -116,6 +116,13 @@ export const defaultRules: CategoryRule[] = [
   { id: '103', keyword: 'ShopeePay',  category: 'Transfer' },
   { id: '104', keyword: 'LinkAja',    category: 'Transfer' },
 
+  // Gold & investment platform top-ups (money moves to investment, not spent)
+  { id: '150', keyword: 'LAKU EMAS',    category: 'Transfer' },
+  { id: '151', keyword: 'LAKUEMAS',     category: 'Transfer' },
+  { id: '152', keyword: 'PEGADAIAN',    category: 'Transfer' },
+  { id: '153', keyword: 'TREASURY',     category: 'Transfer' },
+  { id: '154', keyword: 'LOGAM MULIA',  category: 'Transfer' },
+
   // ATM withdrawals (cash conversion, not actual spending)
   { id: '140', keyword: 'Tarik ATM',   category: 'Transfer' },
   { id: '141', keyword: 'TARIK ATM',   category: 'Transfer' },
