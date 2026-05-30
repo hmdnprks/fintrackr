@@ -144,31 +144,30 @@ export default function TransactionSection({
   return (
     <div className="space-y-4">
 
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      {/* Header — stacks on mobile, side-by-side on desktop */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Transactions</h2>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {filtered.length} transaction{filtered.length !== 1 ? 's' : ''}
+          <p className="text-sm text-gray-500 mt-0.5 flex flex-wrap gap-x-1">
+            <span>{filtered.length} transaction{filtered.length !== 1 ? 's' : ''}</span>
             {isFiltered && filtered.length !== transactions.length && (
-              <span className="text-gray-400"> of {transactions.length}</span>
+              <span className="text-gray-400">of {transactions.length}</span>
             )}
-            {/* Fix 5 — show total */}
             {filtered.length > 0 && (
-              <span className="text-gray-400"> · {formatIDR(filteredTotal)}</span>
+              <span className="text-gray-400">· {formatIDR(filteredTotal)}</span>
             )}
             {uncategorizedCount > 0 && (
-              <span className="text-amber-500"> · {uncategorizedCount} uncategorized</span>
+              <span className="text-amber-500">· {uncategorizedCount} uncategorized</span>
             )}
           </p>
         </div>
 
         {uncategorizedCount > 0 && onAICategorize && (
-          <div className="flex flex-col items-end gap-1.5 shrink-0">
+          <div className="flex flex-col sm:items-end gap-1.5 shrink-0">
             <button
               onClick={onAICategorize}
               disabled={isAICategorizing}
-              className="flex items-center gap-2 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center sm:justify-start"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
@@ -209,11 +208,12 @@ export default function TransactionSection({
           )}
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          {/* Category + type on mobile: category full-width, type + clear on a row below */}
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className={`text-sm border rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`w-full sm:w-auto text-sm border rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               filterCategory !== 'all' ? 'border-blue-400 text-blue-700 font-medium' : 'border-gray-200 text-gray-600'
             }`}
           >
@@ -223,39 +223,41 @@ export default function TransactionSection({
             ))}
           </select>
 
-          <div className="flex items-center bg-gray-100 rounded-xl p-1 gap-0.5">
-            {([
-              { value: 'all',    label: 'All' },
-              { value: 'credit', label: '↑ In' },
-              { value: 'debit',  label: '↓ Out' },
-            ] as const).map(({ value, label }) => (
-              <button
-                key={value}
-                onClick={() => setFilterType(value)}
-                className={`px-3 py-1.5 text-sm rounded-lg font-medium transition ${
-                  filterType === value
-                    ? value === 'credit' ? 'bg-white text-green-600 shadow-sm'
-                    : value === 'debit'  ? 'bg-white text-red-500 shadow-sm'
-                    :                      'bg-white text-gray-700 shadow-sm'
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          <div className="flex items-center gap-2 sm:ml-0">
+            <div className="flex items-center bg-gray-100 rounded-xl p-1 gap-0.5">
+              {([
+                { value: 'all',    label: 'All' },
+                { value: 'credit', label: '↑ In' },
+                { value: 'debit',  label: '↓ Out' },
+              ] as const).map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => setFilterType(value)}
+                  className={`px-3 py-1.5 text-sm rounded-lg font-medium transition ${
+                    filterType === value
+                      ? value === 'credit' ? 'bg-white text-green-600 shadow-sm'
+                      : value === 'debit'  ? 'bg-white text-red-500 shadow-sm'
+                      :                      'bg-white text-gray-700 shadow-sm'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
 
-          {isFiltered && (
-            <button
-              onClick={clearFilters}
-              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-500 transition ml-auto"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              Clear filters
-            </button>
-          )}
+            {isFiltered && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-500 transition"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Clear
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
