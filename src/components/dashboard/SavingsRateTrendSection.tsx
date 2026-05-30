@@ -20,7 +20,10 @@ export default function SavingsRateTrendSection({ data }: Props) {
   if (data.length < 2) return null
 
   const avg = Math.round(data.reduce((s, d) => s + d.rate, 0) / data.length)
-  const best = Math.max(...data.map(d => d.rate))
+  const bestEntry = data.reduce((a, b) => b.rate > a.rate ? b : a)
+  const best = bestEntry.rate
+  // "January 2024" → "Jan 2024"
+  const bestMonth = bestEntry.label.replace(/^(\w{3})\w+\s/, '$1 ')
   const IDEAL = 20  // minimum savings rate target
 
   // Clamp bars to ±100% for display
@@ -111,9 +114,9 @@ export default function SavingsRateTrendSection({ data }: Props) {
       {/* Summary insight */}
       <p className="text-xs text-gray-500 leading-relaxed mt-1">
         {avg >= 30
-          ? `Strong savings discipline — you're keeping ${avg}% of income. Best month: ${best}%.`
+          ? `Strong savings discipline — you're keeping ${avg}% of income. Best month: ${bestMonth} at ${best}%.`
           : avg >= IDEAL
-          ? `On track at ${avg}% average. Aim for 30% to accelerate wealth building. Best month: ${best}%.`
+          ? `On track at ${avg}% average. Aim for 30% to accelerate wealth building. Best month: ${bestMonth} at ${best}%.`
           : avg >= 10
           ? `Savings rate of ${avg}% is below the 20% target. Review your wants spending to find room to save more.`
           : `Savings rate of ${avg}% is critically low. Your spending is consuming most of your income — review your budget urgently.`}
