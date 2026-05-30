@@ -4,7 +4,7 @@
 import { useMemo, useState, useRef, useEffect, Fragment } from 'react'
 import RecurringSuggestionPanel from './RecurringSuggestionPanel'
 import { formatIDR } from '@/lib/formatter'
-import { isSafeSimilarityMatch } from '@/lib/insights/recurring'
+import { isSafeSimilarityMatch, normalizeDetail } from '@/lib/insights/recurring'
 
 // Extract a human-readable merchant label from a raw Mandiri transaction description.
 // Mandiri card format: -XXXXXXXX /XXXXXXXXXX/MERCHANT-NAME/SUFFIX
@@ -408,9 +408,18 @@ export default function TransactionSection({
                             defaultValue={tx.category ?? 'Uncategorized'}
                             onChange={(e) => {
                               const newCat = e.target.value
-                              const similarIdxs = transactions
-                                .filter((t: any) => t._idx !== tx._idx && t.category !== newCat && isSafeSimilarityMatch(tx.detail, t.detail))
+                              console.log('[recategorize] edited tx.detail:', tx.detail)
+                              console.log('[recategorize] new category:', newCat)
+                              const candidates = transactions.filter((t: any) => t._idx !== tx._idx && t.category !== newCat)
+                              console.log('[recategorize] candidates to check:', candidates.length)
+                              const similarIdxs = candidates
+                                .filter((t: any) => {
+                                  const match = isSafeSimilarityMatch(tx.detail, t.detail, true)
+                                  if (match) console.log('[recategorize] MATCH found:', t.detail, '| category:', t.category)
+                                  return match
+                                })
                                 .map((t: any) => t._idx)
+                              console.log('[recategorize] similarIdxs count:', similarIdxs.length)
                               onRecategorize(tx._idx, newCat)
                               setEditingOriginalIndex(null)
                               setSimilarPrompt(similarIdxs.length > 0

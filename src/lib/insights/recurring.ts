@@ -22,27 +22,37 @@ export function normalizeDetail(detail: string) {
 // 2. The two raw descriptions must share at least one alpha token of ≥ 3 chars
 //    — this catches cases where two descriptions normalize to the same short key
 //    but are clearly different merchants (e.g. "JPN-APPLE" vs "JPN-NETFLIX")
-export function isSafeSimilarityMatch(a: string, b: string): boolean {
-  // Numeric path — for descriptions dominated by numbers (CC payments, bank references).
-  // A 12+ digit sequence is specific enough to be a card/account identifier.
-  // Use bidirectional raw substring search: if either description's long number
-  // appears anywhere inside the other description, they refer to the same account.
-  // This handles: same CC payment → match, CC vs UBP → no match (different numbers).
+export function isSafeSimilarityMatch(a: string, b: string, debug = false): boolean {
   const longNums = (s: string): string[] => s.match(/\d{12,}/g) ?? []
   const numsA = longNums(a)
   const numsB = longNums(b)
-  if (numsA.length > 0 || numsB.length > 0) {
-    return numsA.some(n => b.includes(n)) || numsB.some(n => a.includes(n))
+
+  if (debug) {
+    console.log('[similarity] a:', a)
+    console.log('[similarity] b:', b)
+    console.log('[similarity] numsA (12+digits):', numsA)
+    console.log('[similarity] numsB (12+digits):', numsB)
   }
 
-  // Alpha path — descriptions with a merchant name (no long numerics on either side).
+  if (numsA.length > 0 || numsB.length > 0) {
+    const result = numsA.some(n => b.includes(n)) || numsB.some(n => a.includes(n))
+    if (debug) console.log('[similarity] numeric path → result:', result)
+    return result
+  }
+
   const keyA = normalizeDetail(a)
   const keyB = normalizeDetail(b)
-  if (keyA !== keyB || keyA.length < MIN_KEY_LENGTH) return false
+  if (debug) console.log('[similarity] alpha path — keyA:', keyA, 'keyB:', keyB)
+  if (keyA !== keyB || keyA.length < MIN_KEY_LENGTH) {
+    if (debug) console.log('[similarity] alpha path → no match (keys differ or too short)')
+    return false
+  }
   const tokens = (s: string) =>
     s.toUpperCase().replace(/[^A-Z\s]/g, ' ').split(/\s+/).filter(t => t.length >= 3)
   const setA = new Set(tokens(a))
-  return tokens(b).some(t => setA.has(t))
+  const result = tokens(b).some(t => setA.has(t))
+  if (debug) console.log('[similarity] alpha shared tokens → result:', result)
+  return result
 }
 
 // Minimum chars a normalized key must have to be a safe grouping key.
