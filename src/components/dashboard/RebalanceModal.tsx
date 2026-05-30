@@ -59,11 +59,10 @@ function formatIDR(n: number) {
 }
 
 function timeAgo(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime()
-  const days = Math.floor(diffMs / 86_400_000)
-  if (days === 0) return 'today'
-  if (days === 1) return 'yesterday'
-  return `${days} days ago`
+  const d = new Date(iso)
+  const dateStr = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+  const timeStr = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+  return `${dateStr} ${timeStr}`
 }
 
 function buildPrintHTML(r: RebalanceResult, riskPref: string): string {
@@ -282,7 +281,7 @@ export default function RebalanceModal({
                       Last analysis: {timeAgo(lastEntry.savedAt)}
                     </p>
                     <p className="text-xs text-gray-400 dark:text-gray-500 capitalize">
-                      {lastEntry.riskPreference} · {new Date(lastEntry.savedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      Risk: {lastEntry.riskPreference}
                     </p>
                   </div>
                   <button

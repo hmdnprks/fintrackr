@@ -42,14 +42,9 @@ const TYPE_ORDER: AssetType[] = ['savings', 'gold', 'investment', 'pocket', 'oth
 
 function relativeDate(iso: string) {
   const d = new Date(iso)
-  const now = new Date()
-  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86_400_000)
-  if (diffDays === 0) return 'Updated today'
-  if (diffDays === 1) return 'Updated yesterday'
-  if (diffDays < 30)  return `Updated ${diffDays}d ago`
-  const diffMonths = Math.floor(diffDays / 30)
-  if (diffMonths < 12) return `Updated ${diffMonths}mo ago`
-  return `Updated ${Math.floor(diffMonths / 12)}y ago`
+  const dateStr = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+  const timeStr = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+  return `Updated: ${dateStr} ${timeStr}`
 }
 
 export default function AssetsTab({ statements }: Props) {
@@ -108,9 +103,7 @@ export default function AssetsTab({ statements }: Props) {
   const lastUpdatedLabel = useMemo(() => {
     if (!assets.length) return null
     const latest = assets.reduce((a, b) => new Date(a.updatedAt) > new Date(b.updatedAt) ? a : b)
-    // eslint-disable-next-line react-hooks/purity
-    const diffDays = Math.floor((new Date().getTime() - new Date(latest.updatedAt).getTime()) / 86_400_000)
-    return { diffDays, label: diffDays === 0 ? 'Values updated today' : diffDays === 1 ? 'Values updated yesterday' : `Values updated ${diffDays}d ago` }
+    return { label: relativeDate(latest.updatedAt) }
   }, [assets])
 
   // Net worth growth — compare current total to the most recent snapshot
@@ -216,8 +209,8 @@ export default function AssetsTab({ statements }: Props) {
             <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 break-all">{formatIDRFull(totalNetWorth)}</p>
             {/* Last updated */}
             {lastUpdatedLabel && (
-              <p className={`text-xs mt-0.5 ${lastUpdatedLabel.diffDays > 30 ? 'text-amber-500' : 'text-gray-400 dark:text-gray-500'}`}>
-                {lastUpdatedLabel.label}{lastUpdatedLabel.diffDays > 30 ? ' — refresh to track growth' : ''}
+              <p className="text-xs mt-0.5 text-gray-400 dark:text-gray-500">
+                {lastUpdatedLabel.label}
               </p>
             )}
             {netWorthGrowth !== null && (
