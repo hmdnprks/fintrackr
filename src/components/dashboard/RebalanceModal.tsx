@@ -66,59 +66,77 @@ function timeAgo(iso: string): string {
 }
 
 function buildPrintHTML(r: RebalanceResult, riskPref: string): string {
-  const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+  const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
   const verdict = r.safetyCheck.verdict
 
   const suggestionsHTML = r.suggestions.map(s => {
     const conf = CONFIDENCE_META[s.confidence] ?? CONFIDENCE_META.medium
     return `
-      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:12px;">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:12px;">
+      <div style="border:1px solid #e5e7eb;border-radius:6px;padding:10px;margin-bottom:8px;page-break-inside:avoid;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:10px;">
           <span style="font-weight:700;color:#6b7280;">#${s.priority}</span>
-          <span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:4px;font-weight:700;">${s.action.toUpperCase()}</span>
-          <span style="padding:2px 8px;border-radius:4px;font-weight:600;background:${s.confidence === 'high' ? '#dcfce7' : s.confidence === 'medium' ? '#fef3c7' : '#f3f4f6'};color:${s.confidence === 'high' ? '#15803d' : s.confidence === 'medium' ? '#b45309' : '#6b7280'};">${conf.label}</span>
-          ${s.confidenceReason ? `<span style="color:#9ca3af;font-style:italic;">${s.confidenceReason}</span>` : ''}
+          <span style="background:#dbeafe;color:#1d4ed8;padding:1px 6px;border-radius:3px;font-weight:700;text-transform:uppercase;">${s.action}</span>
+          <span style="padding:1px 6px;border-radius:3px;font-weight:600;background:${s.confidence === 'high' ? '#dcfce7' : s.confidence === 'medium' ? '#fef3c7' : '#f3f4f6'};color:${s.confidence === 'high' ? '#15803d' : s.confidence === 'medium' ? '#b45309' : '#6b7280'}; text-transform:uppercase; font-size:9px;">${conf.label}</span>
         </div>
-        ${s.from || s.to ? `<div style="font-size:14px;font-weight:600;margin-bottom:6px;">${s.from ?? ''}${s.from && s.to ? ' → ' : ''}${s.to ?? ''}${s.amount ? ` · Rp ${s.amount.toLocaleString('id-ID')}` : ''}</div>` : ''}
-        <div style="font-size:13px;color:#4b5563;line-height:1.5;">${s.reason}</div>
+        ${s.from || s.to ? `<div style="font-size:12px;font-weight:700;margin-bottom:2px;color:#111827;">${s.from ?? ''}${s.from && s.to ? ' → ' : ''}${s.to ?? ''}${s.amount ? ` · Rp ${s.amount.toLocaleString('id-ID')}` : ''}</div>` : ''}
+        <div style="font-size:11px;color:#4b5563;line-height:1.4;">${s.reason}</div>
       </div>`
   }).join('')
 
   const safetyHTML = `
-    <div style="margin-top:20px;padding:12px;border-radius:8px;font-size:13px;line-height:1.5;
+    <div style="margin-top:12px;padding:10px;border-radius:6px;font-size:11px;line-height:1.4;
       background:${verdict === 'safe' ? '#dcfce7' : verdict === 'caution' ? '#fef3c7' : '#fee2e2'};
       color:${verdict === 'safe' ? '#15803d' : verdict === 'caution' ? '#b45309' : '#b91c1c'};
       border-left:3px solid ${verdict === 'safe' ? '#4ade80' : verdict === 'caution' ? '#fbbf24' : '#f87171'};">
-      <strong>Savings Safety (${verdict.toUpperCase()}):</strong> 
-      After rebalancing, remaining liquid savings will be Rp ${r.safetyCheck.remainingLiquidAmount.toLocaleString('id-ID')} — covering ~${r.safetyCheck.monthsCovered.toFixed(1)} months of expenses. ${r.safetyCheck.analysis}
+      <strong style="text-transform:uppercase; font-size:10px; display:block; margin-bottom:2px;">Daily Cash Safety (${verdict})</strong> 
+      After rebalancing, remaining daily operational cash will be Rp ${r.safetyCheck.remainingLiquidAmount.toLocaleString('id-ID')} — covering ~${r.safetyCheck.monthsCovered.toFixed(1)} months of expenses. ${r.safetyCheck.analysis}
     </div>`
 
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Portfolio Rebalance — Fintrackr</title>
+  <title>Rebalance Report — Fintrackr</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 700px; margin: 40px auto; padding: 0 24px; color: #111; }
-    h1 { font-size: 22px; margin-bottom: 4px; }
-    h2 { font-size: 16px; margin: 20px 0 12px; }
-    @media print { @page { margin: 20mm; } }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #111; font-size: 11px; line-height: 1.4; }
+    h1 { font-size: 18px; margin: 0 0 4px 0; color: #111827; font-weight: 800; }
+    h2 { font-size: 13px; margin: 16px 0 8px 0; color: #374151; font-weight: 700; text-transform: uppercase; letter-spacing: 0.025em; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+    .meta { color: #6b7280; font-size: 10px; margin-bottom: 16px; }
+    .health-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+    @media print { 
+      body { padding: 0; margin: 0; } 
+      @page { margin: 15mm; size: A4; } 
+    }
   </style>
 </head>
 <body>
-  <h1>Portfolio Rebalance Report</h1>
-  <p style="color:#666;font-size:13px;margin-bottom:24px;">Generated by Fintrackr · ${dateStr} · Risk: ${riskPref.charAt(0).toUpperCase() + riskPref.slice(1)}</p>
-  <div style="display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:16px;
-    background:${r.overallHealth === 'poor' ? '#fee2e2' : r.overallHealth === 'fair' ? '#fef3c7' : r.overallHealth === 'good' ? '#dcfce7' : '#d1fae5'};
-    color:${r.overallHealth === 'poor' ? '#b91c1c' : r.overallHealth === 'fair' ? '#b45309' : r.overallHealth === 'good' ? '#15803d' : '#065f46'};">
-    ${r.overallHealth}
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+    <div>
+      <h1>Portfolio Rebalance</h1>
+      <div class="meta">Fintrackr Analysis · ${dateStr} · Risk: ${riskPref.charAt(0).toUpperCase() + riskPref.slice(1)}</div>
+    </div>
+    <div class="health-badge" style="
+      background:${r.overallHealth === 'poor' ? '#fee2e2' : r.overallHealth === 'fair' ? '#fef3c7' : r.overallHealth === 'good' ? '#dcfce7' : '#d1fae5'};
+      color:${r.overallHealth === 'poor' ? '#b91c1c' : r.overallHealth === 'fair' ? '#b45309' : r.overallHealth === 'good' ? '#15803d' : '#065f46'};">
+      Portfolio Health: ${r.overallHealth.toUpperCase()}
+    </div>
   </div>
-  <div style="font-size:14px;line-height:1.6;background:#f8f8f8;padding:14px;border-radius:8px;margin-bottom:20px;">${r.summary}</div>
-  ${r.executionNote ? `<div style="font-size:13px;line-height:1.6;background:#eff6ff;color:#1d4ed8;padding:12px;border-radius:8px;border-left:3px solid #93c5fd;margin-bottom:20px;"><strong>How to execute:</strong> ${r.executionNote}</div>` : ''}
-  <h2>Suggestions</h2>
+
+  <div style="background:#f9fafb; padding:12px; border-radius:6px; border:1px solid #f3f4f6; margin-bottom:12px;">
+    <div style="font-weight:700; font-size:10px; text-transform:uppercase; color:#6b7280; margin-bottom:4px;">Assessment</div>
+    <div style="font-size:12px; color:#1f2937;">${r.summary}</div>
+  </div>
+
+  ${r.executionNote ? `<div style="font-size:11px; background:#eff6ff; color:#1d4ed8; padding:10px; border-radius:6px; border-left:3px solid #3b82f6; margin-bottom:12px;"><strong>Execution:</strong> ${r.executionNote}</div>` : ''}
+  
+  <h2>Strategic Suggestions</h2>
   ${suggestionsHTML}
+  
   ${safetyHTML}
-  <p style="margin-top:24px;font-size:12px;color:#9ca3af;font-style:italic;">${r.disclaimer}</p>
+
+  <div style="margin-top:20px; padding-top:12px; border-top:1px dashed #e5e7eb; font-size:9px; color:#9ca3af; text-align:center;">
+    ${r.disclaimer} · Personal Finance Tracker locally stored in browser
+  </div>
 </body>
 </html>`
 }
