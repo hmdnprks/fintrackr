@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   Category, CategoryRule, defaultRules,
   getUserRules, saveUserRules, deleteUserRule,
 } from '@/lib/categories'
-import { changeMasterPassword, getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
+import { changeMasterPassword, getVaultDataSync, saveVaultData, getSessionPassword } from '@/lib/storage/secureStorage'
+import { isBiometricAvailable, isBiometricEnrolled, enrollBiometric, revokeBiometric } from '@/lib/security/biometric'
 import PasswordStrength from '@/components/PasswordStrength'
 import BackupSection from '@/components/settings/BackupSection'
 
@@ -109,12 +110,52 @@ export default function SettingsPage() {
     setPwError('')
     try {
       await changeMasterPassword(currentPassword, newPassword)
-      setPwSuccess('Password updated successfully.')
+      // Revoke biometric so stale password isn't used on next unlock
+      await revokeBiometric()
+      setBiometricEnrolled(false)
+      setPwSuccess('Password updated. Biometric unlock was reset — re-enable it below.')
       setCurrentPassword('')
       setNewPassword('')
     } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       setPwError(e.message)
     }
+  }
+
+  // ── biometric ──────────────────────────────────────────────────────────────
+  const [biometricAvailable, setBiometricAvailable] = useState(false)
+  const [biometricEnrolled, setBiometricEnrolled]   = useState(false)
+  const [biometricLoading, setBiometricLoading]     = useState(false)
+  const [biometricMsg, setBiometricMsg]             = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  useEffect(() => {
+    Promise.all([isBiometricAvailable(), isBiometricEnrolled()]).then(([avail, enrolled]) => {
+      setBiometricAvailable(avail)
+      setBiometricEnrolled(enrolled)
+    })
+  }, [])
+
+  async function handleEnrollBiometric() {
+    const pw = getSessionPassword()
+    if (!pw) { setBiometricMsg({ type: 'error', text: 'Session expired. Please unlock the vault again.' }); return }
+    setBiometricLoading(true)
+    setBiometricMsg(null)
+    try {
+      await enrollBiometric(pw)
+      setBiometricEnrolled(true)
+      setBiometricMsg({ type: 'success', text: 'Biometric unlock enabled. Use Face ID / Touch ID next time you open the app.' })
+    } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      if (e?.name !== 'NotAllowedError') {
+        setBiometricMsg({ type: 'error', text: e.message ?? 'Enrolment failed.' })
+      }
+    } finally {
+      setBiometricLoading(false)
+    }
+  }
+
+  async function handleRevokeBiometric() {
+    await revokeBiometric()
+    setBiometricEnrolled(false)
+    setBiometricMsg({ type: 'success', text: 'Biometric unlock disabled.' })
   }
 
   // ── render ─────────────────────────────────────────────────────────────────
@@ -370,7 +411,89 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* ── 4. Data ───────────────────────────────────────────────────── */}
+        {/* ── 4. Biometric Unlock ───────────────────────────────────────── */}
+        <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Biometric Unlock</h2>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">
+              Use Face ID, Touch ID, or fingerprint to unlock your vault.
+            </p>
+          </div>
+
+          <div className="px-6 py-5 space-y-4">
+            {!biometricAvailable ? (
+              <div className="flex items-start gap-3 bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3">
+                <svg className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                </svg>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Biometric unlock is not supported on this device or browser. Try Chrome or Safari on a device with Face ID, Touch ID, or a fingerprint sensor.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Status row */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${biometricEnrolled ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {biometricEnrolled ? 'Enabled' : 'Not enabled'}
+                    </span>
+                  </div>
+                  {biometricEnrolled ? (
+                    <button
+                      onClick={handleRevokeBiometric}
+                      className="text-sm text-red-500 hover:text-red-700 font-medium transition"
+                    >
+                      Disable
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleEnrollBiometric}
+                      disabled={biometricLoading}
+                      className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white px-4 py-2 rounded-xl text-sm font-medium transition"
+                    >
+                      {biometricLoading ? (
+                        <>
+                          <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                          Setting up…
+                        </>
+                      ) : 'Enable'}
+                    </button>
+                  )}
+                </div>
+
+                {/* Feedback */}
+                {biometricMsg && (
+                  <div className={`flex items-start gap-2 rounded-xl px-4 py-3 text-sm ${
+                    biometricMsg.type === 'success'
+                      ? 'bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800 text-green-700 dark:text-green-400'
+                      : 'bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-800 text-red-600 dark:text-red-400'
+                  }`}>
+                    <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      {biometricMsg.type === 'success'
+                        ? <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        : <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />}
+                    </svg>
+                    {biometricMsg.text}
+                  </div>
+                )}
+
+                {/* Security note */}
+                <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+                  Biometric is a convenience feature — your vault password remains the primary key.
+                  If you change your master password, biometric is automatically reset and must be re-enabled.
+                  Disabling biometric does not affect your vault data.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* ── 5. Data ───────────────────────────────────────────────────── */}
         <BackupSection />
 
       </div>

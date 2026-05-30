@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useVault } from '@/context/VaultContext'
 import PasswordStrength from '@/components/PasswordStrength'
+import { isBiometricAvailable, isBiometricEnrolled, authenticateWithBiometric } from '@/lib/security/biometric'
 
 function EyeToggle({ show, onToggle }: { show: boolean; onToggle: () => void }) {
   return (
@@ -26,25 +27,47 @@ function EyeToggle({ show, onToggle }: { show: boolean; onToggle: () => void }) 
   )
 }
 
+// Fingerprint SVG — no heroicons equivalent
+function FingerprintIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2C8.5 2 5.5 4 4 7" />
+      <path d="M20 7c-1.5-3-4.5-5-8-5" />
+      <path d="M4 12c0-4.4 3.6-8 8-8s8 3.6 8 8" />
+      <path d="M12 8c-2.2 0-4 1.8-4 4 0 3 1 5.5 2.5 7.5" />
+      <path d="M16 12c0-2.2-1.8-4-4-4" />
+      <path d="M16 12c0 4-1.5 7.5-4 9.5" />
+      <path d="M12 12v.01" />
+    </svg>
+  )
+}
+
 export default function VaultGate({ children }: { children: React.ReactNode }) {
   const { initialized, unlocked, unlock, initialize } = useVault()
 
-  const [password, setPassword]             = useState('')
+  const [password, setPassword]               = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [showPassword, setShowPassword]     = useState(false)
-  const [showConfirm, setShowConfirm]       = useState(false)
-  const [error, setError]                   = useState('')
-  const [isLoading, setIsLoading]           = useState(false)
+  const [showPassword, setShowPassword]       = useState(false)
+  const [showConfirm, setShowConfirm]         = useState(false)
+  const [error, setError]                     = useState('')
+  const [isLoading, setIsLoading]             = useState(false)
   const confirmRef = useRef<HTMLInputElement>(null)
 
-  // Fix 10 — initialized is never null with useSyncExternalStore
+  const [biometricReady, setBiometricReady]     = useState(false)  // enrolled + available
+  const [biometricLoading, setBiometricLoading] = useState(false)
+
+  useEffect(() => {
+    if (!initialized) return
+    Promise.all([isBiometricAvailable(), isBiometricEnrolled()]).then(([avail, enrolled]) => {
+      setBiometricReady(avail && enrolled)
+    })
+  }, [initialized])
+
   if (unlocked) return <>{children}</>
 
   const passwordsMatch = !confirmPassword || password === confirmPassword
   const canSubmit = !isLoading && !!password && (
-    initialized
-      ? true
-      : !!confirmPassword && password === confirmPassword
+    initialized ? true : !!confirmPassword && password === confirmPassword
   )
 
   async function handleSubmit() {
@@ -52,11 +75,8 @@ export default function VaultGate({ children }: { children: React.ReactNode }) {
     setIsLoading(true)
     setError('')
     try {
-      if (!initialized) {
-        await initialize(password)
-      } else {
-        await unlock(password)
-      }
+      if (!initialized) await initialize(password)
+      else await unlock(password)
     } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       setError(e.message)
     } finally {
@@ -64,15 +84,29 @@ export default function VaultGate({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function handleBiometric() {
+    setBiometricLoading(true)
+    setError('')
+    try {
+      const pw = await authenticateWithBiometric()
+      await unlock(pw)
+    } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      // NotAllowedError = user cancelled — don't show as error
+      if (e?.name !== 'NotAllowedError') {
+        setError(e.message ?? 'Biometric authentication failed.')
+      }
+    } finally {
+      setBiometricLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm w-full max-w-sm overflow-hidden">
 
-        {/* Fix 7 — app branding + header */}
+        {/* Header */}
         <div className="bg-blue-600 px-6 py-5 text-white">
-          <p className="text-xs font-bold tracking-widest uppercase text-blue-300 mb-3">
-            Fintrackr
-          </p>
+          <p className="text-xs font-bold tracking-widest uppercase text-blue-300 mb-3">Fintrackr</p>
           <div className="flex items-center gap-2 mb-1">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
@@ -90,7 +124,36 @@ export default function VaultGate({ children }: { children: React.ReactNode }) {
 
         <div className="px-6 py-5 space-y-4">
 
-          {/* Fix 3 — password with show/hide */}
+          {/* Biometric button — only shown on unlock screen when enrolled */}
+          {initialized && biometricReady && (
+            <>
+              <button
+                onClick={handleBiometric}
+                disabled={biometricLoading || isLoading}
+                className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 disabled:opacity-50 transition"
+              >
+                {biometricLoading ? (
+                  <svg className="w-5 h-5 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <FingerprintIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                )}
+                <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                  {biometricLoading ? 'Waiting for biometric…' : 'Unlock with Biometrics'}
+                </span>
+              </button>
+
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
+                <span className="text-xs text-gray-400 dark:text-gray-500">or use password</span>
+                <div className="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
+              </div>
+            </>
+          )}
+
+          {/* Master password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               Master Password
@@ -107,14 +170,14 @@ export default function VaultGate({ children }: { children: React.ReactNode }) {
                     else confirmRef.current?.focus()
                   }
                 }}
-                autoFocus
+                autoFocus={!biometricReady}
                 className="w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2.5 pr-10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <EyeToggle show={showPassword} onToggle={() => setShowPassword((v) => !v)} />
             </div>
           </div>
 
-          {/* Fix 1 — confirm password for create flow */}
+          {/* Confirm password (create flow only) */}
           {!initialized && (
             <>
               <div>
@@ -141,13 +204,11 @@ export default function VaultGate({ children }: { children: React.ReactNode }) {
                   <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
                 )}
               </div>
-
-              {/* Fix 4 — password strength */}
               {password && <PasswordStrength password={password} />}
             </>
           )}
 
-          {/* Fix 8 — proper error banner */}
+          {/* Error */}
           {error && (
             <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5">
               <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -157,7 +218,7 @@ export default function VaultGate({ children }: { children: React.ReactNode }) {
             </div>
           )}
 
-          {/* Fix 2 & 6 — loading state + disabled when empty */}
+          {/* Submit */}
           <button
             onClick={handleSubmit}
             disabled={!canSubmit}
@@ -176,7 +237,7 @@ export default function VaultGate({ children }: { children: React.ReactNode }) {
             )}
           </button>
 
-          {/* Fix 5 — relevant warnings for each flow */}
+          {/* Footer note */}
           {!initialized ? (
             <p className="text-xs text-gray-400 dark:text-gray-500 text-center leading-relaxed">
               This password encrypts all your data using AES-256.

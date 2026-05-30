@@ -49,6 +49,10 @@ export function isVaultUnlocked() {
   return sessionPassword !== null
 }
 
+export function getSessionPassword(): string | null {
+  return sessionPassword
+}
+
 export function lockVault() {
   sessionPassword = null
   vaultCache = null
