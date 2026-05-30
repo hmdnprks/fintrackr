@@ -56,22 +56,22 @@ export default function CategorySection({ allTransactions }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
 
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-        <h2 className="text-lg font-semibold text-gray-900">
+      <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           {filter === 'expense' ? 'Spending' : 'Income'} by Category
         </h2>
-        <div className="flex items-center bg-gray-100 rounded-xl p-1 gap-0.5">
+        <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1 gap-0.5">
           {(['expense', 'income'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 text-sm rounded-lg font-medium transition ${
                 filter === f
-                  ? 'bg-white text-gray-800 shadow-sm'
-                  : 'text-gray-400 hover:text-gray-600'
+                  ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 shadow-sm'
+                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
               }`}
             >
               {f === 'expense' ? '↓ Expenses' : '↑ Income'}
@@ -115,10 +115,10 @@ export default function CategorySection({ allTransactions }: Props) {
               />
               {/* Center total */}
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <p className="text-xs text-gray-400 mb-0.5">
+                <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">
                   {filter === 'expense' ? 'Total spent' : 'Total earned'}
                 </p>
-                <p className="text-sm font-bold text-gray-800 text-center leading-tight px-2">
+                <p className="text-sm font-bold text-gray-800 dark:text-gray-100 text-center leading-tight px-2">
                   {formatIDR(total)}
                 </p>
               </div>
@@ -126,30 +126,30 @@ export default function CategorySection({ allTransactions }: Props) {
           </div>
 
           {/* Ranked list */}
-          <div className="flex-1 border-t md:border-t-0 md:border-l border-gray-100 divide-y divide-gray-50">
+          <div className="flex-1 border-t md:border-t-0 md:border-l border-gray-100 dark:border-gray-800 divide-y divide-gray-50 dark:divide-gray-800">
             {entries.map(([cat, amount], i) => {
               const pct   = total > 0 ? (amount / total) * 100 : 0
               const color = CATEGORY_COLOR[cat] ?? '#94a3b8'
               return (
                 <div key={cat} className="flex items-center gap-3 px-5 py-3">
-                  <span className="text-xs text-gray-300 w-4 text-right shrink-0 tabular-nums">
+                  <span className="text-xs text-gray-300 dark:text-gray-600 w-4 text-right shrink-0 tabular-nums">
                     {i + 1}
                   </span>
                   <div
                     className="w-2.5 h-2.5 rounded-full shrink-0"
                     style={{ backgroundColor: color }}
                   />
-                  <span className="text-sm text-gray-700 w-36 shrink-0 truncate">{cat}</span>
-                  <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <span className="text-sm text-gray-700 dark:text-gray-300 w-36 shrink-0 truncate">{cat}</span>
+                  <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full"
                       style={{ width: `${pct}%`, backgroundColor: color }}
                     />
                   </div>
-                  <span className="text-sm font-medium text-gray-800 w-28 text-right shrink-0 tabular-nums">
+                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200 w-28 text-right shrink-0 tabular-nums">
                     {formatIDR(amount)}
                   </span>
-                  <span className="text-xs text-gray-400 w-10 text-right shrink-0 tabular-nums">
+                  <span className="text-xs text-gray-400 dark:text-gray-500 w-10 text-right shrink-0 tabular-nums">
                     {pct.toFixed(1)}%
                   </span>
                 </div>

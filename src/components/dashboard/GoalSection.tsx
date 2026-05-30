@@ -315,14 +315,14 @@ function SavingsGoalCard({ goal, statements, onDelete }: {
   const isOverdue   = months < 0 && !isComplete
 
   return (
-    <div className={`bg-white rounded-2xl shadow-sm overflow-hidden border ${
-      isComplete ? 'border-green-200' : isOverdue ? 'border-red-200' : 'border-gray-100'
+    <div className={`bg-white dark:bg-gray-900 rounded-2xl shadow-sm overflow-hidden border ${
+      isComplete ? 'border-green-200 dark:border-green-800' : isOverdue ? 'border-red-200 dark:border-red-800' : 'border-gray-100 dark:border-gray-800'
     }`}>
-      <div className={`px-5 py-4 ${isComplete ? 'bg-green-50' : isOverdue ? 'bg-red-50' : 'bg-gray-50'}`}>
+      <div className={`px-5 py-4 ${isComplete ? 'bg-green-50 dark:bg-green-900/20' : isOverdue ? 'bg-red-50 dark:bg-red-900/20' : 'bg-gray-50 dark:bg-gray-800'}`}>
         <div className="flex items-start justify-between">
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">Savings Goal</span>
-            <p className="text-base font-semibold text-gray-900 mt-0.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Savings Goal</span>
+            <p className="text-base font-semibold text-gray-900 dark:text-gray-100 mt-0.5">
               Save {formatIDR(goal.targetAmount)}
             </p>
             <p className={`text-xs mt-0.5 ${isOverdue ? 'text-red-500' : 'text-gray-400'}`}>
@@ -342,7 +342,7 @@ function SavingsGoalCard({ goal, statements, onDelete }: {
       </div>
 
       <div className="px-5 py-4 space-y-3">
-        <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+        <div className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-700 ${isComplete ? 'bg-green-500' : 'bg-blue-500'}`}
             style={{ width: `${pct}%` }}
@@ -352,13 +352,13 @@ function SavingsGoalCard({ goal, statements, onDelete }: {
           <span className={`font-semibold ${isComplete ? 'text-green-600' : 'text-gray-800'}`}>
             {formatIDR(saved)} saved
           </span>
-          <span className="text-gray-400">
+          <span className="text-gray-400 dark:text-gray-500">
             {isComplete ? 'Target reached' : `${formatIDR(remaining)} to go`}
           </span>
         </div>
-        <div className="flex items-center justify-between text-xs text-gray-400">
+        <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
           <span>From {monthLabel(goal.startMonth)}</span>
-          <span className="font-medium text-gray-600">{pct.toFixed(1)}%</span>
+          <span className="font-medium text-gray-600 dark:text-gray-400">{pct.toFixed(1)}%</span>
         </div>
       </div>
     </div>
@@ -374,14 +374,14 @@ function SpendingGoalCard({ goal, statements, onDelete }: {
   )
 
   return (
-    <div className={`bg-white rounded-2xl shadow-sm overflow-hidden border ${
-      achieved ? 'border-green-200' : 'border-gray-100'
+    <div className={`bg-white dark:bg-gray-900 rounded-2xl shadow-sm overflow-hidden border ${
+      achieved ? 'border-green-200 dark:border-green-800' : 'border-gray-100 dark:border-gray-800'
     }`}>
-      <div className={`px-5 py-4 ${achieved ? 'bg-green-50' : 'bg-gray-50'}`}>
+      <div className={`px-5 py-4 ${achieved ? 'bg-green-50 dark:bg-green-900/20' : 'bg-gray-50 dark:bg-gray-800'}`}>
         <div className="flex items-start justify-between">
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">Spending Goal</span>
-            <p className="text-base font-semibold text-gray-900 mt-0.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Spending Goal</span>
+            <p className="text-base font-semibold text-gray-900 dark:text-gray-100 mt-0.5">
               {goal.category} &lt; {formatIDR(goal.monthlyLimit)}
             </p>
             <p className="text-xs text-gray-400 mt-0.5">
@@ -408,14 +408,14 @@ function SpendingGoalCard({ goal, statements, onDelete }: {
                 className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                   i < streak
                     ? 'bg-green-500 text-white'
-                    : 'bg-gray-100 text-gray-300'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-300 dark:text-gray-600'
                 }`}
               >
                 {i < streak ? '✓' : '○'}
               </div>
             ))}
           </div>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             {streak} of {goal.targetMonths} month{goal.targetMonths !== 1 ? 's' : ''}
             {streak > 0 ? ' streak' : ''}
           </span>
@@ -434,7 +434,7 @@ function SpendingGoalCard({ goal, statements, onDelete }: {
                   {r.passed ? '✓' : '✗'}
                 </span>
                 <span className="text-xs text-gray-500 w-20 shrink-0">{r.label}</span>
-                <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full ${r.passed ? 'bg-green-400' : 'bg-red-400'}`}
                     style={{ width: `${Math.min((r.amount / (goal.monthlyLimit * 1.5)) * 100, 100)}%` }}
@@ -481,8 +481,8 @@ export default function GoalSection({ statements }: Props) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Goals</h2>
-            <p className="text-sm text-gray-400 mt-0.5">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Goals</h2>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">
               {goals.length > 0
                 ? `${goals.length} active goal${goals.length !== 1 ? 's' : ''}`
                 : 'Track savings targets and spending habits'}
@@ -500,7 +500,7 @@ export default function GoalSection({ statements }: Props) {
         </div>
 
         {goals.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 py-12 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 py-12 text-center">
             <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />

@@ -19,12 +19,12 @@ export default function SummaryCard({
   delta,
 }: SummaryCardProps) {
   return (
-    <div className="bg-white p-5 rounded-xl shadow-sm">
+    <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 p-5 rounded-xl shadow-sm">
       <div className="flex items-center gap-2 mb-2">
         {icon}
-        <p className="text-xs text-gray-500">{label}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
       </div>
-      <p className={`text-lg font-semibold ${valueColor || 'text-gray-800'}`}>
+      <p className={`text-lg font-semibold ${valueColor || 'text-gray-800 dark:text-gray-100'}`}>
         {value}
       </p>
       {delta != null && (
@@ -37,7 +37,7 @@ export default function SummaryCard({
             {delta.pct > 0 ? '↑' : '↓'}
             {Math.abs(delta.pct).toFixed(1)}%
           </span>
-          <span className="text-xs text-gray-400">vs last month</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">vs last month</span>
         </div>
       )}
     </div>
