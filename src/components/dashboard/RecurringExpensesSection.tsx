@@ -67,19 +67,23 @@ export default function RecurringExpensesSection({ items, avgMonthlyIncome }: Pr
         </p>
       )}
 
-      <div className="space-y-2.5">
+      <div className="space-y-2">
         {items.map((item, i) => (
-          <div key={i} className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${CATEGORY_COLOR[item.category] ?? 'bg-gray-100 text-gray-600'}`}>
-                {item.category}
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm text-gray-700 truncate">{item.description}</p>
-                <p className="text-xs text-gray-400">{item.months} months detected</p>
+          <div key={i} className="bg-gray-50 rounded-xl px-4 py-3">
+            {/* Description — full width, wraps naturally */}
+            <p className="text-sm font-medium text-gray-800 break-words mb-1.5">{item.description}</p>
+            {/* Metadata row */}
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${CATEGORY_COLOR[item.category] ?? 'bg-gray-100 text-gray-600'}`}>
+                  {item.category}
+                </span>
+                <span className="text-xs text-gray-400">{item.months} months</span>
               </div>
+              <p className="text-sm font-semibold text-gray-800 shrink-0">
+                {formatIDR(item.avgMonthly)}<span className="text-xs text-gray-400 font-normal">/mo</span>
+              </p>
             </div>
-            <p className="text-sm font-semibold text-gray-800 shrink-0">{formatIDR(item.avgMonthly)}<span className="text-xs text-gray-400 font-normal">/mo</span></p>
           </div>
         ))}
       </div>
