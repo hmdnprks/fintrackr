@@ -25,9 +25,14 @@
 - **Wrong category flag** — flag icon on AI-categorized rows; clicking marks the transaction as incorrect; reassigning a flagged transaction records the correction in `learnedRules` with source `ai-corrected`
 - **Auto-learn from manual overrides** — every inline category change upserts the normalized description → new category into `vault.learnedRules`; no need to re-run AI for the same merchant again
 - Live status text during processing shows each phase; result modal breaks down counts: "X from learned rules · Y via AI"
-- **Manual override** — click any category badge in the transaction table to reassign inline
-- **Recurring batch** — detect repeating uncategorized transactions and assign category to all occurrences at once
-- 14 categories: Income, Food & Dining, Groceries, Shopping, Services, Transportation, Health & Medical, Entertainment, Education, Housing, Insurance, Bank Charges, Transfer, Uncategorized
+- **Manual override** — click any category badge to reassign inline; apply-to-all-similar prompt expands inline below the edited row showing up to 5 matching transactions with merchant label, current category, and amount; per-row × button to exclude false matches before applying; success message shows actual applied count
+- **Bulk search categorize** — type any keyword in the search box to filter transactions; a "Set all N results as…" bar appears with a category picker; applies to all filtered results across all pages in one tap
+- **Merchant labels** — tag icon on each description row to assign a human-readable alias (e.g. `UBP60148960801FFFFFF...` → "Shopee"); alias shown as primary bold text with raw description in gray below; labels saved to `vault.transactionLabels` and included in backup; label key is alphanumeric (preserves digits) so different merchants with similar patterns stay distinct
+- **Category icons** — each category badge displays a small Heroicon before the label for faster visual scanning
+- **Recurring batch** — detect repeating uncategorized transactions and assign category to all occurrences at once; expandable row shows last 5 occurrences with timestamps for manual Livin Mandiri lookup
+- 15 categories: Income, Food & Dining, Groceries, Shopping, Services, Transportation, Health & Medical, Entertainment, Education, Housing, Insurance, Bank Charges, Transfer, Loan, Uncategorized
+- **Loan category** — KKB, KPR, personal loan installments (Angsuran, Cicilan, KPR, KKB, Pinjaman, Pelunasan); excluded from spending analysis and savings rate trend; counted as Needs in 50/30/20; detected as recurring fixed commitment; rose/pink badge
+- ATM withdrawals (Tarik ATM, ATM-) → Transfer; treated as cash conversion, not spending
 
 ## Dashboard
 
@@ -151,7 +156,7 @@ Two goal types displayed as cards in the Budget tab:
 ## Data Export
 
 - **CSV export** — download currently filtered transactions (Date, Description, Amount, Type, Category, Balance)
-- **JSON backup** — full vault export: statements, manual transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots, rebalance history, learned categorization rules
+- **JSON backup** — full vault export: statements, manual transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots, rebalance history, learned categorization rules, transaction labels
 - Vault credentials excluded (device-specific)
 
 ## Data Backup & Restore

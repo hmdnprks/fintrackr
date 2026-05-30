@@ -26,12 +26,17 @@ Checklist of shipped features and planned improvements. Items without a check ar
   - [x] Phase 1 — learned rules: reuses categories from previously categorized transactions via normalized description matching
   - [x] Phase 2 — deduplication: groups by normalized description, sends only unique merchants to AI (2,000 transactions → 20 API rows)
   - [x] Phase 3 — AI fallback: DeepSeek with sequential batching and exponential backoff
-- [x] Manual inline override — click any category badge to reassign
-- [x] Recurring uncategorized pattern panel — bulk-assign categories
+- [x] Manual inline override — click any category badge to reassign; apply-to-all-similar prompt appears inline below the edited row with up to 5 matching transactions shown (date, merchant label, current category, amount); per-row × to exclude individual transactions before applying; success message shows actual applied count
+- [x] Recurring uncategorized pattern panel — bulk-assign categories; expandable row shows last 5 occurrences with timestamps for manual lookup in Livin Mandiri
 - [x] Categorization result modal shows learned vs AI counts
 - [x] Confidence score per AI-categorized transaction — AI returns high/medium/low confidence per result; stored on each transaction; colored dot on category badge (green/amber/red) with tooltip
 - [x] User feedback loop — "wrong category" flag on AI-categorized rows; flagged + reassigned transactions recorded in learnedRules with source 'ai-corrected'; improves future categorization without re-running AI
 - [x] Learn from manual overrides automatically — every inline category change upserts normalizedDesc → category into vault learnedRules; Phase 1 seeds from learnedRules before scanning transaction history; AI results also persisted to learnedRules; included in backup
+- [x] **Bulk search categorize** — "Set all N results as…" bar in filter card when search is active; applies selected category to all filtered transactions across all pages; 3s success indicator
+- [x] **Merchant labels** — tag icon on each description to assign a human-readable alias (e.g. UBP...FFFFFF... → "Shopee"); alias shown as primary bold text with raw description below in gray; saved to vault transactionLabels; included in backup; label key keeps digits for precision (different UBP merchants stay distinct)
+- [x] **Category icons** — each category badge shows a small Heroicon (w-3 h-3) before the label for faster visual scanning
+- [x] **Loan category** — for KKB, KPR, personal loan installments; 9 default keyword rules; excluded from spending analysis and savings rate trend; counted as Needs in 50/30/20; appears in fixed commitments detection; rose/pink badge + ReceiptPercentIcon
+- [x] **ATM withdrawal rules** — Tarik ATM, TARIK ATM, ATM-, TARIKAN ATM → Transfer (cash conversion, not spending)
 
 ---
 
@@ -104,7 +109,7 @@ Checklist of shipped features and planned improvements. Items without a check ar
 
 ## Data & Backup
 
-- [x] JSON backup v4 — statements, transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots, rebalance history
+- [x] JSON backup v4 — statements, transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots, rebalance history, learned rules, transaction labels
 - [x] Backwards-compatible restore — v1/v2/v3 backups load cleanly
 - [x] Merge restore — deduplicates by ID; backup wins on same-day snapshots
 - [x] CSV export — filtered transaction list
