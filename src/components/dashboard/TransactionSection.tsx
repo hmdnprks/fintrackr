@@ -195,6 +195,7 @@ export default function TransactionSection({
       {/* Recurring suggestions */}
       <RecurringSuggestionPanel
         suggestions={recurringSuggestions}
+        transactions={transactions}
         formatIDR={formatIDR}
         onCategorizeGroup={onCategorizeGroup}
       />
