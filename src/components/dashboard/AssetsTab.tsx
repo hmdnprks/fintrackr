@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import { useState, useMemo } from 'react'
@@ -64,30 +65,67 @@ export default function AssetsTab({ statements }: Props) {
   }
 
   // Average real monthly expense from the 6 most recent months.
-  // Excludes Transfer and Bank Charges — these are financial movements
-  // (credit card payments, e-wallet top-ups) not actual spending.
-  const avgMonthlyExpense = useMemo(() => {
-    if (!statements.length) return 0
-    const EXCLUDE = new Set(['Transfer', 'Bank Charges'])
-    const monthlyTotals: Record<string, number> = {}
-    for (const s of statements) {
+  // Excludes Transfer, Bank Charges, and Loan — financial movements / debt obligations.
+  const EXPENSE_EXCLUDE = new Set(['Transfer', 'Bank Charges', 'Loan'])
+
+  const { avgMonthlyExpense, expenseBreakdown } = useMemo(() => {
+    if (!statements.length) return { avgMonthlyExpense: 0, expenseBreakdown: [] }
+
+    // Build per-category, per-month totals + top transactions per category
+    const catByMonth: Record<string, Record<string, number>> = {}
+    const monthTotals: Record<string, number> = {}
+    const catTxns: Record<string, { detail: string; amount: number; monthKey: string }[]> = {}
+
+    for (const s of statements as any[]) {
       if (!s.monthKey) continue
-      let total = 0
       for (const tx of s.transactions || []) {
-        if (tx.type === 'debit' && !EXCLUDE.has(tx.category)) {
-          total += tx.amount || 0
-        }
+        if (tx.type !== 'debit') continue
+        const cat = tx.category || 'Uncategorized'
+        if (EXPENSE_EXCLUDE.has(cat)) continue
+        if (cat === 'Income') continue
+        const amt = tx.amount || 0
+        if (!catByMonth[cat]) catByMonth[cat] = {}
+        catByMonth[cat][s.monthKey] = (catByMonth[cat][s.monthKey] || 0) + amt
+        monthTotals[s.monthKey] = (monthTotals[s.monthKey] || 0) + amt
+        if (!catTxns[cat]) catTxns[cat] = []
+        catTxns[cat].push({ detail: tx.detail, amount: amt, monthKey: s.monthKey })
       }
-      monthlyTotals[s.monthKey] = total
     }
-    // Sort by monthKey (YYYY-MM) chronologically, take the 6 most recent
-    const recent = Object.entries(monthlyTotals)
+
+    // 6 most recent months that have any spending
+    const sampleMonths = Object.entries(monthTotals)
       .filter(([, v]) => v > 0)
-      .sort(([a], [b]) => b.localeCompare(a))  // descending → most recent first
+      .sort(([a], [b]) => b.localeCompare(a))
       .slice(0, 6)
-      .map(([, v]) => v)
-    if (!recent.length) return 0
-    return recent.reduce((s, v) => s + v, 0) / recent.length
+      .map(([k]) => k)
+
+    const n = sampleMonths.length
+    if (!n) return { avgMonthlyExpense: 0, expenseBreakdown: [] }
+
+    // For each category: if it appeared in fewer than half the sample months,
+    // it's an infrequent/annual expense — amortise over 12 months so a once-a-year
+    // rent payment doesn't inflate the monthly average.
+    const expenseBreakdown: { category: string; avg: number; amortised: boolean; topTxns: { detail: string; amount: number; monthKey: string }[] }[] = []
+    let totalAvg = 0
+
+    for (const [cat, monthAmounts] of Object.entries(catByMonth)) {
+      const monthsActive = sampleMonths.filter(m => (monthAmounts[m] || 0) > 0).length
+      const total = sampleMonths.reduce((s, m) => s + (monthAmounts[m] || 0), 0)
+      const amortised = monthsActive < Math.ceil(n / 2)
+      const avg = total / (amortised ? 12 : n)
+      // Top 5 transactions for this category in the sample period, by amount desc
+      const topTxns = (catTxns[cat] ?? [])
+        .filter(tx => sampleMonths.includes(tx.monthKey))
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, 5)
+      expenseBreakdown.push({ category: cat, avg, amortised, topTxns })
+      totalAvg += avg
+    }
+
+    expenseBreakdown.sort((a, b) => b.avg - a.avg)
+
+    return { avgMonthlyExpense: totalAvg, expenseBreakdown }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statements])
 
   const totalByType = useMemo(() => {
@@ -267,13 +305,13 @@ export default function AssetsTab({ statements }: Props) {
             <EmergencyFundSection
               months={emergencyMonths}
               avgMonthlyExpense={avgMonthlyExpense}
+              expenseBreakdown={expenseBreakdown}
             />
           )}
           {liquidCoverageMonths !== null && (
             <LiquidCoverageSection
               months={liquidCoverageMonths.months}
               totalLiquid={liquidCoverageMonths.totalLiquid}
-              avgMonthlyExpense={avgMonthlyExpense}
             />
           )}
         </div>
@@ -402,10 +440,14 @@ const EF_ADVICE: Record<EFStatus, string> = {
 function EmergencyFundSection({
   months,
   avgMonthlyExpense,
+  expenseBreakdown,
 }: {
   months: number
   avgMonthlyExpense: number
+  expenseBreakdown: { category: string; avg: number; amortised: boolean; topTxns: { detail: string; amount: number; monthKey: string }[] }[]
 }) {
+  const [showBreakdown, setShowBreakdown] = useState(false)
+  const [expandedCat, setExpandedCat]   = useState<string | null>(null)
   const TARGET = 6
   const status: EFStatus =
     months >= 9 ? 'strong' :
@@ -465,9 +507,64 @@ function EmergencyFundSection({
           </div>
         )}
         {avgMonthlyExpense > 0 && (
-          <div className="bg-white/60 dark:bg-black/20 rounded-lg px-3 py-2 text-xs">
-            <span className="text-gray-500 dark:text-gray-400">Avg monthly expenses: </span>
-            <span className="font-semibold text-gray-800 dark:text-gray-200">{formatIDRFull(avgMonthlyExpense)}</span>
+          <div className="bg-white/60 dark:bg-black/20 rounded-lg px-3 py-2 text-xs w-full">
+            <button
+              onClick={() => setShowBreakdown(v => !v)}
+              className="flex items-center justify-between w-full"
+            >
+              <span>
+                <span className="text-gray-500 dark:text-gray-400">Avg monthly expenses: </span>
+                <span className="font-semibold text-gray-800 dark:text-gray-200">{formatIDRFull(avgMonthlyExpense)}</span>
+              </span>
+              <svg
+                className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ml-2 ${showBreakdown ? 'rotate-180' : ''}`}
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+
+            {showBreakdown && expenseBreakdown.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-black/10 dark:border-white/10 space-y-1">
+                <p className="text-gray-400 dark:text-gray-500 mb-1.5">Breakdown (avg/month, last 6 months):</p>
+                {expenseBreakdown.map(({ category, avg, amortised, topTxns }) => {
+                  const isExpanded = expandedCat === category
+                  return (
+                    <div key={category}>
+                      <button
+                        onClick={() => setExpandedCat(isExpanded ? null : category)}
+                        className="flex items-center justify-between gap-2 w-full text-left hover:opacity-80 transition"
+                      >
+                        <span className="text-gray-600 dark:text-gray-400 truncate">
+                          {category}
+                          {amortised && <span className="ml-1 text-gray-400 dark:text-gray-500">(÷12)</span>}
+                        </span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="font-medium text-gray-800 dark:text-gray-200 tabular-nums">{formatIDRFull(avg)}</span>
+                          <svg className={`w-3 h-3 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                          </svg>
+                        </div>
+                      </button>
+                      {isExpanded && topTxns.length > 0 && (
+                        <div className="mt-1 mb-1 ml-2 space-y-0.5 border-l-2 border-black/10 dark:border-white/10 pl-2">
+                          {topTxns.map((tx, i) => (
+                            <div key={i} className="flex items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400">
+                              <span className="truncate">{tx.detail}</span>
+                              <span className="shrink-0 tabular-nums text-gray-700 dark:text-gray-300">{formatIDRFull(tx.amount)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+                <p className="text-gray-400 dark:text-gray-500 pt-1 border-t border-black/10 dark:border-white/10">
+                  Excludes Transfer, Bank Charges, Loan.
+                  (÷12) = infrequent payment amortised annually so one-time costs don&apos;t inflate the monthly average.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -486,11 +583,9 @@ function EmergencyFundSection({
 function LiquidCoverageSection({
   months,
   totalLiquid,
-  avgMonthlyExpense,
 }: {
   months: number
   totalLiquid: number
-  avgMonthlyExpense: number
 }) {
   const status = months >= 12 ? 'excellent' : months >= 6 ? 'healthy' : months >= 3 ? 'adequate' : 'low'
 
