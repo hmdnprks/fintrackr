@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { Squares2X2Icon } from '@heroicons/react/24/outline'
 import {
   Category, CategoryRule, defaultRules,
   getUserRules, saveUserRules, deleteUserRule,
@@ -174,12 +175,11 @@ export default function SettingsPage() {
           </div>
           <Link
             href="/dashboard"
-            className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 flex items-center gap-1.5 transition shrink-0"
+            className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 px-3 py-2 rounded-xl transition shrink-0"
           >
-            Dashboard
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
+            <Squares2X2Icon className="w-4 h-4" />
+            <span className="hidden sm:inline">Go to Dashboard</span>
+            <span className="sm:hidden">Dashboard</span>
           </Link>
         </div>
 
