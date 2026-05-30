@@ -116,6 +116,12 @@ export const defaultRules: CategoryRule[] = [
   { id: '103', keyword: 'ShopeePay',  category: 'Transfer' },
   { id: '104', keyword: 'LinkAja',    category: 'Transfer' },
 
+  // ATM withdrawals (cash conversion, not actual spending)
+  { id: '140', keyword: 'Tarik ATM',   category: 'Transfer' },
+  { id: '141', keyword: 'TARIK ATM',   category: 'Transfer' },
+  { id: '142', keyword: 'ATM-',        category: 'Transfer' },
+  { id: '143', keyword: 'TARIKAN ATM', category: 'Transfer' },
+
   // Credit card payments (transfer, not an expense)
   { id: '120', keyword: 'KARTU KREDIT',  category: 'Transfer' },
   { id: '121', keyword: 'Bayar CC',      category: 'Transfer' },

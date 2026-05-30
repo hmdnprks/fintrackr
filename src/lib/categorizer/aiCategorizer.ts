@@ -30,7 +30,7 @@ Rules:
 - "Education": courses, books, training (Udemy, Coursera, buku)
 - "Insurance": insurance premiums (Asuransi, Premi)
 - "Bank Charges": admin fees, ATM fees, penalties (Biaya Adm, Biaya Transfer, Denda)
-- "Transfer": transfers between accounts, e-wallets, and credit card bill payments (GoPay, OVO, DANA, ShopeePay, LinkAja, KARTU KREDIT, Bayar CC — credit card payments are NOT expenses, they settle a liability)
+- "Transfer": transfers between accounts, e-wallets, credit card bill payments, and ATM cash withdrawals (GoPay, OVO, DANA, ShopeePay, LinkAja, KARTU KREDIT, Bayar CC, Tarik ATM, ATM- — these are cash/liability movements, not actual spending)
 - "Loan": vehicle and property loan installments, personal loan repayments (Angsuran, Cicilan, KKB, KPR, Pinjaman — these are debt repayments, not expenses)
 - "Uncategorized": only if truly unable to determine
 
