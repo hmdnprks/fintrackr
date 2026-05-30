@@ -4,6 +4,12 @@
 import { useMemo, useState, useRef, useEffect } from 'react'
 import RecurringSuggestionPanel from './RecurringSuggestionPanel'
 import { formatIDR } from '@/lib/formatter'
+import { normalizeDetail } from '@/lib/insights/recurring'
+import {
+  BanknotesIcon, BuildingStorefrontIcon, ShoppingCartIcon, ShoppingBagIcon,
+  WrenchScrewdriverIcon, TruckIcon, HeartIcon, FilmIcon, AcademicCapIcon,
+  HomeIcon, ShieldCheckIcon, CreditCardIcon, ArrowsRightLeftIcon, QuestionMarkCircleIcon,
+} from '@heroicons/react/24/outline'
 
 const CATEGORIES = [
   'Income', 'Food & Dining', 'Groceries', 'Shopping',
@@ -27,6 +33,24 @@ const CATEGORY_COLORS: Record<string, string> = {
   'Bank Charges':     'bg-gray-100 text-gray-600',
   'Transfer':         'bg-slate-100 text-slate-600',
   'Uncategorized':    'bg-amber-50 text-amber-600',
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CATEGORY_ICONS: Record<string, React.ComponentType<any>> = {
+  'Income':           BanknotesIcon,
+  'Food & Dining':    BuildingStorefrontIcon,
+  'Groceries':        ShoppingCartIcon,
+  'Shopping':         ShoppingBagIcon,
+  'Services':         WrenchScrewdriverIcon,
+  'Transportation':   TruckIcon,
+  'Health & Medical': HeartIcon,
+  'Entertainment':    FilmIcon,
+  'Education':        AcademicCapIcon,
+  'Housing':          HomeIcon,
+  'Insurance':        ShieldCheckIcon,
+  'Bank Charges':     CreditCardIcon,
+  'Transfer':         ArrowsRightLeftIcon,
+  'Uncategorized':    QuestionMarkCircleIcon,
 }
 
 type SortKey = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'
@@ -83,6 +107,9 @@ export default function TransactionSection({
   const [editingOriginalIndex, setEditingOriginalIndex] = useState<number | null>(null)
   const [page, setPage]                   = useState(1)
   const editingRef = useRef<HTMLSelectElement>(null)
+
+  type SimilarPrompt = { indexes: number[]; category: string; label: string }
+  const [similarPrompt, setSimilarPrompt] = useState<SimilarPrompt | null>(null)
 
   const isFiltered = search || filterCategory !== 'all' || filterType !== 'all'
 
@@ -199,6 +226,32 @@ export default function TransactionSection({
         formatIDR={formatIDR}
         onCategorizeGroup={onCategorizeGroup}
       />
+
+      {/* Apply-to-all-similar prompt */}
+      {similarPrompt && (
+        <div className="flex items-center justify-between gap-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl px-4 py-3">
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            <span className="font-semibold">{similarPrompt.indexes.length} other transaction{similarPrompt.indexes.length !== 1 ? 's' : ''}</span> match this merchant pattern. Apply <span className="font-semibold">{similarPrompt.category}</span> to all?
+          </p>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => {
+                onCategorizeGroup(similarPrompt.indexes, similarPrompt.category)
+                setSimilarPrompt(null)
+              }}
+              className="text-xs font-semibold px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+            >
+              Apply to all
+            </button>
+            <button
+              onClick={() => setSimilarPrompt(null)}
+              className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Filter bar */}
       <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm px-4 py-3 space-y-3">
@@ -353,8 +406,21 @@ export default function TransactionSection({
                             ref={editingRef}
                             defaultValue={tx.category ?? 'Uncategorized'}
                             onChange={(e) => {
-                              onRecategorize(tx._idx, e.target.value)
+                              const newCat = e.target.value
+                              // Find other transactions with the same normalized merchant pattern
+                              const key = normalizeDetail(tx.detail)
+                              const similarIdxs = key
+                                ? transactions
+                                    .filter((t: any) => t._idx !== tx._idx && normalizeDetail(t.detail) === key && t.category !== newCat)
+                                    .map((t: any) => t._idx)
+                                : []
+                              onRecategorize(tx._idx, newCat)
                               setEditingOriginalIndex(null)
+                              if (similarIdxs.length > 0) {
+                                setSimilarPrompt({ indexes: similarIdxs, category: newCat, label: newCat })
+                              } else {
+                                setSimilarPrompt(null)
+                              }
                             }}
                             onBlur={() => setEditingOriginalIndex(null)}
                             className="text-xs border border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
@@ -365,7 +431,7 @@ export default function TransactionSection({
                           </select>
                         ) : (
                           <div className="flex items-center gap-1.5">
-                            {/* Category badge with optional AI confidence dot */}
+                            {/* Category badge with icon + optional AI confidence dot */}
                             <button
                               onClick={() => setEditingOriginalIndex(tx._idx)}
                               title="Click to change category"
@@ -377,6 +443,10 @@ export default function TransactionSection({
                                   title={CONFIDENCE_LABEL[tx.aiConfidence]}
                                 />
                               )}
+                              {(() => {
+                                const Icon = CATEGORY_ICONS[tx.category ?? 'Uncategorized'] ?? QuestionMarkCircleIcon
+                                return <Icon className="w-3 h-3 shrink-0 opacity-70" />
+                              })()}
                               {tx.category ?? 'Uncategorized'}
                               <svg className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" />
