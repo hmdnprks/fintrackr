@@ -4,7 +4,7 @@
 import { useMemo, useState, useRef, useEffect, Fragment } from 'react'
 import RecurringSuggestionPanel from './RecurringSuggestionPanel'
 import { formatIDR } from '@/lib/formatter'
-import { normalizeDetail } from '@/lib/insights/recurring'
+import { isSafeSimilarityMatch } from '@/lib/insights/recurring'
 import {
   BanknotesIcon, BuildingStorefrontIcon, ShoppingCartIcon, ShoppingBagIcon,
   WrenchScrewdriverIcon, TruckIcon, HeartIcon, FilmIcon, AcademicCapIcon,
@@ -393,12 +393,9 @@ export default function TransactionSection({
                             defaultValue={tx.category ?? 'Uncategorized'}
                             onChange={(e) => {
                               const newCat = e.target.value
-                              const key = normalizeDetail(tx.detail)
-                              const similarIdxs = key
-                                ? transactions
-                                    .filter((t: any) => t._idx !== tx._idx && normalizeDetail(t.detail) === key && t.category !== newCat)
-                                    .map((t: any) => t._idx)
-                                : []
+                              const similarIdxs = transactions
+                                .filter((t: any) => t._idx !== tx._idx && t.category !== newCat && isSafeSimilarityMatch(tx.detail, t.detail))
+                                .map((t: any) => t._idx)
                               onRecategorize(tx._idx, newCat)
                               setEditingOriginalIndex(null)
                               setSimilarPrompt(similarIdxs.length > 0

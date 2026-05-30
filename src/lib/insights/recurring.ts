@@ -17,6 +17,28 @@ export function normalizeDetail(detail: string) {
     .trim()
 }
 
+// Returns true only when it is safe to offer "apply to all similar":
+// 1. The normalized key must be long enough to be specific (≥ MIN_KEY_LENGTH chars)
+// 2. The two raw descriptions must share at least one alpha token of ≥ 3 chars
+//    — this catches cases where two descriptions normalize to the same short key
+//    but are clearly different merchants (e.g. "JPN-APPLE" vs "JPN-NETFLIX")
+export function isSafeSimilarityMatch(a: string, b: string): boolean {
+  const keyA = normalizeDetail(a)
+  const keyB = normalizeDetail(b)
+  if (keyA !== keyB) return false
+  if (keyA.length < MIN_KEY_LENGTH) return false
+  // Check that both descriptions share at least one meaningful alpha token
+  const tokens = (s: string) =>
+    s.toUpperCase().replace(/[^A-Z\s]/g, ' ').split(/\s+/).filter(t => t.length >= 3)
+  const setA = new Set(tokens(a))
+  return tokens(b).some(t => setA.has(t))
+}
+
+// Minimum chars a normalized key must have to be a safe grouping key.
+// Keys shorter than this (e.g. "JPN", "UBP", "VAP") are too generic and
+// would falsely group unrelated transactions from different merchants.
+const MIN_KEY_LENGTH = 5
+
 export function detectRecurringUncategorized(
   transactions: any[],
   minOccurrences = 2
@@ -34,7 +56,7 @@ export function detectRecurringUncategorized(
     if (tx.category !== 'Uncategorized') continue
 
     const key = normalizeDetail(tx.detail)
-    if (!key) continue
+    if (!key || key.length < MIN_KEY_LENGTH) continue
 
     if (!map[key]) {
       map[key] = {
