@@ -17,6 +17,7 @@ export type VaultData = {
   budgets: Record<string, number>
   goals: any[]
   assets: any[]
+  netWorthSnapshots: { date: string; value: number }[]
   settings: Record<string, string> // e.g. chat API keys
 }
 
@@ -27,6 +28,7 @@ const defaultVaultData: VaultData = {
   budgets: {},
   goals: [],
   assets: [],
+  netWorthSnapshots: [],
   settings: {},
 }
 

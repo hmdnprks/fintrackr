@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Asset, AssetType, getAssets, deleteAsset } from '@/lib/assetStorage'
+import { Asset, AssetType, getAssets, deleteAsset, getNetWorthSnapshots, NetWorthSnapshot } from '@/lib/assetStorage'
 import AssetModal from './AssetModal'
 import WindfallModal from './WindfallModal'
 
@@ -53,6 +53,7 @@ function relativeDate(iso: string) {
 
 export default function AssetsTab({ statements }: Props) {
   const [assets, setAssets] = useState<Asset[]>(() => getAssets())
+  const [snapshots, setSnapshots] = useState<NetWorthSnapshot[]>(() => getNetWorthSnapshots())
   const [showModal, setShowModal]         = useState(false)
   const [showWindfall, setShowWindfall]   = useState(false)
   const [editingAsset, setEditingAsset]   = useState<Asset | null>(null)
@@ -60,6 +61,7 @@ export default function AssetsTab({ statements }: Props) {
 
   function reload() {
     setAssets(getAssets())
+    setSnapshots(getNetWorthSnapshots())
   }
 
   // Average real monthly expense from the 6 most recent months.
@@ -98,6 +100,32 @@ export default function AssetsTab({ statements }: Props) {
   }, [assets])
 
   const totalNetWorth = Object.values(totalByType).reduce((s, v) => s + v, 0)
+
+  // Net worth growth — compare current total to the most recent snapshot
+  // that is at least 25 days old (approximates "previous month")
+  const netWorthGrowth = useMemo(() => {
+    if (snapshots.length < 2 || totalNetWorth === 0) return null
+    const today = new Date()
+    const cutoff = new Date(today)
+    cutoff.setDate(cutoff.getDate() - 25)
+    const cutoffStr = cutoff.toISOString().split('T')[0]
+    const older = snapshots.filter(s => s.date <= cutoffStr)
+    if (!older.length) return null
+    const prev = older[older.length - 1]
+    const change = totalNetWorth - prev.value
+    const pct = prev.value > 0 ? (change / prev.value) * 100 : 0
+    return { change, pct, since: prev.date }
+  }, [snapshots, totalNetWorth])
+
+  // Liquid coverage ratio — ALL savings accounts ÷ avg monthly expense
+  // Broader than emergency fund (includes Mandiri payroll, all savings)
+  const liquidCoverageMonths = useMemo(() => {
+    if (avgMonthlyExpense <= 0) return null
+    const totalLiquid = assets
+      .filter(a => a.type === 'savings')
+      .reduce((s, a) => s + a.currentValue, 0)
+    return { months: totalLiquid / avgMonthlyExpense, totalLiquid }
+  }, [assets, avgMonthlyExpense])
 
   const emergencyFundTotal = assets
     .filter(a => a.type === 'savings' && a.isEmergencyFund)
@@ -163,6 +191,21 @@ export default function AssetsTab({ statements }: Props) {
           <div className="mb-4">
             <p className="text-sm text-gray-500">Total Net Worth</p>
             <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-0.5 break-all">{formatIDRFull(totalNetWorth)}</p>
+            {netWorthGrowth !== null && (
+              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                <span className={`inline-flex items-center gap-1 text-sm font-semibold ${netWorthGrowth.change >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                  {netWorthGrowth.change >= 0 ? '↑' : '↓'}
+                  {formatIDR(Math.abs(netWorthGrowth.change))}
+                  <span className="font-normal text-xs">({Math.abs(netWorthGrowth.pct).toFixed(1)}%)</span>
+                </span>
+                <span className="text-xs text-gray-400">
+                  since {new Date(netWorthGrowth.since).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </span>
+              </div>
+            )}
+            {snapshots.length === 0 && assets.length > 0 && (
+              <p className="text-xs text-gray-400 mt-1">Update asset values regularly to track growth over time.</p>
+            )}
           </div>
 
           {/* Breakdown bars */}
@@ -195,12 +238,23 @@ export default function AssetsTab({ statements }: Props) {
         </div>
       )}
 
-      {/* Emergency fund detail */}
-      {emergencyMonths !== null && (
-        <EmergencyFundSection
-          months={emergencyMonths}
-          avgMonthlyExpense={avgMonthlyExpense}
-        />
+      {/* Liquidity metrics — emergency fund + liquid coverage side by side on desktop */}
+      {(emergencyMonths !== null || liquidCoverageMonths !== null) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {emergencyMonths !== null && (
+            <EmergencyFundSection
+              months={emergencyMonths}
+              avgMonthlyExpense={avgMonthlyExpense}
+            />
+          )}
+          {liquidCoverageMonths !== null && (
+            <LiquidCoverageSection
+              months={liquidCoverageMonths.months}
+              totalLiquid={liquidCoverageMonths.totalLiquid}
+              avgMonthlyExpense={avgMonthlyExpense}
+            />
+          )}
+        </div>
       )}
 
       {/* Asset cards grouped by type */}
@@ -389,6 +443,76 @@ function EmergencyFundSection({
       <p className="text-xs text-gray-400 mt-3 leading-relaxed">
         Calculated from savings accounts marked as emergency fund. Ideal: liquid, low-risk accounts
         (tabungan, deposito) — not gold or investments that take time to liquidate.
+      </p>
+    </div>
+  )
+}
+
+// ── Liquid Coverage Section ────────────────────────────────────────────────────
+
+function LiquidCoverageSection({
+  months,
+  totalLiquid,
+  avgMonthlyExpense,
+}: {
+  months: number
+  totalLiquid: number
+  avgMonthlyExpense: number
+}) {
+  const status = months >= 12 ? 'excellent' : months >= 6 ? 'healthy' : months >= 3 ? 'adequate' : 'low'
+
+  const meta = {
+    excellent: { label: 'Excellent',  color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200', bar: 'bg-emerald-500' },
+    healthy:   { label: 'Healthy',    color: 'text-green-700',   bg: 'bg-green-50',   border: 'border-green-200',   bar: 'bg-green-500'   },
+    adequate:  { label: 'Adequate',   color: 'text-amber-700',   bg: 'bg-amber-50',   border: 'border-amber-200',   bar: 'bg-amber-400'   },
+    low:       { label: 'Low',        color: 'text-orange-700',  bg: 'bg-orange-50',  border: 'border-orange-200',  bar: 'bg-orange-400'  },
+  }[status]
+
+  const pct = Math.min(100, (months / 12) * 100)
+
+  return (
+    <div className={`rounded-2xl border p-5 ${meta.bg} ${meta.border}`}>
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div>
+          <p className="text-sm font-semibold text-gray-900">Liquid Coverage</p>
+          <p className={`text-xs font-semibold ${meta.color}`}>{meta.label}</p>
+        </div>
+        <div className="text-right shrink-0">
+          <p className={`text-2xl font-bold ${meta.color}`}>{months.toFixed(1)}</p>
+          <p className="text-xs text-gray-500">months total</p>
+        </div>
+      </div>
+
+      {/* Bar — target 12 months */}
+      <div className="mb-3">
+        <div className="h-2.5 bg-white/70 rounded-full overflow-hidden">
+          <div className={`h-full rounded-full ${meta.bar}`} style={{ width: `${pct}%` }} />
+        </div>
+        <div className="flex justify-between text-xs text-gray-400 mt-1">
+          <span>0</span>
+          <span>6 mo</span>
+          <span>12 mo</span>
+        </div>
+      </div>
+
+      <p className="text-xs text-gray-600 leading-relaxed mb-3">
+        {status === 'excellent'
+          ? `All your savings cover ${months.toFixed(1)} months of expenses — strong liquidity position.`
+          : status === 'healthy'
+          ? `${months.toFixed(1)} months of expenses across all savings accounts — good overall buffer.`
+          : status === 'adequate'
+          ? `${months.toFixed(1)} months covered. Consider growing total savings for more flexibility.`
+          : `Only ${months.toFixed(1)} months of expenses in savings. Build liquid assets as a priority.`}
+      </p>
+
+      <div className="bg-white/60 rounded-lg px-3 py-2 text-xs">
+        <span className="text-gray-500">Total liquid savings: </span>
+        <span className="font-semibold text-gray-800">{formatIDRFull(totalLiquid)}</span>
+      </div>
+
+      <p className="text-xs text-gray-400 mt-3 leading-relaxed">
+        Includes <strong>all</strong> savings accounts — unlike the emergency fund which counts only designated accounts.
+        Both metrics together give the full liquidity picture.
       </p>
     </div>
   )

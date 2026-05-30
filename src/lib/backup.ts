@@ -14,6 +14,7 @@ export type BackupData = {
     budgets: Record<string, number>
     goals: any[]
     assets: any[]
+    netWorthSnapshots: any[]
   }
 }
 
@@ -40,6 +41,7 @@ export async function exportBackup(): Promise<BackupData> {
       budgets:            vault.budgets,
       goals:              vault.goals,
       assets:             vault.assets ?? [],
+      netWorthSnapshots:  vault.netWorthSnapshots ?? [],
     },
   }
 }
@@ -85,6 +87,7 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
   const goals = backup.data.goals ?? []
 
   const assets = backup.data.assets ?? []
+  const netWorthSnapshots = backup.data.netWorthSnapshots ?? []
 
   if (mode === 'replace') {
     await saveVaultData({
@@ -94,6 +97,7 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       budgets: backup.data.budgets,
       goals,
       assets,
+      netWorthSnapshots,
     })
     return
   }
@@ -136,6 +140,13 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       ...existingAssets,
       ...assets.filter((a) => !existingAssetIds.has(a.id)),
     ],
+    // Merge snapshots by date — backup snapshot wins on same day
+    netWorthSnapshots: [
+      ...(existingVault.netWorthSnapshots ?? []).filter(
+        (s: any) => !netWorthSnapshots.find((b: any) => b.date === s.date)
+      ),
+      ...netWorthSnapshots,
+    ].sort((a: any, b: any) => a.date.localeCompare(b.date)),
   }
 
   await saveVaultData(newVaultState)
