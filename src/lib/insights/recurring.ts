@@ -22,43 +22,48 @@ export function normalizeDetail(detail: string) {
 // 2. The two raw descriptions must share at least one alpha token of ≥ 3 chars
 //    — this catches cases where two descriptions normalize to the same short key
 //    but are clearly different merchants (e.g. "JPN-APPLE" vs "JPN-NETFLIX")
-export function isSafeSimilarityMatch(a: string, b: string, debug = false): boolean {
+export function isSafeSimilarityMatch(a: string, b: string): boolean {
+  // Alpha path first — if both descriptions have a readable merchant name,
+  // use it. Long numbers in these descriptions are generic bank references
+  // (e.g. 1390017311642 in KAI/Indomaret), NOT merchant identifiers.
+  const keyA = normalizeDetail(a)
+  const keyB = normalizeDetail(b)
+  if (keyA.length >= MIN_KEY_LENGTH && keyB.length >= MIN_KEY_LENGTH) {
+    if (keyA !== keyB) return false
+    const tokens = (s: string) =>
+      s.toUpperCase().replace(/[^A-Z\s]/g, ' ').split(/\s+/).filter(t => t.length >= 3)
+    const setA = new Set(tokens(a))
+    return tokens(b).some(t => setA.has(t))
+  }
+
+  // Numeric path — only when at least one side has no readable merchant name
+  // (e.g. pure CC payment: -52432560005447812 52432560005447812=).
+  // A 12+ digit sequence is specific enough to be a card/account number.
+  // Bidirectional: either description's long number must appear in the other.
   const longNums = (s: string): string[] => s.match(/\d{12,}/g) ?? []
   const numsA = longNums(a)
   const numsB = longNums(b)
-
-  if (debug) {
-    console.log('[similarity] a:', a)
-    console.log('[similarity] b:', b)
-    console.log('[similarity] numsA (12+digits):', numsA)
-    console.log('[similarity] numsB (12+digits):', numsB)
-  }
-
   if (numsA.length > 0 || numsB.length > 0) {
-    const result = numsA.some(n => b.includes(n)) || numsB.some(n => a.includes(n))
-    if (debug) console.log('[similarity] numeric path → result:', result)
-    return result
+    return numsA.some(n => b.includes(n)) || numsB.some(n => a.includes(n))
   }
 
-  const keyA = normalizeDetail(a)
-  const keyB = normalizeDetail(b)
-  if (debug) console.log('[similarity] alpha path — keyA:', keyA, 'keyB:', keyB)
-  if (keyA !== keyB || keyA.length < MIN_KEY_LENGTH) {
-    if (debug) console.log('[similarity] alpha path → no match (keys differ or too short)')
-    return false
-  }
-  const tokens = (s: string) =>
-    s.toUpperCase().replace(/[^A-Z\s]/g, ' ').split(/\s+/).filter(t => t.length >= 3)
-  const setA = new Set(tokens(a))
-  const result = tokens(b).some(t => setA.has(t))
-  if (debug) console.log('[similarity] alpha shared tokens → result:', result)
-  return result
+  return false
 }
 
 // Minimum chars a normalized key must have to be a safe grouping key.
 // Keys shorter than this (e.g. "JPN", "UBP", "VAP") are too generic and
 // would falsely group unrelated transactions from different merchants.
 const MIN_KEY_LENGTH = 5
+
+// Label key for merchant aliases — keeps BOTH letters and digits so that
+// UBP transactions with different reference numbers (= different merchants)
+// get different keys and don't share labels accidentally.
+// Unlike isSafeSimilarityMatch (which strips digits to group same-merchant variants),
+// labels need to be precise: different description → different label bucket.
+export function getLabelKey(detail: string): string | null {
+  const key = detail.toUpperCase().replace(/[^A-Z0-9]/g, ' ').replace(/\s+/g, ' ').trim()
+  return key.length >= 3 ? key : null
+}
 
 export function detectRecurringUncategorized(
   transactions: any[],

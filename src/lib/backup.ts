@@ -18,6 +18,7 @@ export type BackupData = {
     assetSnapshots: any[]
     rebalanceHistory: any[]
     learnedRules: any[]
+    transactionLabels: Record<string, string>
   }
 }
 
@@ -48,6 +49,7 @@ export async function exportBackup(): Promise<BackupData> {
       assetSnapshots:     vault.assetSnapshots ?? [],
       rebalanceHistory:   vault.rebalanceHistory ?? [],
       learnedRules:       vault.learnedRules ?? [],
+      transactionLabels:  vault.transactionLabels ?? {},
     },
   }
 }
@@ -96,8 +98,9 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
   const netWorthSnapshots = backup.data.netWorthSnapshots ?? []
   const assetSnapshots = backup.data.assetSnapshots ?? []
 
-  const rebalanceHistory = backup.data.rebalanceHistory ?? []
-  const learnedRules     = backup.data.learnedRules     ?? []
+  const rebalanceHistory   = backup.data.rebalanceHistory   ?? []
+  const learnedRules       = backup.data.learnedRules       ?? []
+  const transactionLabels  = backup.data.transactionLabels  ?? {}
 
   if (mode === 'replace') {
     await saveVaultData({
@@ -111,6 +114,7 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       assetSnapshots,
       rebalanceHistory,
       learnedRules,
+      transactionLabels,
     })
     return
   }
@@ -174,6 +178,8 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       ),
       ...rebalanceHistory,
     ].sort((a: any, b: any) => a.savedAt.localeCompare(b.savedAt)).slice(-5),
+    // Merge labels — backup wins on same key
+    transactionLabels: { ...(existingVault.transactionLabels ?? {}), ...transactionLabels },
     // Merge learned rules by normalizedDesc — backup wins on same key
     learnedRules: [
       ...(existingVault.learnedRules ?? []).filter(

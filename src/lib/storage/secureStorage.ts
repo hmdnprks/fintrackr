@@ -22,6 +22,7 @@ export type VaultData = {
   settings: Record<string, string> // e.g. chat API keys
   rebalanceHistory: any[]          // last 5 RebalanceSavedEntry objects
   learnedRules: any[]              // { normalizedDesc, category, source, updatedAt }
+  transactionLabels: Record<string, string>  // labelKey → human alias e.g. 'UBPFFFFFF' → 'Shopee'
 }
 
 const defaultVaultData: VaultData = {
@@ -36,6 +37,7 @@ const defaultVaultData: VaultData = {
   settings: {},
   rebalanceHistory: [],
   learnedRules: [],
+  transactionLabels: {},
 }
 
 // ============================

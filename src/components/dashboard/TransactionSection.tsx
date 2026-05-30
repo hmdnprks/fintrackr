@@ -4,7 +4,9 @@
 import { useMemo, useState, useRef, useEffect, Fragment } from 'react'
 import RecurringSuggestionPanel from './RecurringSuggestionPanel'
 import { formatIDR } from '@/lib/formatter'
-import { isSafeSimilarityMatch, normalizeDetail } from '@/lib/insights/recurring'
+import { isSafeSimilarityMatch, getLabelKey } from '@/lib/insights/recurring'
+import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
+import { TagIcon } from '@heroicons/react/24/outline'
 
 // Extract a human-readable merchant label from a raw Mandiri transaction description.
 // Mandiri card format: -XXXXXXXX /XXXXXXXXXX/MERCHANT-NAME/SUFFIX
@@ -126,14 +128,45 @@ export default function TransactionSection({
   type SimilarPrompt = {
     editedIdx: number
     indexes: number[]
+    excluded: Set<number>   // indexes the user removed from the list
     category: string
     step: 'prompt' | 'success'
   }
   const [similarPrompt, setSimilarPrompt] = useState<SimilarPrompt | null>(null)
+  const [bulkCat, setBulkCat]           = useState('')
+  const [bulkApplied, setBulkApplied]   = useState<number | null>(null)
+
+  const [labels, setLabels]             = useState<Record<string, string>>(() =>
+    getVaultDataSync().transactionLabels ?? {}
+  )
+  const [labelingKey, setLabelingKey]   = useState<string | null>(null)
+  const [labelInput, setLabelInput]     = useState('')
+
+  async function saveLabel(key: string, alias: string) {
+    const vault = getVaultDataSync()
+    const updated = { ...(vault.transactionLabels ?? {}), [key]: alias.trim() }
+    if (!alias.trim()) delete updated[key]
+    await saveVaultData({ transactionLabels: updated })
+    setLabels(updated)
+    setLabelingKey(null)
+    setLabelInput('')
+  }
+
+  function excludeSimilar(idx: number) {
+    setSimilarPrompt(p => {
+      if (!p) return null
+      const excluded = new Set(p.excluded)
+      excluded.add(idx)
+      // If user removes everything, dismiss
+      const remaining = p.indexes.filter(i => !excluded.has(i))
+      return remaining.length > 0 ? { ...p, excluded } : null
+    })
+  }
 
   function applyAllSimilar() {
     if (!similarPrompt) return
-    onCategorizeGroup(similarPrompt.indexes, similarPrompt.category)
+    const toApply = similarPrompt.indexes.filter(i => !similarPrompt.excluded.has(i))
+    onCategorizeGroup(toApply, similarPrompt.category)
     setSimilarPrompt(p => p ? { ...p, step: 'success' } : null)
     setTimeout(() => setSimilarPrompt(null), 2000)
   }
@@ -268,7 +301,7 @@ export default function TransactionSection({
             className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button onClick={() => { setSearch(''); setBulkCat(''); setBulkApplied(null) }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -327,6 +360,43 @@ export default function TransactionSection({
             )}
           </div>
         </div>
+        {/* Bulk-categorize bar — shown when search is active */}
+        {search && filtered.length > 0 && (
+          <div className="flex items-center gap-2 pt-1 border-t border-gray-100 dark:border-gray-800 mt-1">
+            <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">
+              Set all <span className="font-semibold text-gray-700 dark:text-gray-300">{filtered.length}</span> results as
+            </span>
+            <select
+              value={bulkCat}
+              onChange={e => { setBulkCat(e.target.value); setBulkApplied(null) }}
+              className="flex-1 text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="" disabled>Pick category…</option>
+              {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            </select>
+            {bulkApplied !== null ? (
+              <span className="text-xs text-green-600 dark:text-green-400 font-medium shrink-0 flex items-center gap-1">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                Applied to {bulkApplied}
+              </span>
+            ) : (
+              <button
+                disabled={!bulkCat}
+                onClick={() => {
+                  const idxs = filtered.map((t: any) => t._idx)
+                  onCategorizeGroup(idxs, bulkCat)
+                  setBulkApplied(idxs.length)
+                  setTimeout(() => setBulkApplied(null), 3000)
+                }}
+                className="text-xs font-semibold px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg transition shrink-0"
+              >
+                Apply
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Transaction table */}
@@ -398,7 +468,59 @@ export default function TransactionSection({
                       </td>
 
                       <td className="px-5 py-3">
-                        <span className="text-gray-700 dark:text-gray-300 line-clamp-1">{tx.detail}</span>
+                        {(() => {
+                          const lkey  = getLabelKey(tx.detail)
+                          const alias = lkey ? labels[lkey] : undefined
+                          const isLabeling = labelingKey === lkey && lkey !== null
+                          return (
+                            <div>
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <div className="flex-1 min-w-0">
+                                  {alias ? (
+                                    <>
+                                      <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{alias}</p>
+                                      <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{tx.detail}</p>
+                                    </>
+                                  ) : (
+                                    <span className="text-gray-700 dark:text-gray-300 line-clamp-1">{tx.detail}</span>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (!lkey) return
+                                    if (isLabeling) { setLabelingKey(null); setLabelInput('') }
+                                    else { setLabelingKey(lkey); setLabelInput(alias ?? '') }
+                                  }}
+                                  title={alias ? 'Edit label' : 'Label this merchant'}
+                                  className={`shrink-0 transition ${alias ? 'text-blue-400 dark:text-blue-500 hover:text-blue-600' : 'text-gray-300 dark:text-gray-600 hover:text-blue-400'}`}
+                                >
+                                  <TagIcon className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                              {isLabeling && (
+                                <div className="flex items-center gap-1.5 mt-1.5" onClick={e => e.stopPropagation()}>
+                                  <input
+                                    autoFocus
+                                    type="text"
+                                    value={labelInput}
+                                    onChange={e => setLabelInput(e.target.value)}
+                                    onKeyDown={e => {
+                                      if (e.key === 'Enter') saveLabel(lkey!, labelInput)
+                                      if (e.key === 'Escape') { setLabelingKey(null); setLabelInput('') }
+                                    }}
+                                    placeholder="e.g. Shopee"
+                                    className="flex-1 text-xs border border-blue-300 dark:border-blue-700 rounded-lg px-2 py-1 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  />
+                                  <button onClick={() => saveLabel(lkey!, labelInput)} className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline shrink-0">Save</button>
+                                  {alias && (
+                                    <button onClick={() => saveLabel(lkey!, '')} className="text-xs text-red-400 hover:underline shrink-0">Remove</button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })()}
                       </td>
 
                       <td className="px-5 py-3" onClick={(e) => e.stopPropagation()}>
@@ -408,22 +530,13 @@ export default function TransactionSection({
                             defaultValue={tx.category ?? 'Uncategorized'}
                             onChange={(e) => {
                               const newCat = e.target.value
-                              console.log('[recategorize] edited tx.detail:', tx.detail)
-                              console.log('[recategorize] new category:', newCat)
-                              const candidates = transactions.filter((t: any) => t._idx !== tx._idx && t.category !== newCat)
-                              console.log('[recategorize] candidates to check:', candidates.length)
-                              const similarIdxs = candidates
-                                .filter((t: any) => {
-                                  const match = isSafeSimilarityMatch(tx.detail, t.detail, true)
-                                  if (match) console.log('[recategorize] MATCH found:', t.detail, '| category:', t.category)
-                                  return match
-                                })
+                              const similarIdxs = withIndex
+                                .filter((t: any) => t._idx !== tx._idx && t.category !== newCat && isSafeSimilarityMatch(tx.detail, t.detail))
                                 .map((t: any) => t._idx)
-                              console.log('[recategorize] similarIdxs count:', similarIdxs.length)
                               onRecategorize(tx._idx, newCat)
                               setEditingOriginalIndex(null)
                               setSimilarPrompt(similarIdxs.length > 0
-                                ? { editedIdx: tx._idx, indexes: similarIdxs, category: newCat, step: 'prompt' }
+                                ? { editedIdx: tx._idx, indexes: similarIdxs, excluded: new Set(), category: newCat, step: 'prompt' }
                                 : null
                               )
                             }}
@@ -491,65 +604,83 @@ export default function TransactionSection({
                               <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
-                              Applied <span className="font-bold">{similarPrompt.category}</span> to {similarPrompt.indexes.length} transaction{similarPrompt.indexes.length !== 1 ? 's' : ''}
+                              {(() => {
+                                const n = similarPrompt.indexes.filter(i => !similarPrompt.excluded.has(i)).length
+                                return <>Applied <span className="font-bold">{similarPrompt.category}</span> to {n} transaction{n !== 1 ? 's' : ''}</>
+                              })()}
                             </div>
                           ) : (
                             <div className="space-y-2">
-                              <p className="text-xs font-semibold text-blue-700 dark:text-blue-300">
-                                {similarPrompt.indexes.length} other transaction{similarPrompt.indexes.length !== 1 ? 's' : ''} match this merchant — apply <span className="font-bold">{similarPrompt.category}</span> to all?
-                              </p>
-
-                              {/* Mini list of similar transactions */}
-                              <div className="rounded-xl border border-blue-100 dark:border-blue-800 overflow-hidden divide-y divide-blue-50 dark:divide-blue-900">
-                                {similarPrompt.indexes
-                                  .map(idx => transactions.find((t: any) => t._idx === idx))
+                              {(() => {
+                                const remaining = similarPrompt.indexes.filter(i => !similarPrompt.excluded.has(i))
+                                const allRows = remaining
+                                  .map(idx => withIndex.find((t: any) => t._idx === idx))
                                   .filter(Boolean)
                                   .sort((a: any, b: any) => {
                                     const da = a.fullDate instanceof Date ? a.fullDate : new Date(a.transactionDate)
                                     const db = b.fullDate instanceof Date ? b.fullDate : new Date(b.transactionDate)
                                     return db.getTime() - da.getTime()
                                   })
-                                  .slice(0, 5)
-                                  .map((t: any, i: number) => {
-                                    const d = t.fullDate instanceof Date ? t.fullDate : new Date(t.transactionDate)
-                                    const dateStr = isNaN(d.getTime()) ? t.transactionDate : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' })
-                                    const catColor = CATEGORY_COLORS[t.category] ?? CATEGORY_COLORS['Uncategorized']
-                                    return (
-                                      <div key={i} className="flex items-center gap-3 px-3 py-1.5 text-xs">
-                                        <span className="text-blue-400 dark:text-blue-500 tabular-nums shrink-0 w-20">{dateStr}</span>
-                                        <span className="flex-1 text-blue-700 dark:text-blue-300 font-medium truncate">
-                                          {merchantLabel(t.detail)}
-                                        </span>
-                                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs shrink-0 ${catColor}`}>
-                                          {t.category ?? 'Uncategorized'}
-                                        </span>
-                                        <span className={`tabular-nums font-medium shrink-0 ${t.type === 'credit' ? 'text-green-600' : 'text-red-500'}`}>
-                                          {t.type === 'credit' ? '+' : '−'}{formatIDR(t.amount)}
-                                        </span>
-                                      </div>
-                                    )
-                                  })}
-                                {similarPrompt.indexes.length > 5 && (
-                                  <div className="px-3 py-1.5 text-xs text-blue-400 dark:text-blue-500">
-                                    + {similarPrompt.indexes.length - 5} more
-                                  </div>
-                                )}
-                              </div>
+                                return (
+                                  <>
+                                    <p className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                                      {remaining.length} transaction{remaining.length !== 1 ? 's' : ''} — apply <span className="font-bold">{similarPrompt.category}</span> to all?
+                                      <span className="font-normal text-blue-400 dark:text-blue-500 ml-1">Remove any that don&apos;t belong.</span>
+                                    </p>
 
-                              <div className="flex items-center gap-2 pt-1">
-                                <button
-                                  onClick={applyAllSimilar}
-                                  className="text-xs font-semibold px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
-                                >
-                                  Apply to all {similarPrompt.indexes.length}
-                                </button>
-                                <button
-                                  onClick={() => setSimilarPrompt(null)}
-                                  className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
-                                >
-                                  Dismiss
-                                </button>
-                              </div>
+                                    <div className="rounded-xl border border-blue-100 dark:border-blue-800 overflow-hidden divide-y divide-blue-50 dark:divide-blue-900">
+                                      {allRows.slice(0, 5).map((t: any, i: number) => {
+                                        const d = t.fullDate instanceof Date ? t.fullDate : new Date(t.transactionDate)
+                                        const dateStr = isNaN(d.getTime()) ? t.transactionDate : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' })
+                                        const catColor = CATEGORY_COLORS[t.category] ?? CATEGORY_COLORS['Uncategorized']
+                                        return (
+                                          <div key={i} className="flex items-center gap-2 px-3 py-1.5 text-xs">
+                                            <span className="text-blue-400 dark:text-blue-500 tabular-nums shrink-0 w-20">{dateStr}</span>
+                                            <span className="flex-1 text-blue-700 dark:text-blue-300 font-medium truncate">
+                                              {merchantLabel(t.detail)}
+                                            </span>
+                                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs shrink-0 ${catColor}`}>
+                                              {t.category ?? 'Uncategorized'}
+                                            </span>
+                                            <span className={`tabular-nums font-medium shrink-0 ${t.type === 'credit' ? 'text-green-600' : 'text-red-500'}`}>
+                                              {t.type === 'credit' ? '+' : '−'}{formatIDR(t.amount)}
+                                            </span>
+                                            <button
+                                              onClick={() => excludeSimilar(t._idx)}
+                                              title="Remove from list"
+                                              className="ml-1 text-blue-300 dark:text-blue-600 hover:text-red-400 dark:hover:text-red-400 transition shrink-0"
+                                            >
+                                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                              </svg>
+                                            </button>
+                                          </div>
+                                        )
+                                      })}
+                                      {allRows.length > 5 && (
+                                        <div className="px-3 py-1.5 text-xs text-blue-400 dark:text-blue-500">
+                                          + {allRows.length - 5} more (will also be included)
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    <div className="flex items-center gap-2 pt-1">
+                                      <button
+                                        onClick={applyAllSimilar}
+                                        className="text-xs font-semibold px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                                      >
+                                        Apply to {remaining.length}
+                                      </button>
+                                      <button
+                                        onClick={() => setSimilarPrompt(null)}
+                                        className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                      >
+                                        Dismiss
+                                      </button>
+                                    </div>
+                                  </>
+                                )
+                              })()}
                             </div>
                           )}
                         </td>
