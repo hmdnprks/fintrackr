@@ -308,11 +308,6 @@ export default function Dashboard() {
           {/* Budget tab */}
           {activeTab === 'budget' && (
             <div className="space-y-8">
-              <RecurringExpensesSection
-                items={recurringExpenses}
-                avgMonthlyIncome={avgMonthlyIncome}
-              />
-
               <BudgetSection
                 budgets={budgets}
                 spending={currentMonthSpending}
@@ -325,6 +320,11 @@ export default function Dashboard() {
               <GoalSection statements={statements as any[]} />
 
               <CategorySection allTransactions={allTransactions} />
+
+              <RecurringExpensesSection
+                items={recurringExpenses}
+                avgMonthlyIncome={avgMonthlyIncome}
+              />
             </div>
           )}
 
