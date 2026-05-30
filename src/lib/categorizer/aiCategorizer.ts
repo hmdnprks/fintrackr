@@ -478,7 +478,12 @@ export type RebalanceResult = {
   overallHealth: 'poor' | 'fair' | 'good' | 'excellent'
   summary: string
   executionNote: string      // e.g. "Run in order shown — each uses the remaining balance after the previous step"
-  safetyCheck: string        // AI assessment of whether remaining liquid savings is adequate post-rebalance
+  safetyCheck: {
+    verdict: 'safe' | 'caution' | 'warning'
+    remainingLiquidAmount: number
+    monthsCovered: number
+    analysis: string         // natural language reasoning for the verdict
+  }
   suggestions: RebalanceSuggestion[]
   disclaimer: string
 }
@@ -532,17 +537,22 @@ Additional rules:
   - "low": optional enhancement, personal preference matters more than financial logic
 - confidenceReason: one short phrase (e.g. "emergency fund gap is urgent", "market timing uncertain", "already adequate")
 - executionNote: explain if suggestions are sequential (run in order, each uses balance after previous) or alternatives (pick one or more independently)
-- safetyCheck: after all move suggestions are applied, compute the remaining liquid savings (savings accounts minus total moved out). Express how many months of avg monthly expenses that covers. Use one of three verdicts: "safe" (≥6 months), "caution" (3–5 months), or "warning" (<3 months). Include actual numbers, e.g. "After rebalancing, remaining liquid savings will be Rp 45.000.000 — covering ~4,5 months of expenses. This is in the caution zone; consider keeping more in savings before investing."
+- safetyCheck: after all move suggestions are applied, compute the remaining liquid savings (sum of all "savings" type items minus total moved out). This must precisely match the mathematical remainder from your suggestions. Express how many months of avg monthly expenses that covers. Use one of three verdicts: "safe" (≥6 months), "caution" (3–5 months), or "warning" (<3 months).
 
 Format all IDR amounts using Indonesian dots (Rp 50.000.000 not Rp 50,000,000).
-Round amounts to nearest 5.000.000 IDR.
+Use sensible rounding (e.g. nearest 1.000.000 or exact numbers if specific targets like Emergency Fund are needed) but ensure absolute mathematical consistency between individual suggestions and the final safety check.
 
 Respond with ONLY valid JSON, no markdown:
 {
   "overallHealth": "poor|fair|good|excellent",
   "summary": "2-3 sentence overall assessment of the current allocation",
   "executionNote": "explain if sequential or alternatives, and what the net effect is if all are run",
-  "safetyCheck": "verdict (safe/caution/warning) with remaining liquid amount and months covered after all moves",
+  "safetyCheck": {
+    "verdict": "safe|caution|warning",
+    "remainingLiquidAmount": number,
+    "monthsCovered": number,
+    "analysis": "1-2 sentence assessment of liquidity after rebalancing"
+  },
   "suggestions": [
     {
       "priority": 1,
@@ -600,7 +610,12 @@ export async function generateRebalancingSuggestions(
       reason:           fixIDRFormat(s.reason           || ''),
       confidenceReason: fixIDRFormat(s.confidenceReason || ''),
     })),
-    safetyCheck:   fixIDRFormat(parsed.safetyCheck   || ''),
+    safetyCheck: {
+      verdict:               parsed.safetyCheck?.verdict || 'caution',
+      remainingLiquidAmount: Number(parsed.safetyCheck?.remainingLiquidAmount || 0),
+      monthsCovered:         Number(parsed.safetyCheck?.monthsCovered || 0),
+      analysis:              fixIDRFormat(parsed.safetyCheck?.analysis || ''),
+    },
     disclaimer:    fixIDRFormat(parsed.disclaimer    || ''),
   }
 }

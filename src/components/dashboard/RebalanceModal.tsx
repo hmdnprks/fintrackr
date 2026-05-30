@@ -66,16 +66,9 @@ function timeAgo(iso: string): string {
   return `${days} days ago`
 }
 
-function safetyVerdict(text: string): 'safe' | 'caution' | 'warning' {
-  const t = text.toLowerCase()
-  if (t.includes('warning')) return 'warning'
-  if (t.includes('caution')) return 'caution'
-  return 'safe'
-}
-
 function buildPrintHTML(r: RebalanceResult, riskPref: string): string {
   const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
-  const verdict = r.safetyCheck ? safetyVerdict(r.safetyCheck) : null
+  const verdict = r.safetyCheck.verdict
 
   const suggestionsHTML = r.suggestions.map(s => {
     const conf = CONFIDENCE_META[s.confidence] ?? CONFIDENCE_META.medium
@@ -92,13 +85,14 @@ function buildPrintHTML(r: RebalanceResult, riskPref: string): string {
       </div>`
   }).join('')
 
-  const safetyHTML = r.safetyCheck && verdict ? `
+  const safetyHTML = `
     <div style="margin-top:20px;padding:12px;border-radius:8px;font-size:13px;line-height:1.5;
       background:${verdict === 'safe' ? '#dcfce7' : verdict === 'caution' ? '#fef3c7' : '#fee2e2'};
       color:${verdict === 'safe' ? '#15803d' : verdict === 'caution' ? '#b45309' : '#b91c1c'};
       border-left:3px solid ${verdict === 'safe' ? '#4ade80' : verdict === 'caution' ? '#fbbf24' : '#f87171'};">
-      <strong>Savings Safety (${verdict}):</strong> ${r.safetyCheck}
-    </div>` : ''
+      <strong>Savings Safety (${verdict.toUpperCase()}):</strong> 
+      After rebalancing, remaining liquid savings will be Rp ${r.safetyCheck.remainingLiquidAmount.toLocaleString('id-ID')} — covering ~${r.safetyCheck.monthsCovered.toFixed(1)} months of expenses. ${r.safetyCheck.analysis}
+    </div>`
 
   return `<!DOCTYPE html>
 <html>
@@ -435,8 +429,8 @@ export default function RebalanceModal({
               </div>
 
               {/* Safety check banner */}
-              {result.safetyCheck && (() => {
-                const verdict = safetyVerdict(result.safetyCheck)
+              {(() => {
+                const verdict = result.safetyCheck.verdict
                 const SAFETY_META = {
                   safe:    { bg: 'bg-green-50 dark:bg-green-900/20',  border: 'border-green-200 dark:border-green-800',  icon: 'text-green-500',  title: 'text-green-700 dark:text-green-300',  body: 'text-green-600 dark:text-green-400',  label: 'Savings Safety: OK' },
                   caution: { bg: 'bg-amber-50 dark:bg-amber-900/20',  border: 'border-amber-200 dark:border-amber-800',  icon: 'text-amber-500',  title: 'text-amber-700 dark:text-amber-300',  body: 'text-amber-600 dark:text-amber-400',  label: 'Savings Safety: Caution' },
@@ -449,7 +443,9 @@ export default function RebalanceModal({
                     <Icon className={`w-4 h-4 ${m.icon} shrink-0 mt-0.5`} />
                     <div>
                       <p className={`text-xs font-semibold ${m.title} mb-0.5`}>{m.label}</p>
-                      <p className={`text-xs ${m.body} leading-relaxed`}>{result.safetyCheck}</p>
+                      <p className={`text-xs ${m.body} leading-relaxed`}>
+                        After rebalancing, remaining liquid savings will be <span className="font-bold">Rp {result.safetyCheck.remainingLiquidAmount.toLocaleString('id-ID')}</span> — covering <span className="font-bold">~{result.safetyCheck.monthsCovered.toFixed(1)} months</span> of expenses. {result.safetyCheck.analysis}
+                      </p>
                     </div>
                   </div>
                 )
