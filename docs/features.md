@@ -64,9 +64,12 @@ Three-tab layout with shared year/month filter:
 ### Assets tab
 - Track all asset types in one place: **Savings**, **Gold**, **Investment**, **Pocket**, **Other**
 - All icons use @heroicons/react — no emojis
-- **Net worth summary card** — total value across all assets, allocation breakdown bars by type with label and percentage; responsive on mobile
-- **Emergency fund section** — dedicated card below the net worth summary; five tiers: Critical (<1 mo), Low (1–3), Building (3–6), Healthy (6–9), Strong (9+); progress bar with 3-month minimum and 6-month ideal markers; contextual advice per tier written for Indonesian context (PHK, BPJS, variable income); amount still needed to reach 6 months; avg monthly expense baseline (6 most recent months, excluding Transfer and Bank Charges); note clarifying emergency fund should be liquid (tabungan/deposito), not gold or investments
-- **Asset cards** grouped by type with Heroicons, each showing current value, institution, last-updated timestamp, and type-specific details:
+- **Net worth summary card** — total value across all assets, allocation breakdown bars by type; shows month-over-month growth (↑/↓ amount and %) compared to the most recent snapshot ≥25 days old; hint shown until first snapshot exists
+- **Net worth & asset history** — snapshots recorded automatically whenever any asset value is saved or updated; stores both aggregate net worth (up to 365 daily entries) and per-asset value history (up to 365 daily entries per asset); each asset card shows ↑/↓ growth vs previous snapshot; history included in JSON backup
+- **Liquidity metrics** — displayed side-by-side on desktop, stacked on mobile:
+  - *Emergency fund* — five tiers Critical/Low/Building/Healthy/Strong; progress bar with 3-month and 6-month markers; contextual advice per tier (Indonesian context: PHK, BPJS, variable income); amount to reach 6-month target
+  - *Liquid coverage* — all savings accounts ÷ avg monthly expense (broader than emergency fund); four tiers Low/Adequate/Healthy/Excellent scaled to 12-month target; explains difference from emergency fund metric
+- **Asset cards** grouped by type with Heroicons, each showing current value, per-asset growth since last snapshot, institution, last-updated timestamp, and type-specific details:
   - Savings: interest rate (% p.a.), emergency fund badge, months of expenses covered
   - Gold: weight in grams, auto-computed price per gram
   - Investment: investment type; **contributable toggle** — mark BPJS Ketenagakerjaan JHT and other auto-managed funds as non-contributable so they are excluded from windfall allocation suggestions; badge shows "Can top up" (green) or "Auto-managed" (gray)
@@ -79,7 +82,7 @@ Three-tab layout with shared year/month filter:
   - Each destination shows two bars: % of windfall + gap fill progress with amount still needed
   - AI constrained to never exceed windfall total; hard clamp on server as safety net
   - Non-contributable investment assets filtered out of context before sending to AI
-- Assets included in JSON backup (v3); v1/v2 backups remain compatible
+- Assets included in JSON backup (v4); v1/v2/v3 backups remain compatible
 
 ## Manual Transactions
 
@@ -143,7 +146,8 @@ Available in Settings:
 - **Restore — Replace** — wipes current data and writes backup
 - File validation — rejects non-Fintrackr JSON
 - Preview before restoring: statement count, manual transactions, rules, budgets, goals, assets, export date
-- Backwards-compatible: v1 (no goals) and v2 (no assets) backups restore cleanly
+- Backwards-compatible: v1 (no goals), v2 (no assets), v3 (no asset snapshots) all restore cleanly; missing fields default to empty
+- v4 backup includes: statements, manual transactions, rules, budgets, goals, assets, net worth snapshots (daily aggregate), asset snapshots (daily per-asset value history)
 
 ## Recurring Transaction Detection
 
