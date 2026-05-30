@@ -1,5 +1,7 @@
 'use client'
 
+import { useRef, useEffect } from 'react'
+
 interface MonthData {
   label: string
   income: number
@@ -17,6 +19,15 @@ function shortLabel(label: string): string {
 }
 
 export default function SavingsRateTrendSection({ data }: Props) {
+  const chartRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll to the latest (rightmost) months on mount and data change
+  useEffect(() => {
+    if (chartRef.current) {
+      chartRef.current.scrollLeft = chartRef.current.scrollWidth
+    }
+  }, [data])
+
   if (data.length < 2) return null
 
   const avg = Math.round(data.reduce((s, d) => s + d.rate, 0) / data.length)
@@ -24,7 +35,7 @@ export default function SavingsRateTrendSection({ data }: Props) {
   const best = bestEntry.rate
   // "January 2024" → "Jan 2024"
   const bestMonth = bestEntry.label.replace(/^(\w{3})\w+\s/, '$1 ')
-  const IDEAL = 20  // minimum savings rate target
+  const IDEAL = 20
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm">
@@ -49,56 +60,67 @@ export default function SavingsRateTrendSection({ data }: Props) {
         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg < 10 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'}`}>{'<'}10% critical</span>
       </div>
 
-      {/* Bar chart — bars grow from bottom, 20% line clearly marked */}
-      <div className="relative">
-        {/* Y-axis labels */}
-        <div className="absolute -left-1 inset-y-0 flex flex-col justify-between text-xs text-gray-300 pointer-events-none" style={{ top: 0, bottom: 24 }}>
+      {/* Bar chart — horizontally scrollable, min bar width ensures readability */}
+      <div className="flex gap-2">
+        {/* Y-axis labels — fixed outside scroll area */}
+        <div className="flex flex-col justify-between text-xs text-gray-300 shrink-0 pb-6" style={{ height: '9rem' }}>
           <span>100%</span>
           <span>50%</span>
           <span>0%</span>
         </div>
 
-        {/* Chart area */}
-        <div className="ml-7 relative h-36 flex items-end gap-1">
-          {/* 20% reference line — solid, clearly labeled */}
-          <div className="absolute left-0 right-0 z-10 pointer-events-none" style={{ bottom: '20%' }}>
-            <div className="border-t-2 border-dashed border-blue-500 w-full" />
-            <span className="absolute -top-5 right-0 bg-blue-600 text-white text-xs font-semibold px-1.5 py-0.5 rounded">
-              20% target
-            </span>
-          </div>
+        {/* Scrollable chart + fade hint on right */}
+        <div className="relative flex-1 min-w-0">
+          {/* Right-edge fade — hints that there's more to scroll */}
+          <div className="absolute top-0 right-0 bottom-6 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none z-20" />
 
-          {data.map((d, i) => {
-            const height = Math.max(1, Math.min(100, d.rate))
-            const barColor = d.rate >= 30 ? 'bg-green-500' :
-                             d.rate >= IDEAL ? 'bg-green-400' :
-                             d.rate >= 10 ? 'bg-amber-400' : 'bg-red-400'
-            return (
-              <div key={i} className="flex-1 flex flex-col items-center justify-end h-full relative group min-w-0">
-                {/* Tooltip */}
-                <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none z-20">
-                  {d.rate}%
-                </div>
-                <div
-                  className={`w-full rounded-t-sm transition-all ${barColor}`}
-                  style={{ height: `${height}%` }}
-                />
+          <div ref={chartRef} className="overflow-x-auto pb-1">
+            {/* 20% reference line — spans the full scrollable width */}
+            <div className="relative h-36" style={{ minWidth: `${data.length * 28}px` }}>
+              <div className="absolute left-0 right-0 z-10 pointer-events-none" style={{ bottom: '20%' }}>
+                <div className="border-t-2 border-dashed border-blue-500 w-full" />
+                <span className="absolute -top-5 right-0 bg-blue-600 text-white text-xs font-semibold px-1.5 py-0.5 rounded">
+                  20% target
+                </span>
               </div>
-            )
-          })}
-        </div>
 
-        {/* Month labels */}
-        <div className="ml-7 flex gap-1 mt-1.5">
-          {data.map((d, i) => (
-            <div key={i} className="flex-1 min-w-0 text-center">
-              <span className="text-xs text-gray-400 truncate block">{shortLabel(d.label)}</span>
+              {/* Bars */}
+              <div className="absolute inset-0 flex items-end gap-1 px-0.5">
+                {data.map((d, i) => {
+                  const height = Math.max(1, Math.min(100, d.rate))
+                  const barColor = d.rate >= 30 ? 'bg-green-500' :
+                                   d.rate >= IDEAL ? 'bg-green-400' :
+                                   d.rate >= 10 ? 'bg-amber-400' : 'bg-red-400'
+                  return (
+                    <div key={i} className="flex-1 min-w-[20px] flex flex-col items-center justify-end h-full relative group">
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none z-30">
+                        {shortLabel(d.label)}: {d.rate}%
+                      </div>
+                      <div
+                        className={`w-full rounded-t-sm ${barColor}`}
+                        style={{ height: `${height}%` }}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-          ))}
+
+            {/* Month labels — same min-width as chart */}
+            <div className="flex gap-1 mt-1 px-0.5" style={{ minWidth: `${data.length * 28}px` }}>
+              {data.map((d, i) => (
+                <div key={i} className="flex-1 min-w-[20px] text-center">
+                  <span className="text-xs text-gray-400 truncate block">{shortLabel(d.label)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="mt-4" />
+      <p className="text-xs text-gray-400 mt-1 text-right">← swipe to see older months</p>
+      <div className="mt-2" />
 
       {/* Summary insight */}
       <p className="text-xs text-gray-500 leading-relaxed mt-1">
