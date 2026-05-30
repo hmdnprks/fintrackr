@@ -518,15 +518,16 @@ Indonesian investment products to consider (by risk level):
 - Aggressive: Reksa Dana Saham (10-15% p.a. long-term, volatile), Saham langsung
 
 Rebalancing principles:
-1. Emergency fund must be 3-6 months of expenses in liquid savings — address this first if insufficient
-2. Excess savings beyond 9 months liquid coverage earning <1% should work harder (Reksa Dana Pasar Uang minimum)
-3. Risk allocation by preference:
+1. EMERGENCY FUND: Must be 3-6 months of expenses in liquid savings — address this first if insufficient.
+2. OPERATIONAL CASH: CRITICAL. Always leave at least 1.5 - 2.0 months of average monthly expenses in the primary daily savings account. Do NOT suggest moving so much that the user is left with no "running money" for this month's bills.
+3. EXCESS LIQUIDITY: Only suggest moving money that is beyond the Emergency Fund + Operational Cash buffer.
+4. Risk allocation by preference:
    - Conservative: 60-70% savings/deposito, 20-30% reksa dana pasar uang/obligasi, 5-10% saham
    - Moderate: 40% savings, 30% reksa dana campuran/obligasi, 20-25% saham, 5% gold
    - Aggressive: 20-30% savings (emergency only), 50-60% saham/reksa dana saham, 10% gold
-4. Gold should generally be 5-15% of portfolio — more is over-concentrated
-5. Savings paying low interest (tabungan biasa <1%) should migrate to higher-yield liquid instruments first
-6. Only suggest moving money between existing assets or into named products — do NOT invent asset names
+5. Gold should generally be 5-15% of portfolio — more is over-concentrated
+6. Savings paying low interest (tabungan biasa <1%) should migrate to higher-yield liquid instruments (like RDPU) only IF the operational cash buffer is satisfied.
+7. Only suggest moving money between existing assets or into named products — do NOT invent asset names.
 
 Additional rules:
 - Order suggestions by priority: 1 = most urgent/impactful (e.g. fix emergency fund gap first), highest number = nice-to-have enhancement
