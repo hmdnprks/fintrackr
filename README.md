@@ -17,8 +17,8 @@ Built with [Next.js](https://nextjs.org) (App Router), React 19, TypeScript, Tai
 - **Month comparison** — Delta badges on summary cards + per-category breakdown vs prior month
 - **Assets profile** — Track savings, gold, investments, and goal pockets; net worth growth tracking; per-asset value history (up to 365 days); emergency fund + liquid coverage ratio side-by-side; contributable flag excludes auto-managed funds (BPJS JHT) from suggestions
 - **Windfall allocation** — AI-powered plan for bonus/THR/freelance windfalls; allocates across emergency fund, goal pockets, investments, and a reward slice based on your real financial data
-- **Data backup** — JSON export/import (v4); includes statements, assets, net worth snapshots, per-asset history; v1–v3 backups remain compatible
-- **Data backup** — Export/import full JSON backup (merge or replace); includes goals and assets; v1/v2 backups supported
+- **Asset Reallocation Advisor** — AI restructures your existing portfolio (not new money); risk preference selector; priority-ordered suggestions with confidence levels, running balance, and savings safety check post-rebalance; result auto-saved to vault; exportable as PDF
+- **Data backup** — JSON export/import (v4); includes statements, assets, net worth snapshots, per-asset history, rebalance history; v1–v3 backups remain compatible; merge or replace modes
 - **CSV export** — Download filtered transactions as CSV
 - **Secure vault** — AES-GCM encryption, PBKDF2 key derivation, confirm-on-create, all data local
 - **Privacy-first** — No server, no database, no tracking; AI features are explicitly opt-in

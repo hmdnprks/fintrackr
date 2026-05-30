@@ -82,7 +82,16 @@ Three-tab layout with shared year/month filter:
   - Each destination shows two bars: % of windfall + gap fill progress with amount still needed
   - AI constrained to never exceed windfall total; hard clamp on server as safety net
   - Non-contributable investment assets filtered out of context before sending to AI
-- Assets included in JSON backup (v4); v1/v2/v3 backups remain compatible
+- **Asset Reallocation Advisor** — indigo "Rebalance with AI" button in the net worth card; restructures existing money (not new money); risk preference selector (Conservative / Moderate / Aggressive):
+  - Suggestions sorted by priority (#1 = most urgent); confidence badge per card (High priority / Consider / Optional) with a one-phrase reason
+  - Action types: Move, Increase, Reduce, Maintain — each with distinct icon and colour
+  - Running balance computed client-side in priority order — shows remaining amount in source after each step; red ⚠ Insufficient funds when accumulated withdrawals exceed source balance
+  - Execution note explains whether suggestions are sequential or alternatives
+  - **Savings safety check** — AI computes remaining liquid savings after all moves and expresses months of expense coverage; verdict banner (Safe ✓ green / Caution amber / Warning red) shown below suggestion cards
+  - **Vault persistence** — every analysis auto-saved (last 5 entries); "Load" banner on next open restores the previous result without an API call; included in JSON backup export and restore
+  - **PDF export** — print-ready HTML page opened in a new tab (no library dependency); includes health badge, summary, execution note, all suggestion cards, safety check, and disclaimer
+  - Net worth card shows last-updated label (amber when >30 days)
+- Assets included in JSON backup (v4); v1/v2/v3 backups remain compatible; rebalance history included from v4
 
 ## Manual Transactions
 
@@ -134,7 +143,7 @@ Two goal types displayed as cards in the Budget tab:
 ## Data Export
 
 - **CSV export** — download currently filtered transactions (Date, Description, Amount, Type, Category, Balance)
-- **JSON backup** — full vault export: statements, manual transactions, rules, budgets, goals
+- **JSON backup** — full vault export: statements, manual transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots, rebalance history
 - Vault credentials excluded (device-specific)
 
 ## Data Backup & Restore
@@ -147,7 +156,7 @@ Available in Settings:
 - File validation — rejects non-Fintrackr JSON
 - Preview before restoring: statement count, manual transactions, rules, budgets, goals, assets, export date
 - Backwards-compatible: v1 (no goals), v2 (no assets), v3 (no asset snapshots) all restore cleanly; missing fields default to empty
-- v4 backup includes: statements, manual transactions, rules, budgets, goals, assets, net worth snapshots (daily aggregate), asset snapshots (daily per-asset value history)
+- v4 backup includes: statements, manual transactions, rules, budgets, goals, assets, net worth snapshots (daily aggregate), asset snapshots (daily per-asset value history), rebalance history (last 5 entries)
 
 ## Recurring Transaction Detection
 
@@ -160,6 +169,9 @@ Available in Settings:
 
 - **AI Categorize** — batch-categorizes uncategorized transactions; sequential processing with exponential backoff retry on rate limits; Indonesian-context system prompt with local service names
 - **AI Insights** — pre-aggregates data (category totals, top expenses, savings rate) before sending; period label and IDR currency context included; structured 4-bullet output; temperature 0.1 for consistent factual output
+- **AI Budget Suggestions** — generates per-category budget limits from last 3 months average spending; editable before applying
+- **AI Windfall Allocation** — full financial context (income, assets, goals, emergency fund gap, THR type); reward slice; hard clamp prevents over-allocation
+- **AI Rebalance Advisor** — restructures existing assets rather than allocating new money; risk-aware (Conservative / Moderate / Aggressive); priority-ordered suggestions with confidence levels and running balance; savings safety check post-rebalance; result auto-saved to vault; PDF export
 - User-provided DeepSeek API key stored in vault and sent with each AI request — works in production without env vars
 - Server-side `DEEPSEEK_API_KEY` env var takes priority over user-provided key
 - AI data notice shown in Settings and next to each AI button in the dashboard
