@@ -1,96 +1,82 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
+import {
+  ArrowUpTrayIcon,
+  Squares2X2Icon,
+  Cog6ToothIcon,
+} from '@heroicons/react/24/outline'
+import DarkModeToggle from '@/components/DarkModeToggle'
 
 const NAV_LINKS = [
-  { href: '/',          label: 'Import'    },
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/settings',  label: 'Settings'  },
+  { href: '/',          label: 'Import',    Icon: ArrowUpTrayIcon  },
+  { href: '/dashboard', label: 'Dashboard', Icon: Squares2X2Icon   },
+  { href: '/settings',  label: 'Settings',  Icon: Cog6ToothIcon    },
 ]
 
 export default function NavBar() {
   const pathname = usePathname()
-  const [open, setOpen] = useState(false)
-
-  // Close menu on route change
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { setOpen(false) }, [pathname])
-
-  // Close on Escape
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [open])
 
   return (
     <>
-      <nav className="bg-white border-b border-gray-100 sticky top-0 z-40">
+      {/* Top nav — always visible; on mobile shows logo only */}
+      <nav className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Image alt="Fintrackr" src="/logo-fintrackr.png" height={60} width={90} />
 
           {/* Desktop links */}
-          <div className="hidden sm:flex gap-6 text-sm text-gray-600">
-            {NAV_LINKS.map(link => (
+          <div className="hidden sm:flex items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
+            {NAV_LINKS.map(({ href, label }) => (
               <Link
-                key={link.href}
-                href={link.href}
+                key={href}
+                href={href}
                 className={`transition ${
-                  pathname === link.href
+                  pathname === href
                     ? 'text-blue-600 font-medium'
-                    : 'hover:text-blue-600'
+                    : 'hover:text-blue-600 dark:hover:text-blue-400'
                 }`}
               >
-                {link.label}
+                {label}
               </Link>
             ))}
+            <DarkModeToggle />
           </div>
 
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setOpen(v => !v)}
-            className="sm:hidden p-2 -mr-2 text-gray-500 hover:text-gray-900 transition"
-            aria-label="Toggle menu"
-          >
-            {open
-              ? <XMarkIcon className="w-5 h-5" />
-              : <Bars3Icon className="w-5 h-5" />}
-          </button>
+          {/* Mobile: dark mode toggle in top bar */}
+          <div className="sm:hidden">
+            <DarkModeToggle />
+          </div>
         </div>
       </nav>
 
-      {/* Mobile dropdown */}
-      {open && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-30 bg-black/20 sm:hidden"
-            onClick={() => setOpen(false)}
-          />
-          {/* Menu panel */}
-          <div className="fixed top-14 left-0 right-0 z-40 bg-white border-b border-gray-100 shadow-lg sm:hidden">
-            {NAV_LINKS.map(link => (
+      {/* Mobile bottom navigation bar */}
+      <nav
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        <div className="flex">
+          {NAV_LINKS.map(({ href, label, Icon }) => {
+            const active = pathname === href
+            return (
               <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setOpen(false)}
-                className={`flex items-center px-6 py-4 text-sm border-b border-gray-50 last:border-0 transition ${
-                  pathname === link.href
-                    ? 'text-blue-600 font-semibold bg-blue-50'
-                    : 'text-gray-700 hover:bg-gray-50'
+                key={href}
+                href={href}
+                className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-xs transition ${
+                  active ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                 }`}
               >
-                {link.label}
+                <Icon className="w-6 h-6" />
+                <span className={active ? 'font-medium' : ''}>{label}</span>
               </Link>
-            ))}
-          </div>
-        </>
-      )}
+            )
+          })}
+        </div>
+      </nav>
+
+      {/* Spacer so bottom nav doesn't cover page content on mobile */}
+      <div className="h-16 sm:hidden" />
     </>
   )
 }
