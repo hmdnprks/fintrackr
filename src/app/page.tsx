@@ -3,6 +3,7 @@
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
+import { Squares2X2Icon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 import { getSavedStatements, saveStatement } from '@/lib/storage'
 import VaultGate from '@/components/VaultGate'
 import StatementGuide from '@/components/home/StatementGuide'
@@ -151,19 +152,18 @@ export default function Home() {
         <div className="max-w-3xl mx-auto space-y-6">
 
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Import Statement</h1>
               <p className="text-sm text-gray-400 mt-0.5">Upload Mandiri PDF bank statements</p>
             </div>
             <Link
               href="/dashboard"
-              className="text-sm font-medium text-gray-500 hover:text-gray-800 flex items-center gap-1.5 transition"
+              className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 bg-white border border-gray-200 hover:border-blue-300 px-3 py-2 rounded-xl transition shrink-0"
             >
-              Dashboard
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
+              <Squares2X2Icon className="w-4 h-4" />
+              <span className="hidden sm:inline">Go to Dashboard</span>
+              <span className="sm:hidden">Dashboard</span>
             </Link>
           </div>
 
@@ -171,9 +171,7 @@ export default function Home() {
 
           {/* Privacy notice */}
           <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4">
-            <svg className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-            </svg>
+            <ShieldCheckIcon className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-semibold text-blue-800">Your data never leaves your device</p>
               <p className="text-sm text-blue-600 mt-0.5">
