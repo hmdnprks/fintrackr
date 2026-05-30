@@ -29,6 +29,8 @@ import SavingsRateTrendSection from '@/components/dashboard/SavingsRateTrendSect
 import SpendingBreakdownSection from '@/components/dashboard/SpendingBreakdownSection'
 import RecurringExpensesSection from '@/components/dashboard/RecurringExpensesSection'
 import InvestmentRateSection from '@/components/dashboard/InvestmentRateSection'
+import FinancialHealthScore from '@/components/dashboard/FinancialHealthScore'
+import FIRENumberSection from '@/components/dashboard/FIRENumberSection'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 import { useVault } from '@/context/VaultContext'
 
@@ -283,6 +285,13 @@ export default function Dashboard() {
                 onClear={clearInsights}
               />
 
+              <FinancialHealthScore
+                savingsRateTrend={savingsRateTrend}
+                investmentRate={investmentRate.rate}
+                budgets={budgets}
+                currentMonthSpending={currentMonthSpending}
+              />
+
               <SpendingBreakdownSection data={spendingBreakdown} />
 
               <SavingsRateTrendSection data={savingsRateTrend} />
@@ -298,6 +307,8 @@ export default function Dashboard() {
                 items={investmentRate.items}
                 totalIncome={totalIncome}
               />
+
+              <FIRENumberSection savingsRateTrend={savingsRateTrend} />
             </div>
           )}
 
