@@ -32,10 +32,11 @@ import InvestmentRateSection from '@/components/dashboard/InvestmentRateSection'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 import { useVault } from '@/context/VaultContext'
 
-type Tab = 'overview' | 'budget' | 'transactions' | 'assets'
+type Tab = 'overview' | 'insights' | 'budget' | 'transactions' | 'assets'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'overview',     label: 'Overview'      },
+  { id: 'insights',     label: 'Insights'      },
   { id: 'budget',       label: 'Budget'        },
   { id: 'transactions', label: 'Transactions'  },
   { id: 'assets',       label: 'Assets'        },
@@ -238,17 +239,9 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* Overview tab */}
+          {/* Overview tab — summary + trends + calendar */}
           {activeTab === 'overview' && (
             <div className="space-y-8">
-              <AIInsightsPanel
-                insights={insights ?? ''}
-                isLoading={isGeneratingInsights}
-                period={insightsPeriodLabel}
-                onGenerate={(force) => getInsights(allTransactions, selectedYear, selectedMonth, force)}
-                onClear={clearInsights}
-              />
-
               <SummarySection
                 totalIncome={totalIncome}
                 totalExpense={totalExpense}
@@ -259,6 +252,33 @@ export default function Dashboard() {
               <IncomeExpenseSection
                 income={totalIncome}
                 expense={totalExpense}
+              />
+
+              <MonthlyTrendSection data={trendChartData} />
+
+              {comparison && (
+                <MonthComparisonSection comparison={comparison} />
+              )}
+
+              {selectedMonth !== 'all' && (
+                <CalendarSection
+                  allTransactions={allTransactions}
+                  selectedMonth={selectedMonth}
+                  onRecategorize={handleRecategorize}
+                />
+              )}
+            </div>
+          )}
+
+          {/* Insights tab — AI + financial health metrics */}
+          {activeTab === 'insights' && (
+            <div className="space-y-8">
+              <AIInsightsPanel
+                insights={insights ?? ''}
+                isLoading={isGeneratingInsights}
+                period={insightsPeriodLabel}
+                onGenerate={(force) => getInsights(allTransactions, selectedYear, selectedMonth, force)}
+                onClear={clearInsights}
               />
 
               <SpendingBreakdownSection data={spendingBreakdown} />
@@ -276,20 +296,6 @@ export default function Dashboard() {
                 items={investmentRate.items}
                 totalIncome={totalIncome}
               />
-
-              <MonthlyTrendSection data={trendChartData} />
-
-              {comparison && (
-                <MonthComparisonSection comparison={comparison} />
-              )}
-
-              {selectedMonth !== 'all' && (
-                <CalendarSection
-                  allTransactions={allTransactions}
-                  selectedMonth={selectedMonth}
-                  onRecategorize={handleRecategorize}
-                />
-              )}
             </div>
           )}
 
