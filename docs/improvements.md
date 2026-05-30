@@ -146,9 +146,9 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] Fixed commitments: card layout with full-width description
 - [x] Import page: secondary button with Squares2X2Icon for dashboard link
 - [ ] **Pull-to-refresh** on dashboard (mobile)
-- [ ] **Bottom navigation bar** on mobile instead of hamburger (more discoverable for primary pages)
-- [ ] Dark mode support
-- [ ] PWA / installable — add to home screen with offline support
+- [x] **Bottom navigation bar** on mobile — fixed bottom bar with Import/Dashboard/Settings icons, iOS safe-area inset, replaces hamburger entirely
+- [x] Dark mode support — OS preference detection, localStorage persistence, full component coverage, Sun/Moon toggle in nav
+- [x] PWA / installable — manifest.json, service worker (offline shell cache), ServiceWorkerRegister, Apple meta tags
 
 ---
 

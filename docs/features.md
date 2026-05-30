@@ -191,10 +191,10 @@ Available in Settings:
 - Success (green) / error (red) feedback on password change
 - Data Backup & Restore section
 
-## Mobile
+## Mobile & UX
 
 - Responsive layout across all pages — `px-4 py-6` on mobile, `sm:px-6 sm:py-10` on desktop
-- **Navigation**: hamburger menu on mobile (Bars3Icon / XMarkIcon); full-width dropdown with 44px+ touch targets and active route highlight; auto-closes on navigation or Escape key; desktop shows inline links
+- **Navigation**: fixed bottom navigation bar on mobile (Import / Dashboard / Settings) with Heroicons, icon above label, `env(safe-area-inset-bottom)` padding for iOS notch; desktop keeps inline top nav links; active route highlighted blue
 - **Dashboard tabs**: horizontally scrollable on mobile — 5 tabs scroll with `overflow-x-auto`, `shrink-0` + `whitespace-nowrap` prevents label wrapping
 - **Dashboard header filters**: year and month selects in a 2-column grid on mobile; action buttons (Export, Delete, Clear) on a separate row below
 - **Transaction tab**: title and AI Categorize button stack vertically on mobile; category filter goes full width; type toggle and Clear sit on a row below
@@ -205,3 +205,25 @@ Available in Settings:
 - Transaction table: horizontally scrollable on mobile with `min-w-[560px]` so columns never collapse
 - Calendar day cells: `h-10` on mobile, `h-14` on desktop
 - All modals: constrained width with `p-4` backdrop padding to prevent viewport overflow
+
+## Dark Mode
+
+- **Class-strategy dark mode** via Tailwind CSS v4 `@variant dark` directive; toggled by adding `.dark` to `<html>`
+- **DarkModeToggle** component (Sun/Moon icons from Heroicons): detects OS preference on first load via `prefers-color-scheme`; persists choice to `localStorage` under key `fintrackr-theme`; shown in desktop nav and mobile top bar
+- Full dark mode coverage across all major components:
+  - Navigation, VaultGate, import page, dashboard, settings
+  - All dashboard cards: Summary, IncomeExpense, MonthlyTrend, MonthComparison, CalendarSection
+  - Insights tab: SpendingBreakdown, SavingsRateTrend, RecurringExpenses, InvestmentRate, AIInsights
+  - Budget tab: BudgetSection, GoalSection (cards with colored header tints), CategorySection
+  - Transactions tab: TransactionSection, RecurringSuggestionPanel
+  - Assets tab: AssetsTab, AssetModal, WindfallModal
+  - Modals: AIModal, AddTransactionModal
+  - Settings: BackupSection (including preview grid, file drop zone, amber warning)
+
+## PWA / Installable
+
+- **Web App Manifest** (`/public/manifest.json`): name "Fintrackr", `display: standalone`, theme color `#2563eb`, portrait orientation
+- **Service Worker** (`/public/sw.js`): installs shell cache (`/`, `/dashboard`, `/settings`), cleans old caches on activate, network-first fetch with cache fallback for offline use
+- **ServiceWorkerRegister** client component: registers SW on mount via `navigator.serviceWorker.register`
+- **Meta tags** in layout: `<link rel="manifest">`, `theme-color`, `apple-mobile-web-app-capable`, Apple status bar style and title
+- Add `public/icon-192.png` and `public/icon-512.png` (192×192 and 512×512) for full "Add to Home Screen" icon support
