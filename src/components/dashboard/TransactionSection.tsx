@@ -147,14 +147,14 @@ export default function TransactionSection({
       {/* Header — stacks on mobile, side-by-side on desktop */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Transactions</h2>
-          <p className="text-sm text-gray-500 mt-0.5 flex flex-wrap gap-x-1">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Transactions</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 flex flex-wrap gap-x-1">
             <span>{filtered.length} transaction{filtered.length !== 1 ? 's' : ''}</span>
             {isFiltered && filtered.length !== transactions.length && (
-              <span className="text-gray-400">of {transactions.length}</span>
+              <span className="text-gray-400 dark:text-gray-500">of {transactions.length}</span>
             )}
             {filtered.length > 0 && (
-              <span className="text-gray-400">· {formatIDR(filteredTotal)}</span>
+              <span className="text-gray-400 dark:text-gray-500">· {formatIDR(filteredTotal)}</span>
             )}
             {uncategorizedCount > 0 && (
               <span className="text-amber-500">· {uncategorizedCount} uncategorized</span>
@@ -187,9 +187,9 @@ export default function TransactionSection({
       />
 
       {/* Filter bar */}
-      <div className="bg-white rounded-2xl shadow-sm px-4 py-3 space-y-3">
+      <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm px-4 py-3 space-y-3">
         <div className="relative">
-          <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
           <input
@@ -197,7 +197,7 @@ export default function TransactionSection({
             placeholder="Search by description..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+            className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
           {search && (
             <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -213,8 +213,8 @@ export default function TransactionSection({
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className={`w-full sm:w-auto text-sm border rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              filterCategory !== 'all' ? 'border-blue-400 text-blue-700 font-medium' : 'border-gray-200 text-gray-600'
+            className={`w-full sm:w-auto text-sm border rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              filterCategory !== 'all' ? 'border-blue-400 text-blue-700 dark:text-blue-400 font-medium' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'
             }`}
           >
             <option value="all">All Categories</option>
@@ -224,7 +224,7 @@ export default function TransactionSection({
           </select>
 
           <div className="flex items-center gap-2 sm:ml-0">
-            <div className="flex items-center bg-gray-100 rounded-xl p-1 gap-0.5">
+            <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1 gap-0.5">
               {([
                 { value: 'all',    label: 'All' },
                 { value: 'credit', label: '↑ In' },
@@ -235,10 +235,10 @@ export default function TransactionSection({
                   onClick={() => setFilterType(value)}
                   className={`px-3 py-1.5 text-sm rounded-lg font-medium transition ${
                     filterType === value
-                      ? value === 'credit' ? 'bg-white text-green-600 shadow-sm'
-                      : value === 'debit'  ? 'bg-white text-red-500 shadow-sm'
-                      :                      'bg-white text-gray-700 shadow-sm'
-                      : 'text-gray-400 hover:text-gray-600'
+                      ? value === 'credit' ? 'bg-white dark:bg-gray-700 text-green-600 shadow-sm'
+                      : value === 'debit'  ? 'bg-white dark:bg-gray-700 text-red-500 shadow-sm'
+                      :                      'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
+                      : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                   }`}
                 >
                   {label}
@@ -262,13 +262,13 @@ export default function TransactionSection({
       </div>
 
       {/* Transaction table */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden overflow-x-auto">
+      <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden overflow-x-auto">
         {paginated.length === 0 ? (
           <div className="text-center py-16">
-            <svg className="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
             </svg>
-            <p className="text-sm font-medium text-gray-400">No transactions found</p>
+            <p className="text-sm font-medium text-gray-400 dark:text-gray-500">No transactions found</p>
             {isFiltered && (
               <button onClick={clearFilters} className="text-sm text-blue-600 hover:underline mt-1">
                 Clear filters
@@ -279,35 +279,35 @@ export default function TransactionSection({
           <>
             <table className="w-full text-sm min-w-[560px]">
               <thead>
-                <tr className="border-b border-gray-100">
+                <tr className="border-b border-gray-100 dark:border-gray-800">
                   {/* Fix 4 — sortable Date header */}
                   <th
                     className="text-left px-5 py-3 w-28 cursor-pointer select-none group"
                     onClick={() => toggleSort('date')}
                   >
-                    <span className="text-xs font-medium text-gray-400 uppercase tracking-wide group-hover:text-gray-600 transition">
+                    <span className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide group-hover:text-gray-600 dark:group-hover:text-gray-300 transition">
                       Date
                     </span>
                     <SortIcon active={sortBy.startsWith('date')} asc={sortBy === 'date-asc'} />
                   </th>
-                  <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wide px-5 py-3">
+                  <th className="text-left text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide px-5 py-3">
                     Description
                   </th>
-                  <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wide px-5 py-3 w-40">
+                  <th className="text-left text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide px-5 py-3 w-40">
                     Category
                   </th>
                   <th
                     className="text-right px-5 py-3 w-36 cursor-pointer select-none group"
                     onClick={() => toggleSort('amount')}
                   >
-                    <span className="text-xs font-medium text-gray-400 uppercase tracking-wide group-hover:text-gray-600 transition">
+                    <span className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide group-hover:text-gray-600 dark:group-hover:text-gray-300 transition">
                       Amount
                     </span>
                     <SortIcon active={sortBy.startsWith('amount')} asc={sortBy === 'amount-asc'} />
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                 {paginated.map((tx: any) => {
                   const isUncategorized = tx.category === 'Uncategorized'
                   const isCredit        = tx.type === 'credit'
@@ -322,15 +322,15 @@ export default function TransactionSection({
                   return (
                     <tr
                       key={tx._idx}
-                      className={`transition hover:bg-gray-50 ${isUncategorized ? 'border-l-2 border-l-amber-400' : ''}`}
+                      className={`transition hover:bg-gray-50 dark:hover:bg-gray-800 ${isUncategorized ? 'border-l-2 border-l-amber-400' : ''}`}
                       onClick={() => setEditingOriginalIndex(null)}
                     >
-                      <td className="px-5 py-3 text-gray-400 text-xs whitespace-nowrap tabular-nums">
+                      <td className="px-5 py-3 text-gray-400 dark:text-gray-500 text-xs whitespace-nowrap tabular-nums">
                         {tx.fullDate?.toLocaleDateString('id-ID', dateFormat)}
                       </td>
 
                       <td className="px-5 py-3">
-                        <span className="text-gray-700 line-clamp-1">{tx.detail}</span>
+                        <span className="text-gray-700 dark:text-gray-300 line-clamp-1">{tx.detail}</span>
                       </td>
 
                       <td className="px-5 py-3" onClick={(e) => e.stopPropagation()}>
@@ -377,7 +377,7 @@ export default function TransactionSection({
             </table>
 
             {hasMore && (
-              <div className="px-5 py-4 border-t border-gray-100 text-center">
+              <div className="px-5 py-4 border-t border-gray-100 dark:border-gray-800 text-center">
                 <button
                   onClick={() => setPage((p) => p + 1)}
                   className="text-sm text-blue-600 hover:text-blue-800 font-medium"

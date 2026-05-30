@@ -171,15 +171,15 @@ export default function WindfallModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={loading ? undefined : handleClose} />
 
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg z-10 max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg z-10 max-h-[90vh] overflow-y-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Allocate Windfall</h3>
-            <p className="text-xs text-gray-400 mt-0.5">AI will suggest where to put this money based on your financial profile</p>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Allocate Windfall</h3>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">AI will suggest where to put this money based on your financial profile</p>
           </div>
-          <button onClick={handleClose} disabled={loading} className="text-gray-400 hover:text-gray-600 transition disabled:opacity-30">
+          <button onClick={handleClose} disabled={loading} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition disabled:opacity-30">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -192,7 +192,7 @@ export default function WindfallModal({
             <>
               {/* Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Type of windfall</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type of windfall</label>
                 <div className="grid grid-cols-2 gap-2">
                   {WINDFALL_TYPES.map(t => (
                     <button
@@ -201,11 +201,11 @@ export default function WindfallModal({
                       className={`text-left px-3 py-2.5 rounded-xl border text-sm transition ${
                         wfType === t.id
                           ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
                     >
                       <p className="font-medium">{t.label}</p>
-                      <p className={`text-xs mt-0.5 ${wfType === t.id ? 'text-blue-100' : 'text-gray-400'}`}>{t.desc}</p>
+                      <p className={`text-xs mt-0.5 ${wfType === t.id ? 'text-blue-100' : 'text-gray-400 dark:text-gray-500'}`}>{t.desc}</p>
                     </button>
                   ))}
                 </div>
@@ -213,9 +213,9 @@ export default function WindfallModal({
 
               {/* Amount */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Amount received</label>
-                <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
-                  <span className="px-3 py-3 text-sm text-gray-400 bg-gray-50 border-r border-gray-200 select-none">Rp</span>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Amount received</label>
+                <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+                  <span className="px-3 py-3 text-sm text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 select-none">Rp</span>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -225,26 +225,26 @@ export default function WindfallModal({
                       const digits = e.target.value.replace(/[^0-9]/g, '')
                       setAmount(digits ? formatThousands(Number(digits)) : '')
                     }}
-                    className="flex-1 px-3 py-3 text-sm focus:outline-none bg-transparent min-w-0"
+                    className="flex-1 px-3 py-3 text-sm focus:outline-none bg-transparent min-w-0 text-gray-900 dark:text-gray-100"
                   />
                 </div>
               </div>
 
               {/* Context summary */}
               {(avgMonthlyExpense > 0 || assets.length > 0) && (
-                <div className="bg-gray-50 rounded-xl p-4 space-y-1.5">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Your financial snapshot</p>
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-1.5">
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Your financial snapshot</p>
                   {avgMonthlyExpense > 0 && (
-                    <p className="text-xs text-gray-600">Avg monthly expenses: <span className="font-medium text-gray-800">{formatIDRFull(avgMonthlyExpense)}</span></p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Avg monthly expenses: <span className="font-medium text-gray-800 dark:text-gray-200">{formatIDRFull(avgMonthlyExpense)}</span></p>
                   )}
                   {avgMonthlyIncome > 0 && (
-                    <p className="text-xs text-gray-600">Avg monthly income: <span className="font-medium text-gray-800">{formatIDRFull(avgMonthlyIncome)}</span></p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Avg monthly income: <span className="font-medium text-gray-800 dark:text-gray-200">{formatIDRFull(avgMonthlyIncome)}</span></p>
                   )}
                   {emergencyMonths !== null && (
-                    <p className="text-xs text-gray-600">Emergency fund: <span className={`font-medium ${emergencyMonths >= 6 ? 'text-green-600' : emergencyMonths >= 3 ? 'text-amber-600' : 'text-red-500'}`}>{emergencyMonths.toFixed(1)} months</span></p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Emergency fund: <span className={`font-medium ${emergencyMonths >= 6 ? 'text-green-600' : emergencyMonths >= 3 ? 'text-amber-600' : 'text-red-500'}`}>{emergencyMonths.toFixed(1)} months</span></p>
                   )}
                   {assets.filter(a => a.type === 'pocket' && a.goalTarget).length > 0 && (
-                    <p className="text-xs text-gray-600">Active goal pockets: <span className="font-medium text-gray-800">{assets.filter(a => a.type === 'pocket' && a.goalTarget).length}</span></p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Active goal pockets: <span className="font-medium text-gray-800 dark:text-gray-200">{assets.filter(a => a.type === 'pocket' && a.goalTarget).length}</span></p>
                   )}
                 </div>
               )}
@@ -272,8 +272,8 @@ export default function WindfallModal({
           {loading && (
             <div className="text-center py-10">
               <div className="inline-block w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" />
-              <p className="text-sm font-medium text-gray-700">Analysing your financial profile…</p>
-              <p className="text-xs text-gray-400 mt-1">DeepSeek is computing the best allocation for your situation</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Analysing your financial profile…</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">DeepSeek is computing the best allocation for your situation</p>
             </div>
           )}
 
@@ -292,7 +292,7 @@ export default function WindfallModal({
               </div>
 
               {/* Summary */}
-              <p className="text-sm text-gray-600 leading-relaxed">{result.summary}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{result.summary}</p>
 
               {/* Allocations */}
               <div className="space-y-3">
@@ -302,33 +302,33 @@ export default function WindfallModal({
                   const gapFillPct  = gap > 0 ? Math.min(100, Math.round((a.amount / gap) * 100)) : null
                   const stillNeeded = gap > 0 ? Math.max(0, gap - a.amount) : null
                   return (
-                    <div key={i} className="border border-gray-100 rounded-xl p-4 space-y-2.5">
+                    <div key={i} className="border border-gray-100 dark:border-gray-800 rounded-xl p-4 space-y-2.5">
                       <div className="flex flex-col xs:flex-row xs:items-start xs:justify-between gap-0.5 xs:gap-3">
-                        <p className="text-sm font-semibold text-gray-900">{a.destination}</p>
-                        <p className="text-sm font-bold text-blue-700 xs:shrink-0">{formatIDRFull(a.amount)}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{a.destination}</p>
+                        <p className="text-sm font-bold text-blue-700 dark:text-blue-400 xs:shrink-0">{formatIDRFull(a.amount)}</p>
                       </div>
 
                       {/* Bar 1 — % of windfall */}
                       <div>
-                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                           <div className="h-full bg-blue-400 rounded-full" style={{ width: `${windfallPct}%` }} />
                         </div>
-                        <p className="text-xs text-gray-400 mt-1">{windfallPct}% of your windfall goes here</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{windfallPct}% of your windfall goes here</p>
                       </div>
 
                       {/* Bar 2 — gap fill progress (only when gap is known) */}
                       {gapFillPct !== null && (
                         <div>
-                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full ${gapFillPct >= 100 ? 'bg-green-400' : 'bg-amber-400'}`}
                               style={{ width: `${gapFillPct}%` }}
                             />
                           </div>
                           <div className="flex flex-wrap items-center justify-between gap-x-2 mt-1">
-                            <p className="text-xs text-gray-400">fills {gapFillPct}% of the gap</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500">fills {gapFillPct}% of the gap</p>
                             {stillNeeded !== null && stillNeeded > 0 && (
-                              <p className="text-xs text-gray-400">{formatIDRFull(stillNeeded)} still needed</p>
+                              <p className="text-xs text-gray-400 dark:text-gray-500">{formatIDRFull(stillNeeded)} still needed</p>
                             )}
                             {gapFillPct >= 100 && (
                               <p className="inline-flex items-center gap-1 text-xs text-green-600 font-medium"><CheckIcon className="w-3.5 h-3.5" />gap fully covered</p>
@@ -337,7 +337,7 @@ export default function WindfallModal({
                         </div>
                       )}
 
-                      <p className="text-xs text-gray-500 leading-relaxed">{a.reason}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{a.reason}</p>
                     </div>
                   )
                 })}
@@ -345,13 +345,13 @@ export default function WindfallModal({
 
               {/* Leftover */}
               {result.leftover > 0 && (
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-semibold text-gray-700">Remainder</p>
-                    <p className="text-sm font-bold text-gray-900">{formatIDRFull(result.leftover)}</p>
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Remainder</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{formatIDRFull(result.leftover)}</p>
                   </div>
                   {result.leftoverAdvice && (
-                    <p className="text-xs text-gray-500">{result.leftoverAdvice}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{result.leftoverAdvice}</p>
                   )}
                 </div>
               )}
@@ -360,7 +360,7 @@ export default function WindfallModal({
               <div className="flex gap-3 pt-1">
                 <button
                   onClick={() => { setResult(null); setError(null) }}
-                  className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
                 >
                   Recalculate
                 </button>

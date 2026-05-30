@@ -48,7 +48,7 @@ function PasswordInput({
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
-        className="w-full border border-gray-200 px-3 py-2.5 pr-10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2.5 pr-10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
       <button
         type="button"
@@ -120,20 +120,20 @@ export default function SettingsPage() {
   // ── render ─────────────────────────────────────────────────────────────────
 
   return (
-    <main className="min-h-screen bg-gray-50 py-6 px-4 sm:py-10 sm:px-6">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 py-6 px-4 sm:py-10 sm:px-6">
       <div className="max-w-3xl mx-auto space-y-6">
 
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-            <p className="text-sm text-gray-400 mt-0.5">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Settings</h1>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">
               Categorization rules, AI config, security &amp; data
             </p>
           </div>
           <Link
             href="/dashboard"
-            className="text-sm font-medium text-gray-500 hover:text-gray-800 flex items-center gap-1.5 transition shrink-0"
+            className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 flex items-center gap-1.5 transition shrink-0"
           >
             Dashboard
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -143,16 +143,16 @@ export default function SettingsPage() {
         </div>
 
         {/* ── 1. Categorization Rules ────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">Categorization Rules</h2>
-            <p className="text-sm text-gray-400 mt-0.5">
+        <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Categorization Rules</h2>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">
               Keywords matched against transaction descriptions. Your rules override defaults.
             </p>
           </div>
 
           {/* Add form */}
-          <div className="px-6 py-5 border-b border-gray-100">
+          <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
             <div className="flex gap-3">
               <input
                 type="text"
@@ -160,12 +160,12 @@ export default function SettingsPage() {
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddRule()}
-                className="flex-1 border border-gray-200 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as Category)}
-                className="border border-gray-200 px-3 py-2.5 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="border border-gray-200 dark:border-gray-700 px-3 py-2.5 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -185,21 +185,21 @@ export default function SettingsPage() {
           {/* User rules list */}
           {userRules.length === 0 ? (
             <div className="px-6 py-8 text-center">
-              <p className="text-sm text-gray-400">No custom rules yet. Add one above.</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500">No custom rules yet. Add one above.</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-gray-50 dark:divide-gray-800">
               {userRules.map((rule) => (
                 <div key={rule.id} className="flex items-center justify-between px-6 py-3">
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="font-medium text-gray-800">{rule.keyword}</span>
-                    <span className="text-gray-300">→</span>
-                    <span className="text-gray-500">{rule.category}</span>
+                    <span className="font-medium text-gray-800 dark:text-gray-200">{rule.keyword}</span>
+                    <span className="text-gray-300 dark:text-gray-600">→</span>
+                    <span className="text-gray-500 dark:text-gray-400">{rule.category}</span>
                   </div>
                   <button
                     onClick={() => handleDeleteRule(rule.id)}
                     title="Delete rule"
-                    className="text-gray-300 hover:text-red-500 transition p-1"
+                    className="text-gray-300 dark:text-gray-600 hover:text-red-500 transition p-1"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -211,10 +211,10 @@ export default function SettingsPage() {
           )}
 
           {/* Default rules — collapsible */}
-          <div className="border-t border-gray-100">
+          <div className="border-t border-gray-100 dark:border-gray-800">
             <button
               onClick={() => setShowDefaults((v) => !v)}
-              className="w-full flex items-center justify-between px-6 py-3.5 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition"
+              className="w-full flex items-center justify-between px-6 py-3.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
             >
               <span>{showDefaults ? 'Hide' : 'Show'} {defaultRules.length} system default rules</span>
               <svg
@@ -226,17 +226,17 @@ export default function SettingsPage() {
             </button>
 
             {showDefaults && (
-              <div className="divide-y divide-gray-50 border-t border-gray-100">
+              <div className="divide-y divide-gray-50 dark:divide-gray-800 border-t border-gray-100 dark:border-gray-800">
                 {defaultRules.map((rule) => (
                   <div key={rule.id} className="flex items-center gap-2 px-6 py-3 text-sm">
-                    <span className="font-medium text-gray-600">{rule.keyword}</span>
-                    <span className="text-gray-300">→</span>
-                    <span className="text-gray-400">{rule.category}</span>
-                    <span className="ml-auto text-xs text-gray-300 bg-gray-100 px-2 py-0.5 rounded-full">default</span>
+                    <span className="font-medium text-gray-600 dark:text-gray-400">{rule.keyword}</span>
+                    <span className="text-gray-300 dark:text-gray-600">→</span>
+                    <span className="text-gray-400 dark:text-gray-500">{rule.category}</span>
+                    <span className="ml-auto text-xs text-gray-300 dark:text-gray-600 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">default</span>
                   </div>
                 ))}
                 <div className="px-6 py-3">
-                  <p className="text-xs text-gray-400">Default rules cannot be deleted. Your rules take priority.</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Default rules cannot be deleted. Your rules take priority.</p>
                 </div>
               </div>
             )}
@@ -244,10 +244,10 @@ export default function SettingsPage() {
         </div>
 
         {/* ── 2. AI Features ────────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">AI Features</h2>
-            <p className="text-sm text-gray-400 mt-0.5">
+        <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">AI Features</h2>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">
               AI categorization and insights via DeepSeek — fully optional.
             </p>
           </div>
@@ -267,8 +267,8 @@ export default function SettingsPage() {
             {/* Unified API key */}
             <div className="space-y-3">
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-0.5">Your DeepSeek API Key</p>
-                <p className="text-xs text-gray-400 mb-3">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Your DeepSeek API Key</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
                   Powers AI categorization, insights, and chat. Stored only on this device — never sent to anyone except DeepSeek.{' '}
                   <a
                     href="https://platform.deepseek.com/api_keys"
@@ -286,7 +286,7 @@ export default function SettingsPage() {
                     onChange={(e) => { setChatApiKey(e.target.value); setChatKeySaved(false) }}
                     onKeyDown={(e) => e.key === 'Enter' && handleSaveChatKey()}
                     placeholder="sk-..."
-                    className="flex-1 border border-gray-200 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <button
                     onClick={handleSaveChatKey}
@@ -322,10 +322,10 @@ export default function SettingsPage() {
         </div>
 
         {/* ── 3. Security ───────────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">Security</h2>
-            <p className="text-sm text-gray-400 mt-0.5">Change your vault master password.</p>
+        <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Security</h2>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">Change your vault master password.</p>
           </div>
 
           <div className="px-6 py-5 space-y-4">

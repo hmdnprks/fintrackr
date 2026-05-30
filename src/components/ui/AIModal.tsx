@@ -30,14 +30,14 @@ export default function AIModal({
         onClick={isProcessing ? undefined : onClose}
       />
 
-      <div className="relative bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg mx-4 z-10 max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 w-full max-w-lg mx-4 z-10 max-h-[90vh] overflow-y-auto">
         {isProcessing && (
           <div className="text-center py-6">
             <div className="inline-block w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" />
-            <h3 className="text-lg font-semibold text-gray-800">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
               Categorizing Transactions
             </h3>
-            <p className="text-sm text-gray-500 mt-2 min-h-[20px]">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 min-h-[20px]">
               {processingStatus ?? 'Processing…'}
             </p>
           </div>
@@ -61,10 +61,10 @@ export default function AIModal({
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-800">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
                 Categorization Complete
               </h3>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                 {result.success.toLocaleString('id-ID')} of {result.total.toLocaleString('id-ID')} transactions categorized.
               </p>
               {(result.learnedCount > 0 || result.aiCount > 0) && (
@@ -105,12 +105,12 @@ export default function AIModal({
                   {result.remaining.map((tx, i) => (
                     <div
                       key={i}
-                      className="flex justify-between text-sm bg-white p-2 rounded"
+                      className="flex justify-between text-sm bg-white dark:bg-gray-800 p-2 rounded"
                     >
-                      <span className="text-gray-700 truncate mr-2">
+                      <span className="text-gray-700 dark:text-gray-300 truncate mr-2">
                         {tx.detail}
                       </span>
-                      <span className="text-gray-400 shrink-0">
+                      <span className="text-gray-400 dark:text-gray-500 shrink-0">
                         {tx.amount != null ? `Rp ${Math.round(tx.amount).toLocaleString('id-ID')}` : '-'}
                       </span>
                     </div>
@@ -143,7 +143,7 @@ export default function AIModal({
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-800">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
               Categorization Failed
             </h3>
             <p className="text-sm text-red-600 mt-2">{error}</p>
@@ -153,7 +153,7 @@ export default function AIModal({
         {!isProcessing && (
           <button
             onClick={onClose}
-            className="mt-4 w-full bg-gray-800 hover:bg-black text-white py-2 rounded-lg text-sm transition"
+            className="mt-4 w-full bg-gray-800 hover:bg-black dark:bg-gray-700 dark:hover:bg-gray-600 text-white py-2 rounded-lg text-sm transition"
           >
             Close
           </button>

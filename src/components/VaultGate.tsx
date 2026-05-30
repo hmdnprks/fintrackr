@@ -65,8 +65,8 @@ export default function VaultGate({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="bg-white rounded-2xl shadow-sm w-full max-w-sm overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm w-full max-w-sm overflow-hidden">
 
         {/* Fix 7 — app branding + header */}
         <div className="bg-blue-600 px-6 py-5 text-white">
@@ -92,7 +92,7 @@ export default function VaultGate({ children }: { children: React.ReactNode }) {
 
           {/* Fix 3 — password with show/hide */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               Master Password
             </label>
             <div className="relative">
@@ -108,7 +108,7 @@ export default function VaultGate({ children }: { children: React.ReactNode }) {
                   }
                 }}
                 autoFocus
-                className="w-full border border-gray-200 px-3 py-2.5 pr-10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2.5 pr-10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <EyeToggle show={showPassword} onToggle={() => setShowPassword((v) => !v)} />
             </div>
@@ -118,7 +118,7 @@ export default function VaultGate({ children }: { children: React.ReactNode }) {
           {!initialized && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -129,10 +129,10 @@ export default function VaultGate({ children }: { children: React.ReactNode }) {
                     value={confirmPassword}
                     onChange={(e) => { setConfirmPassword(e.target.value); setError('') }}
                     onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                    className={`w-full border px-3 py-2.5 pr-10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full border px-3 py-2.5 pr-10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${
                       confirmPassword && !passwordsMatch
-                        ? 'border-red-300 bg-red-50'
-                        : 'border-gray-200'
+                        ? 'border-red-300 bg-red-50 dark:bg-red-900/20'
+                        : 'border-gray-200 dark:border-gray-700'
                     }`}
                   />
                   <EyeToggle show={showConfirm} onToggle={() => setShowConfirm((v) => !v)} />
@@ -178,10 +178,10 @@ export default function VaultGate({ children }: { children: React.ReactNode }) {
 
           {/* Fix 5 — relevant warnings for each flow */}
           {!initialized ? (
-            <p className="text-xs text-gray-400 text-center leading-relaxed">
+            <p className="text-xs text-gray-400 dark:text-gray-500 text-center leading-relaxed">
               This password encrypts all your data using AES-256.
               It is never stored or transmitted anywhere.{' '}
-              <strong className="text-gray-500">Keep it safe — it cannot be recovered.</strong>
+              <strong className="text-gray-500 dark:text-gray-400">Keep it safe — it cannot be recovered.</strong>
             </p>
           ) : (
             <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5">

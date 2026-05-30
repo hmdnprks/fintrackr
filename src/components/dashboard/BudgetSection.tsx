@@ -103,17 +103,17 @@ function AISuggestModal({
       className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
 
         {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-100 flex items-start justify-between">
+        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex items-start justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">AI Budget Suggestions</h3>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">AI Budget Suggestions</h3>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
               Based on your last 3 months. Edit any amount, then apply.
             </p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition mt-0.5">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition mt-0.5">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -121,7 +121,7 @@ function AISuggestModal({
         </div>
 
         {/* Rows */}
-        <div className="overflow-y-auto divide-y divide-gray-50">
+        <div className="overflow-y-auto divide-y divide-gray-50 dark:divide-gray-800">
           {state.map((row, i) => (
             <div
               key={row.category}
@@ -147,8 +147,8 @@ function AISuggestModal({
                 <div className="flex-1 min-w-0">
                   {/* Category + avg */}
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="text-sm font-medium text-gray-800">{row.category}</span>
-                    <span className="text-xs text-gray-400 shrink-0">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{row.category}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">
                       avg {formatIDR(row.average)}/mo
                     </span>
                   </div>
@@ -156,23 +156,23 @@ function AISuggestModal({
                   {/* Editable amount */}
                   <div className={`flex items-center border rounded-xl overflow-hidden ${
                     row.selected
-                      ? 'border-gray-200 focus-within:ring-2 focus-within:ring-blue-500'
-                      : 'border-gray-100'
+                      ? 'border-gray-200 dark:border-gray-700 focus-within:ring-2 focus-within:ring-blue-500'
+                      : 'border-gray-100 dark:border-gray-800'
                   }`}>
-                    <span className="px-3 py-2 text-sm text-gray-400 bg-gray-50 border-r border-gray-200 select-none">Rp</span>
+                    <span className="px-3 py-2 text-sm text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 select-none">Rp</span>
                     <input
                       type="text"
                       inputMode="numeric"
                       value={row.editValue}
                       onChange={(e) => updateValue(i, e.target.value)}
                       disabled={!row.selected}
-                      className="flex-1 px-3 py-2 text-sm focus:outline-none bg-white disabled:bg-gray-50 disabled:text-gray-400"
+                      className="flex-1 px-3 py-2 text-sm focus:outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400"
                     />
                   </div>
 
                   {/* AI reason */}
                   {row.reason && (
-                    <p className="text-xs text-gray-400 mt-1.5 italic">{row.reason}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5 italic">{row.reason}</p>
                   )}
                 </div>
               </div>
@@ -181,17 +181,17 @@ function AISuggestModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-3">
+        <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between gap-3">
           <button
             onClick={() => setState((prev) => prev.map((r) => ({ ...r, selected: !prev.every((x) => x.selected) })))}
-            className="text-sm text-gray-500 hover:text-gray-700 transition"
+            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition"
           >
             {state.every((r) => r.selected) ? 'Deselect all' : 'Select all'}
           </button>
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+              className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
             >
               Cancel
             </button>
@@ -311,12 +311,12 @@ export default function BudgetSection({ budgets, spending, statements, onBudgetC
         />
       )}
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm">
+      <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 p-6 rounded-2xl shadow-sm">
         {/* Header — stacks on mobile */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Monthly Budgets</h2>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Monthly Budgets</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               {budgetedCategories.length > 0
                 ? `${budgetedCategories.length} ${budgetedCategories.length === 1 ? 'category' : 'categories'} · `
                 : ''}{currentMonthLabel}
@@ -369,13 +369,13 @@ export default function BudgetSection({ budgets, spending, statements, onBudgetC
 
         {budgetedCategories.length === 0 ? (
           <div className="text-center py-10">
-            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
               </svg>
             </div>
-            <p className="text-sm font-medium text-gray-600">No budgets set yet</p>
-            <p className="text-xs text-gray-400 mt-1 mb-4">Add manually or let AI suggest based on your spending history</p>
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">No budgets set yet</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 mb-4">Add manually or let AI suggest based on your spending history</p>
             <div className="flex items-center justify-center gap-3">
               <button onClick={openAdd} className="text-sm font-medium text-blue-600 hover:underline">
                 Add manually
@@ -401,7 +401,7 @@ export default function BudgetSection({ budgets, spending, statements, onBudgetC
                     {/* Left — category + amount (stacked on mobile) */}
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-medium text-gray-800">{category}</span>
+                        <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{category}</span>
                         {isOver && (
                           <span className="text-xs font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
                             Over budget
@@ -414,10 +414,10 @@ export default function BudgetSection({ budgets, spending, statements, onBudgetC
                         )}
                       </div>
                       <p className="text-xs mt-0.5">
-                        <span className={isOver ? 'text-red-600 font-medium' : 'text-gray-600'}>
+                        <span className={isOver ? 'text-red-600 font-medium' : 'text-gray-600 dark:text-gray-400'}>
                           {formatIDR(spent)}
                         </span>
-                        <span className="text-gray-400"> / {formatIDR(budget)}</span>
+                        <span className="text-gray-400 dark:text-gray-500"> / {formatIDR(budget)}</span>
                       </p>
                     </div>
                     {/* Right — actions */}
@@ -434,7 +434,7 @@ export default function BudgetSection({ budgets, spending, statements, onBudgetC
                       </button>
                     </div>
                   </div>
-                  <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="w-full h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${
                         isOver ? 'bg-red-500' : isWarning ? 'bg-amber-400' : 'bg-green-500'
@@ -455,18 +455,18 @@ export default function BudgetSection({ budgets, spending, statements, onBudgetC
           className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
           onClick={(e) => e.target === e.currentTarget && setModalOpen(false)}
         >
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-5">
-            <h3 className="text-lg font-semibold text-gray-900">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-5">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               {editingCategory ? `Edit Budget — ${editingCategory}` : 'Set Budget'}
             </h3>
 
             {!editingCategory && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Category</label>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {availableCategories.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -474,15 +474,15 @@ export default function BudgetSection({ budgets, spending, statements, onBudgetC
             )}
 
             {contextSpend > 0 && (
-              <div className="bg-blue-50 rounded-xl px-4 py-3 text-sm text-blue-800">
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl px-4 py-3 text-sm text-blue-800 dark:text-blue-300">
                 You spent <span className="font-semibold">{formatIDR(contextSpend)}</span> on {selectedCategory} in {currentMonthLabel}.
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Monthly Limit</label>
-              <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
-                <span className="px-3 py-2.5 text-sm text-gray-500 bg-gray-50 border-r border-gray-200 select-none">Rp</span>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Monthly Limit</label>
+              <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+                <span className="px-3 py-2.5 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 select-none">Rp</span>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -494,7 +494,7 @@ export default function BudgetSection({ budgets, spending, statements, onBudgetC
                   onKeyDown={(e) => e.key === 'Enter' && handleSave()}
                   placeholder="1.500.000"
                   autoFocus
-                  className="flex-1 px-3 py-2.5 text-sm focus:outline-none bg-white"
+                  className="flex-1 px-3 py-2.5 text-sm focus:outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 />
               </div>
             </div>
@@ -502,7 +502,7 @@ export default function BudgetSection({ budgets, spending, statements, onBudgetC
             <div className="flex gap-3 pt-1">
               <button
                 onClick={() => setModalOpen(false)}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
               >
                 Cancel
               </button>

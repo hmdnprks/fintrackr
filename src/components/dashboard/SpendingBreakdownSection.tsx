@@ -67,10 +67,10 @@ export default function SpendingBreakdownSection({ data }: Props) {
   const totalAccountedPct = pct.needs + pct.wants
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm">
+    <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 p-6 rounded-2xl shadow-sm">
       <div className="mb-5">
-        <h2 className="text-lg font-semibold text-gray-900">50/30/20 Breakdown</h2>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">50/30/20 Breakdown</h2>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
           How your income splits across needs, wants, and surplus — ideal: 50% needs · 30% wants · 20% savings
         </p>
       </div>
@@ -98,11 +98,11 @@ export default function SpendingBreakdownSection({ data }: Props) {
               {/* Header row */}
               <div className="flex items-baseline justify-between mb-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-800">{row.label}</span>
+                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{row.label}</span>
                   <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
                     row.key === 'surplus'
                       ? actual >= row.ideal ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
-                      : isOver ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-500'
+                      : isOver ? 'bg-red-50 text-red-600' : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                   }`}>
                     {row.idealLabel}
                   </span>
@@ -111,14 +111,14 @@ export default function SpendingBreakdownSection({ data }: Props) {
                   <span className={`text-sm font-bold ${
                     row.key === 'surplus'
                       ? actual >= row.ideal ? 'text-green-600' : 'text-amber-600'
-                      : isOver ? 'text-red-500' : 'text-gray-800'
+                      : isOver ? 'text-red-500' : 'text-gray-800 dark:text-gray-200'
                   }`}>{actual}%</span>
-                  <span className="text-xs text-gray-400 ml-1.5">{formatIDR(amount)}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500 ml-1.5">{formatIDR(amount)}</span>
                 </div>
               </div>
 
               {/* Bar with ideal marker */}
-              <div className="relative h-2.5 bg-gray-100 rounded-full overflow-visible mb-1.5">
+              <div className="relative h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-visible mb-1.5">
                 <div
                   className={`h-full rounded-full transition-all ${barColor}`}
                   style={{ width: `${barPct}%` }}
@@ -131,13 +131,13 @@ export default function SpendingBreakdownSection({ data }: Props) {
               </div>
 
               {/* Category description */}
-              <p className="text-xs text-gray-400">{row.desc}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">{row.desc}</p>
 
               {/* Status message */}
               <p className={`text-xs mt-0.5 font-medium ${
                 row.key === 'surplus'
                   ? actual >= row.ideal ? 'text-green-600' : 'text-amber-600'
-                  : isOver ? 'text-red-500' : 'text-gray-500'
+                  : isOver ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'
               }`}>
                 {statusMsg}
               </p>
@@ -154,7 +154,7 @@ export default function SpendingBreakdownSection({ data }: Props) {
       )}
 
       {/* Indonesian context note */}
-      <p className="text-xs text-gray-400 mt-3 leading-relaxed">
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 leading-relaxed">
         The 50/30/20 rule is a guideline, not a strict rule. Indonesian context: high cost-of-living cities (Jakarta) may push needs above 50%. Aim to keep surplus ≥20% to build long-term wealth.
       </p>
     </div>

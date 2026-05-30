@@ -188,7 +188,7 @@ export default function Dashboard() {
 
   return (
     <VaultGate>
-      <main className="min-h-screen bg-gray-50 py-6 px-4 sm:py-10 sm:px-6">
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-950 py-6 px-4 sm:py-10 sm:px-6">
         <div className="max-w-6xl mx-auto space-y-6">
 
           <AIModal
@@ -223,7 +223,7 @@ export default function Dashboard() {
           />
 
           {/* Tab navigation — scrollable on mobile so 5 labels don't cramp */}
-          <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto border-b border-gray-200">
+          <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto border-b border-gray-200 dark:border-gray-800">
             <div className="flex min-w-max sm:min-w-0">
               {TABS.map((tab) => (
                 <button
@@ -232,7 +232,7 @@ export default function Dashboard() {
                   className={`shrink-0 px-4 sm:px-5 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   {tab.label}

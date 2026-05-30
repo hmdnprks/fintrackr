@@ -158,8 +158,8 @@ export default function AssetsTab({ statements }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Assets</h2>
-          <p className="text-sm text-gray-400 mt-0.5">Track your savings, gold, investments, and goal pockets</p>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Assets</h2>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">Track your savings, gold, investments, and goal pockets</p>
         </div>
         <div className="flex items-center gap-2">
           {assets.length > 0 && (
@@ -189,10 +189,10 @@ export default function AssetsTab({ statements }: Props) {
 
       {/* Net worth summary */}
       {assets.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm p-6">
+        <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm p-6">
           <div className="mb-4">
-            <p className="text-sm text-gray-500">Total Net Worth</p>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-0.5 break-all">{formatIDRFull(totalNetWorth)}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Total Net Worth</p>
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mt-0.5 break-all">{formatIDRFull(totalNetWorth)}</p>
             {netWorthGrowth !== null && (
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 <span className={`inline-flex items-center gap-1 text-sm font-semibold ${netWorthGrowth.change >= 0 ? 'text-green-600' : 'text-red-500'}`}>
@@ -200,7 +200,7 @@ export default function AssetsTab({ statements }: Props) {
                   {formatIDR(Math.abs(netWorthGrowth.change))}
                   <span className="font-normal text-xs">({Math.abs(netWorthGrowth.pct).toFixed(1)}%)</span>
                 </span>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-gray-400 dark:text-gray-500">
                   since {new Date(netWorthGrowth.since).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </span>
               </div>
@@ -218,10 +218,10 @@ export default function AssetsTab({ statements }: Props) {
               return (
                 <div key={t}>
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="flex items-center gap-1 text-gray-500"><meta.Icon className="w-3 h-3" />{meta.label}</span>
-                    <span className="text-gray-400">{formatIDR(totalByType[t])} · {Math.round(pct)}%</span>
+                    <span className="flex items-center gap-1 text-gray-500 dark:text-gray-400"><meta.Icon className="w-3 h-3" />{meta.label}</span>
+                    <span className="text-gray-400 dark:text-gray-500">{formatIDR(totalByType[t])} · {Math.round(pct)}%</span>
                   </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full ${
                         t === 'savings'    ? 'bg-blue-400'   :
@@ -261,12 +261,12 @@ export default function AssetsTab({ statements }: Props) {
 
       {/* Asset cards grouped by type */}
       {assets.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-sm p-8 sm:p-12 text-center">
-          <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gray-100 mx-auto mb-3">
-            <BriefcaseIcon className="w-7 h-7 text-gray-400" />
+        <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm p-8 sm:p-12 text-center">
+          <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-800 mx-auto mb-3">
+            <BriefcaseIcon className="w-7 h-7 text-gray-400 dark:text-gray-500" />
           </div>
-          <h3 className="text-base font-semibold text-gray-700">No assets yet</h3>
-          <p className="text-sm text-gray-400 mt-1 max-w-xs mx-auto">
+          <h3 className="text-base font-semibold text-gray-700 dark:text-gray-300">No assets yet</h3>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1 max-w-xs mx-auto">
             Add your savings accounts, gold, investments, and Jago pockets to see your full financial picture.
           </p>
           <button
@@ -281,7 +281,7 @@ export default function AssetsTab({ statements }: Props) {
           const meta = TYPE_META[t]
           return (
             <div key={t}>
-              <h3 className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+              <h3 className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
                 <meta.Icon className="w-3.5 h-3.5" />{meta.label}
               </h3>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -306,13 +306,13 @@ export default function AssetsTab({ statements }: Props) {
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmDelete(null)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm z-10">
-            <h3 className="text-base font-semibold text-gray-900 mb-2">Delete asset?</h3>
-            <p className="text-sm text-gray-500 mb-5">This action cannot be undone.</p>
+          <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 w-full max-w-sm z-10">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Delete asset?</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">This action cannot be undone.</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmDelete(null)}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
               >
                 Cancel
               </button>
@@ -394,7 +394,7 @@ function EmergencyFundSection({
         <div className="flex items-center gap-2.5">
           <s.Icon className={`w-5 h-5 ${s.color}`} />
           <div>
-            <p className="text-sm font-semibold text-gray-900">Emergency Fund</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Emergency Fund</p>
             <p className={`text-xs font-semibold ${s.color}`}>{s.label}</p>
           </div>
         </div>
@@ -406,7 +406,7 @@ function EmergencyFundSection({
 
       {/* Progress bar — 0 to 6 months, min marker at 3 */}
       <div className="mb-4">
-        <div className="relative h-3 bg-white/70 rounded-full overflow-visible mb-1.5">
+        <div className="relative h-3 bg-white/70 dark:bg-black/20 rounded-full overflow-visible mb-1.5">
           <div
             className={`h-full rounded-full transition-all ${s.bar}`}
             style={{ width: `${pct}%` }}
@@ -422,28 +422,28 @@ function EmergencyFundSection({
       </div>
 
       {/* Advice */}
-      <p className="text-xs text-gray-600 leading-relaxed mb-3">
+      <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-3">
         {EF_ADVICE[status]}
       </p>
 
       {/* Amount needed / context row */}
       <div className="flex flex-wrap gap-3">
         {amountToTarget > 0 && (
-          <div className="bg-white/60 rounded-lg px-3 py-2 text-xs">
-            <span className="text-gray-500">To reach 6 months: </span>
-            <span className="font-semibold text-gray-800">{formatIDRFull(amountToTarget)}</span>
+          <div className="bg-white/60 dark:bg-black/20 rounded-lg px-3 py-2 text-xs">
+            <span className="text-gray-500 dark:text-gray-400">To reach 6 months: </span>
+            <span className="font-semibold text-gray-800 dark:text-gray-200">{formatIDRFull(amountToTarget)}</span>
           </div>
         )}
         {avgMonthlyExpense > 0 && (
-          <div className="bg-white/60 rounded-lg px-3 py-2 text-xs">
-            <span className="text-gray-500">Avg monthly expenses: </span>
-            <span className="font-semibold text-gray-800">{formatIDRFull(avgMonthlyExpense)}</span>
+          <div className="bg-white/60 dark:bg-black/20 rounded-lg px-3 py-2 text-xs">
+            <span className="text-gray-500 dark:text-gray-400">Avg monthly expenses: </span>
+            <span className="font-semibold text-gray-800 dark:text-gray-200">{formatIDRFull(avgMonthlyExpense)}</span>
           </div>
         )}
       </div>
 
       {/* What counts as emergency fund */}
-      <p className="text-xs text-gray-400 mt-3 leading-relaxed">
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 leading-relaxed">
         Calculated from savings accounts marked as emergency fund. Ideal: liquid, low-risk accounts
         (tabungan, deposito) — not gold or investments that take time to liquidate.
       </p>
@@ -477,7 +477,7 @@ function LiquidCoverageSection({
     <div className={`rounded-2xl border p-5 ${meta.bg} ${meta.border}`}>
       <div className="flex items-start justify-between gap-2 mb-3">
         <div>
-          <p className="text-sm font-semibold text-gray-900">Liquid Coverage</p>
+          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Liquid Coverage</p>
           <p className={`text-xs font-semibold ${meta.color}`}>{meta.label}</p>
         </div>
         <div className="text-right shrink-0">
@@ -488,17 +488,17 @@ function LiquidCoverageSection({
 
       {/* Bar — target 12 months */}
       <div className="mb-3">
-        <div className="h-2.5 bg-white/70 rounded-full overflow-hidden">
+        <div className="h-2.5 bg-white/70 dark:bg-black/20 rounded-full overflow-hidden">
           <div className={`h-full rounded-full ${meta.bar}`} style={{ width: `${pct}%` }} />
         </div>
-        <div className="flex justify-between text-xs text-gray-400 mt-1">
+        <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-1">
           <span>0</span>
           <span>6 mo</span>
           <span>12 mo</span>
         </div>
       </div>
 
-      <p className="text-xs text-gray-600 leading-relaxed mb-3">
+      <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-3">
         {status === 'excellent'
           ? `All your savings cover ${months.toFixed(1)} months of expenses — strong liquidity position.`
           : status === 'healthy'
@@ -508,12 +508,12 @@ function LiquidCoverageSection({
           : `Only ${months.toFixed(1)} months of expenses in savings. Build liquid assets as a priority.`}
       </p>
 
-      <div className="bg-white/60 rounded-lg px-3 py-2 text-xs">
-        <span className="text-gray-500">Total liquid savings: </span>
-        <span className="font-semibold text-gray-800">{formatIDRFull(totalLiquid)}</span>
+      <div className="bg-white/60 dark:bg-black/20 rounded-lg px-3 py-2 text-xs">
+        <span className="text-gray-500 dark:text-gray-400">Total liquid savings: </span>
+        <span className="font-semibold text-gray-800 dark:text-gray-200">{formatIDRFull(totalLiquid)}</span>
       </div>
 
-      <p className="text-xs text-gray-400 mt-3 leading-relaxed">
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 leading-relaxed">
         Includes <strong>all</strong> savings accounts — unlike the emergency fund which counts only designated accounts.
         Both metrics together give the full liquidity picture.
       </p>
@@ -555,7 +555,7 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
     : null
 
   return (
-    <div className={`bg-white border rounded-2xl p-4 shadow-sm`}>
+    <div className={`bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 shadow-sm`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -568,14 +568,14 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
               </span>
             )}
           </div>
-          <p className="text-sm font-semibold text-gray-900 mt-2 truncate">{asset.name}</p>
-          <p className="text-xs text-gray-400">{asset.institution}</p>
+          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-2 truncate">{asset.name}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">{asset.institution}</p>
         </div>
 
         <div className="flex gap-1 shrink-0">
           <button
             onClick={onEdit}
-            className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+            className="p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
@@ -583,7 +583,7 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
           </button>
           <button
             onClick={onDelete}
-            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -594,7 +594,7 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
 
       {/* Value + growth */}
       <div className="mt-3">
-        <p className="text-xl font-bold text-gray-900">{formatIDRFull(asset.currentValue)}</p>
+        <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{formatIDRFull(asset.currentValue)}</p>
         {assetGrowth !== null && (
           <p className={`text-xs font-medium mt-0.5 ${assetGrowth.change >= 0 ? 'text-green-600' : 'text-red-500'}`}>
             {assetGrowth.change >= 0 ? '↑' : '↓'} {formatIDR(Math.abs(assetGrowth.change))}
@@ -609,7 +609,7 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
       {/* Type-specific detail */}
       <div className="mt-2 space-y-1.5">
         {asset.interestRate != null && (
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Interest: <span className="font-medium text-green-600">{asset.interestRate}% p.a.</span>
           </p>
         )}
@@ -623,10 +623,10 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
         )}
 
         {asset.goldGrams != null && (
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Weight: <span className="font-medium">{asset.goldGrams}g</span>
             {asset.goldGrams > 0 && (
-              <span className="text-gray-400 ml-1">
+              <span className="text-gray-400 dark:text-gray-500 ml-1">
                 (≈ Rp {Math.round(asset.currentValue / asset.goldGrams).toLocaleString('id-ID')}/g)
               </span>
             )}
@@ -634,7 +634,7 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
         )}
 
         {asset.platform && (
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Type: <span className="font-medium">{asset.platform}</span>
           </p>
         )}
@@ -652,10 +652,10 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
         )}
 
         {asset.type === 'pocket' && asset.goalName && (
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Goal: <span className="font-medium">{asset.goalName}</span>
             {asset.goalDeadline && (
-              <span className="text-gray-400 ml-1">
+              <span className="text-gray-400 dark:text-gray-500 ml-1">
                 · {new Date(asset.goalDeadline + '-01').toLocaleString('en-US', { month: 'short', year: 'numeric' })}
               </span>
             )}
@@ -664,11 +664,11 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
 
         {pocketProgress !== null && asset.goalTarget && (
           <div>
-            <div className="flex justify-between text-xs text-gray-500 mb-1">
+            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
               <span>{Math.round(pocketProgress)}% of target</span>
               <span>{formatIDR(asset.goalTarget)}</span>
             </div>
-            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${
                   pocketProgress >= 100 ? 'bg-green-500' : 'bg-purple-500'
@@ -680,11 +680,11 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
         )}
 
         {asset.notes && (
-          <p className="text-xs text-gray-400 italic">{asset.notes}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 italic">{asset.notes}</p>
         )}
       </div>
 
-      <p className="text-xs text-gray-300 mt-3">{relativeDate(asset.updatedAt)}</p>
+      <p className="text-xs text-gray-300 dark:text-gray-600 mt-3">{relativeDate(asset.updatedAt)}</p>
     </div>
   )
 }

@@ -38,32 +38,32 @@ export default function SavingsRateTrendSection({ data }: Props) {
   const IDEAL = 20
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm">
+    <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 p-6 rounded-2xl shadow-sm">
       <div className="flex items-start justify-between mb-1">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Savings Rate</h2>
-          <p className="text-xs text-gray-400 mt-0.5">% of income kept after categorized spending — Transfer excluded (see note below)</p>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Savings Rate</h2>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">% of income kept after categorized spending — Transfer excluded (see note below)</p>
         </div>
         <div className="text-right shrink-0 ml-4">
           <p className={`text-2xl font-bold ${avg >= IDEAL ? 'text-green-600' : avg >= 10 ? 'text-amber-500' : 'text-red-500'}`}>
             {avg}%
           </p>
-          <p className="text-xs text-gray-400">avg this period</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">avg this period</p>
         </div>
       </div>
 
       {/* Target badges */}
       <div className="flex gap-2 mb-5 flex-wrap">
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg >= 30 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>≥30% great</span>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg >= IDEAL && avg < 30 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>≥20% good</span>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg < IDEAL && avg >= 10 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>10–19% low</span>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg < 10 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'}`}>{'<'}10% critical</span>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg >= 30 ? 'bg-green-100 text-green-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>≥30% great</span>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg >= IDEAL && avg < 30 ? 'bg-green-100 text-green-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>≥20% good</span>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg < IDEAL && avg >= 10 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>10–19% low</span>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg < 10 ? 'bg-red-100 text-red-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>{'<'}10% critical</span>
       </div>
 
       {/* Bar chart — horizontally scrollable, min bar width ensures readability */}
       <div className="flex gap-2">
         {/* Y-axis labels — fixed outside scroll area */}
-        <div className="flex flex-col justify-between text-xs text-gray-300 shrink-0 pb-6" style={{ height: '9rem' }}>
+        <div className="flex flex-col justify-between text-xs text-gray-300 dark:text-gray-600 shrink-0 pb-6" style={{ height: '9rem' }}>
           <span>100%</span>
           <span>50%</span>
           <span>0%</span>
@@ -72,7 +72,7 @@ export default function SavingsRateTrendSection({ data }: Props) {
         {/* Scrollable chart + fade hint on right */}
         <div className="relative flex-1 min-w-0">
           {/* Right-edge fade — hints that there's more to scroll */}
-          <div className="absolute top-0 right-0 bottom-6 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none z-20" />
+          <div className="absolute top-0 right-0 bottom-6 w-8 bg-gradient-to-l from-white dark:from-gray-900 to-transparent pointer-events-none z-20" />
 
           <div ref={chartRef} className="overflow-x-auto pb-1">
             {/* 20% reference line — spans the full scrollable width */}
@@ -94,7 +94,7 @@ export default function SavingsRateTrendSection({ data }: Props) {
                   return (
                     <div key={i} className="flex-1 min-w-[20px] flex flex-col items-center justify-end h-full relative group">
                       {/* Tooltip */}
-                      <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none z-30">
+                      <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none z-30">
                         {shortLabel(d.label)}: {d.rate}%
                       </div>
                       <div
@@ -111,7 +111,7 @@ export default function SavingsRateTrendSection({ data }: Props) {
             <div className="flex gap-1 mt-1 px-0.5" style={{ minWidth: `${data.length * 28}px` }}>
               {data.map((d, i) => (
                 <div key={i} className="flex-1 min-w-[20px] text-center">
-                  <span className="text-xs text-gray-400 truncate block">{shortLabel(d.label)}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500 truncate block">{shortLabel(d.label)}</span>
                 </div>
               ))}
             </div>
@@ -119,11 +119,11 @@ export default function SavingsRateTrendSection({ data }: Props) {
         </div>
       </div>
 
-      <p className="text-xs text-gray-400 mt-1 text-right">← swipe to see older months</p>
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 text-right">← swipe to see older months</p>
       <div className="mt-2" />
 
       {/* Summary insight */}
-      <p className="text-xs text-gray-500 leading-relaxed mt-1">
+      <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mt-1">
         {avg >= 30
           ? `Strong savings discipline — you're keeping ${avg}% of income. Best month: ${bestMonth} at ${best}%.`
           : avg >= IDEAL
@@ -134,8 +134,8 @@ export default function SavingsRateTrendSection({ data }: Props) {
       </p>
 
       {/* Transfer exclusion note */}
-      <div className="mt-4 bg-gray-50 rounded-xl px-4 py-3 text-xs text-gray-500 leading-relaxed space-y-1">
-        <p className="font-medium text-gray-600">Why transfers are excluded</p>
+      <div className="mt-4 bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-xs text-gray-500 dark:text-gray-400 leading-relaxed space-y-1">
+        <p className="font-medium text-gray-600 dark:text-gray-300">Why transfers are excluded</p>
         <p>
           The Transfer category mixes three things with very different meanings:
           credit card payments (spending already counted when you used the card),

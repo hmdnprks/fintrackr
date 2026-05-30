@@ -163,14 +163,14 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md z-10 max-h-[90vh] overflow-y-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 sticky top-0 bg-white border-b border-gray-100 z-10">
-          <h3 className="text-lg font-semibold text-gray-900">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 z-10">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             {editing ? 'Edit Asset' : 'Add Asset'}
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -181,7 +181,7 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
 
           {/* Type selector */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Asset Type</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Asset Type</label>
             <div className="flex gap-2 flex-wrap">
               {TYPE_OPTIONS.map(opt => (
                 <button
@@ -190,7 +190,7 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
                     type === opt.id
                       ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                      : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   <span className="flex items-center gap-1.5"><opt.Icon className="w-4 h-4" />{opt.label}</span>
@@ -201,7 +201,7 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
 
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               {type === 'pocket' ? 'Pocket Name' : 'Asset Name'}
             </label>
             <input
@@ -215,8 +215,8 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
               }
               value={name}
               onChange={e => { setName(e.target.value); setErrors(p => ({ ...p, name: '' })) }}
-              className={`w-full px-3 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.name ? 'border-red-300 bg-red-50' : 'border-gray-200'
+              className={`w-full px-3 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${
+                errors.name ? 'border-red-300 bg-red-50 dark:bg-red-900/20' : 'border-gray-200 dark:border-gray-700'
               }`}
             />
             {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
@@ -224,7 +224,7 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
 
           {/* Institution */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Institution / Platform</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Institution / Platform</label>
             <input
               type="text"
               placeholder={
@@ -234,8 +234,8 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
               }
               value={institution}
               onChange={e => { setInstitution(e.target.value); setErrors(p => ({ ...p, institution: '' })) }}
-              className={`w-full px-3 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.institution ? 'border-red-300 bg-red-50' : 'border-gray-200'
+              className={`w-full px-3 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${
+                errors.institution ? 'border-red-300 bg-red-50 dark:bg-red-900/20' : 'border-gray-200 dark:border-gray-700'
               }`}
             />
             {errors.institution && <p className="text-xs text-red-500 mt-1">{errors.institution}</p>}
@@ -243,11 +243,11 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
 
           {/* Current Value */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Current Value</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Current Value</label>
             <div className={`flex items-center border rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 ${
-              errors.value ? 'border-red-300 bg-red-50' : 'border-gray-200'
+              errors.value ? 'border-red-300 bg-red-50 dark:bg-red-900/20' : 'border-gray-200 dark:border-gray-700'
             }`}>
-              <span className="px-3 py-2.5 text-sm text-gray-400 bg-gray-50 border-r border-gray-200 select-none">Rp</span>
+              <span className="px-3 py-2.5 text-sm text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 select-none">Rp</span>
               <input
                 type="text"
                 inputMode="numeric"
@@ -258,7 +258,7 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
                   setValue(digits ? formatThousands(Number(digits)) : '')
                   setErrors(p => ({ ...p, value: '' }))
                 }}
-                className="flex-1 px-3 py-2.5 text-sm focus:outline-none bg-transparent min-w-0"
+                className="flex-1 px-3 py-2.5 text-sm focus:outline-none bg-transparent min-w-0 text-gray-900 dark:text-gray-100"
               />
             </div>
             {errors.value && <p className="text-xs text-red-500 mt-1">{errors.value}</p>}
@@ -269,14 +269,14 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Interest Rate (% p.a.)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Interest Rate (% p.a.)</label>
                   <input
                     type="number"
                     min="0" max="20" step="0.1"
                     placeholder="e.g. 6"
                     value={interestRate}
                     onChange={e => setInterestRate(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div className="flex flex-col justify-end pb-0.5">
@@ -291,7 +291,7 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
                         isEmergencyFund ? 'translate-x-5' : 'translate-x-0.5'
                       }`} />
                     </div>
-                    <span className="text-sm text-gray-700">Emergency fund</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Emergency fund</span>
                   </label>
                 </div>
               </div>
@@ -301,14 +301,14 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
           {/* Gold-specific */}
           {type === 'gold' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Weight (grams, optional)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Weight (grams, optional)</label>
               <input
                 type="number"
                 min="0" step="0.01"
                 placeholder="e.g. 10"
                 value={goldGrams}
                 onChange={e => setGoldGrams(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           )}
@@ -317,13 +317,13 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
           {type === 'investment' && (
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Investment Type</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Investment Type</label>
                 <input
                   type="text"
                   placeholder="e.g. Reksa Dana Saham, Obligasi"
                   value={platform}
                   onChange={e => setPlatform(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <label className="flex items-start gap-3 cursor-pointer select-none">
@@ -338,8 +338,8 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
                   }`} />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-700 font-medium">I can manually add funds</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 font-medium">I can manually add funds</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                     Turn off for auto-managed assets like BPJS Ketenagakerjaan JHT — the windfall allocator will skip them.
                   </p>
                 </div>
@@ -351,20 +351,20 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
           {type === 'pocket' && (
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Goal</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Goal</label>
                 <input
                   type="text"
                   placeholder="e.g. Trip to Japan"
                   value={goalName}
                   onChange={e => setGoalName(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Target Amount</label>
-                  <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
-                    <span className="px-2 py-2.5 text-sm text-gray-400 bg-gray-50 border-r border-gray-200 select-none">Rp</span>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Target Amount</label>
+                  <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+                    <span className="px-2 py-2.5 text-sm text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 select-none">Rp</span>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -375,17 +375,17 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
                         setGoalTarget(digits ? formatThousands(Number(digits)) : '')
                         setErrors(p => ({ ...p, goalTarget: '' }))
                       }}
-                      className="flex-1 px-2 py-2.5 text-sm focus:outline-none bg-transparent min-w-0"
+                      className="flex-1 px-2 py-2.5 text-sm focus:outline-none bg-transparent min-w-0 text-gray-900 dark:text-gray-100"
                     />
                   </div>
                   {errors.goalTarget && <p className="text-xs text-red-500 mt-1">{errors.goalTarget}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Deadline</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Deadline</label>
                   <select
                     value={goalDeadline}
                     onChange={e => setGoalDeadline(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">No deadline</option>
                     {deadlineOptions.map(opt => (
@@ -399,13 +399,13 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Notes (optional)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Notes (optional)</label>
             <input
               type="text"
               placeholder="Any extra context"
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 

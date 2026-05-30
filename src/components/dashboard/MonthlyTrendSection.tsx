@@ -47,9 +47,9 @@ export default function MonthlyTrendSection({ data }: Props) {
     : null
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm">
+    <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 p-6 rounded-2xl shadow-sm">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">Monthly Trend</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Monthly Trend</h2>
 
         {needsNav && (
           <div className="flex items-center gap-2">
@@ -57,14 +57,14 @@ export default function MonthlyTrendSection({ data }: Props) {
               onClick={() => setWindowEnd((e: number) => Math.max(WINDOW, e - STEP))}
               disabled={!canBack}
               title="Earlier"
-              className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition"
+              className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
               </svg>
             </button>
 
-            <span className="text-xs text-gray-400 tabular-nums min-w-[110px] text-center">
+            <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums min-w-[110px] text-center">
               {rangeLabel}
             </span>
 
@@ -72,7 +72,7 @@ export default function MonthlyTrendSection({ data }: Props) {
               onClick={() => setWindowEnd((e: number) => Math.min(total, e + STEP))}
               disabled={!canForward}
               title="Later"
-              className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition"
+              className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />

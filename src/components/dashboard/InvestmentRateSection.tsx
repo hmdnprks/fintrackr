@@ -33,23 +33,23 @@ export default function InvestmentRateSection({ rate, total, items, totalIncome 
                  : 'bg-red-400'
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm">
+    <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 p-6 rounded-2xl shadow-sm">
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Investment Rate</h2>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Investment Rate</h2>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
             % of income directed to investment platforms this period
           </p>
         </div>
         <div className="text-right shrink-0 ml-4">
           <p className={`text-2xl font-bold ${rateColor}`}>{rate}%</p>
-          <p className="text-xs text-gray-400">{formatIDR(total)} invested</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">{formatIDR(total)} invested</p>
         </div>
       </div>
 
       {/* Progress bar with target markers */}
       <div className="mb-1.5">
-        <div className="relative h-3 bg-gray-100 rounded-full overflow-visible">
+        <div className="relative h-3 bg-gray-100 dark:bg-gray-800 rounded-full overflow-visible">
           <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${barPct}%` }} />
           {/* 15% marker */}
           <div className="absolute top-0 bottom-0 w-0.5 bg-gray-400 rounded" style={{ left: '15%' }} />
@@ -57,7 +57,7 @@ export default function InvestmentRateSection({ rate, total, items, totalIncome 
           <div className="absolute top-0 bottom-0 w-0.5 bg-gray-400 rounded" style={{ left: '20%' }} />
         </div>
       </div>
-      <div className="flex justify-between text-xs text-gray-400 mb-4">
+      <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mb-4">
         <span>0%</span>
         <span>15% min</span>
         <span>20% great</span>
@@ -65,7 +65,7 @@ export default function InvestmentRateSection({ rate, total, items, totalIncome 
       </div>
 
       {/* Status message */}
-      <p className="text-xs text-gray-500 leading-relaxed mb-4">
+      <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-4">
         {rate >= GREAT
           ? `Strong investment discipline at ${rate}%. You're building long-term wealth effectively.`
           : rate >= IDEAL
@@ -80,16 +80,16 @@ export default function InvestmentRateSection({ rate, total, items, totalIncome 
         <div className="space-y-2 mb-4">
           {items.map((item, i) => (
             <div key={i} className="flex items-center justify-between gap-3 text-sm">
-              <p className="text-gray-600 truncate min-w-0">{item.description}</p>
-              <p className="font-medium text-gray-800 shrink-0">{formatIDRFull(item.amount)}</p>
+              <p className="text-gray-600 dark:text-gray-400 truncate min-w-0">{item.description}</p>
+              <p className="font-medium text-gray-800 dark:text-gray-200 shrink-0">{formatIDRFull(item.amount)}</p>
             </div>
           ))}
         </div>
       ) : null}
 
       {/* Detection note */}
-      <div className="bg-gray-50 rounded-xl px-4 py-3 text-xs text-gray-500 leading-relaxed space-y-1.5">
-        <p className="font-medium text-gray-600">How this is detected</p>
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-xs text-gray-500 dark:text-gray-400 leading-relaxed space-y-1.5">
+        <p className="font-medium text-gray-600 dark:text-gray-300">How this is detected</p>
         <p>
           Transactions are scanned for known investment platform names: Bibit, Stockbit, Ajaib, Bareksa,
           IPOT, Indopremier, Mandiri Sekuritas, Pluang, and others.
