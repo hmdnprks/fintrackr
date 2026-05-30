@@ -26,9 +26,6 @@ export default function SavingsRateTrendSection({ data }: Props) {
   const bestMonth = bestEntry.label.replace(/^(\w{3})\w+\s/, '$1 ')
   const IDEAL = 20  // minimum savings rate target
 
-  // Clamp bars to ±100% for display
-  const clamp = (n: number) => Math.max(-100, Math.min(100, n))
-
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm">
       <div className="flex items-start justify-between mb-1">
@@ -46,70 +43,62 @@ export default function SavingsRateTrendSection({ data }: Props) {
 
       {/* Target badges */}
       <div className="flex gap-2 mb-5 flex-wrap">
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg >= 30 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-          ≥30% great
-        </span>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg >= IDEAL && avg < 30 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-          ≥20% good
-        </span>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg < IDEAL && avg >= 10 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
-          10–19% low
-        </span>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg < 10 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'}`}>
-          {'<'}10% critical
-        </span>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg >= 30 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>≥30% great</span>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg >= IDEAL && avg < 30 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>≥20% good</span>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg < IDEAL && avg >= 10 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>10–19% low</span>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg < 10 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'}`}>{'<'}10% critical</span>
       </div>
 
-      {/* Bar chart */}
-      <div className="flex items-end gap-1.5 h-28 relative">
-        {/* 20% reference line */}
-        <div
-          className="absolute left-0 right-0 border-t border-dashed border-blue-300 z-10"
-          style={{ bottom: `${((clamp(IDEAL) + 100) / 200) * 100}%` }}
-        >
-          <span className="absolute -top-4 right-0 text-xs text-blue-400">20% target</span>
+      {/* Bar chart — bars grow from bottom, 20% line clearly marked */}
+      <div className="relative">
+        {/* Y-axis labels */}
+        <div className="absolute -left-1 inset-y-0 flex flex-col justify-between text-xs text-gray-300 pointer-events-none" style={{ top: 0, bottom: 24 }}>
+          <span>100%</span>
+          <span>50%</span>
+          <span>0%</span>
         </div>
-        {/* 0% baseline */}
-        <div
-          className="absolute left-0 right-0 border-t border-gray-200"
-          style={{ bottom: '50%' }}
-        />
 
-        {data.map((d, i) => {
-          const clamped = clamp(d.rate)
-          const isPositive = clamped >= 0
-          const heightPct = Math.abs(clamped) / 2  // half of container (50% = 100% of income)
-          const barColor = d.rate >= 30 ? 'bg-green-500' :
-                           d.rate >= IDEAL ? 'bg-green-400' :
-                           d.rate >= 10 ? 'bg-amber-400' :
-                           d.rate >= 0 ? 'bg-red-400' : 'bg-red-600'
+        {/* Chart area */}
+        <div className="ml-7 relative h-36 flex items-end gap-1">
+          {/* 20% reference line — solid, clearly labeled */}
+          <div className="absolute left-0 right-0 z-10 pointer-events-none" style={{ bottom: '20%' }}>
+            <div className="border-t-2 border-dashed border-blue-500 w-full" />
+            <span className="absolute -top-5 right-0 bg-blue-600 text-white text-xs font-semibold px-1.5 py-0.5 rounded">
+              20% target
+            </span>
+          </div>
 
-          return (
-            <div key={i} className="flex-1 flex flex-col items-center justify-end h-full relative group">
-              {/* Tooltip */}
-              <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none z-20">
-                {d.label}: {d.rate}%
+          {data.map((d, i) => {
+            const height = Math.max(1, Math.min(100, d.rate))
+            const barColor = d.rate >= 30 ? 'bg-green-500' :
+                             d.rate >= IDEAL ? 'bg-green-400' :
+                             d.rate >= 10 ? 'bg-amber-400' : 'bg-red-400'
+            return (
+              <div key={i} className="flex-1 flex flex-col items-center justify-end h-full relative group min-w-0">
+                {/* Tooltip */}
+                <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none z-20">
+                  {d.rate}%
+                </div>
+                <div
+                  className={`w-full rounded-t-sm transition-all ${barColor}`}
+                  style={{ height: `${height}%` }}
+                />
               </div>
+            )
+          })}
+        </div>
 
-              {/* Bar positioned from 50% baseline */}
-              <div className="w-full absolute" style={{
-                height: `${heightPct}%`,
-                bottom: isPositive ? '50%' : `${50 - heightPct}%`,
-              }}>
-                <div className={`w-full h-full rounded-sm ${barColor}`} />
-              </div>
-
-              {/* Month label */}
-              <span className="absolute -bottom-5 text-xs text-gray-400 truncate w-full text-center">
-                {shortLabel(d.label)}
-              </span>
+        {/* Month labels */}
+        <div className="ml-7 flex gap-1 mt-1.5">
+          {data.map((d, i) => (
+            <div key={i} className="flex-1 min-w-0 text-center">
+              <span className="text-xs text-gray-400 truncate block">{shortLabel(d.label)}</span>
             </div>
-          )
-        })}
+          ))}
+        </div>
       </div>
 
-      {/* Month labels spacing */}
-      <div className="mt-7" />
+      <div className="mt-4" />
 
       {/* Summary insight */}
       <p className="text-xs text-gray-500 leading-relaxed mt-1">
