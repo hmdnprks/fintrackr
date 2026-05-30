@@ -21,6 +21,7 @@ export type VaultData = {
   assetSnapshots: { assetId: string; date: string; value: number }[]
   settings: Record<string, string> // e.g. chat API keys
   rebalanceHistory: any[]          // last 5 RebalanceSavedEntry objects
+  learnedRules: any[]              // { normalizedDesc, category, source, updatedAt }
 }
 
 const defaultVaultData: VaultData = {
@@ -34,6 +35,7 @@ const defaultVaultData: VaultData = {
   assetSnapshots: [],
   settings: {},
   rebalanceHistory: [],
+  learnedRules: [],
 }
 
 // ============================

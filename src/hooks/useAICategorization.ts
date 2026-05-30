@@ -42,9 +42,16 @@ export function useAICategorization(
       const statements = getSavedStatements()
       if (!statements.length) return
 
-      // ── Phase 1: Build a "learned categories" map from already-categorized
-      //    transactions. This lets us re-apply known merchants without any API call.
+      // ── Phase 1: Build a "learned categories" map.
+      //    Seed from persisted learnedRules first (manual overrides + AI corrections),
+      //    then overlay with transaction history (same logic as before).
       const learnedCategories = new Map<string, string>()
+
+      const vault = getVaultDataSync()
+      ;(vault.learnedRules ?? []).forEach((r: any) => {
+        if (r.normalizedDesc && r.category) learnedCategories.set(r.normalizedDesc, r.category)
+      })
+
       statements.forEach((statement: any) => {
         ;(statement.transactions || []).forEach((tx: any) => {
           const storedCat = tx.category
@@ -52,7 +59,6 @@ export function useAICategorization(
           const effective = storedCat || ruleCat
           if (effective !== 'Uncategorized') {
             const key = normalizeDescription(tx.detail)
-            // Prefer manually stored categories over rule-derived
             if (!learnedCategories.has(key) || storedCat) {
               learnedCategories.set(key, effective)
             }
@@ -104,7 +110,8 @@ export function useAICategorization(
         const key = normalizeDescription(u.detail)
         const learned = learnedCategories.get(key)
         if (learned) {
-          updated[u.statementIndex].transactions[u.txIndex].category = learned
+          updated[u.statementIndex].transactions[u.txIndex].category      = learned
+          updated[u.statementIndex].transactions[u.txIndex].categorizedBy = 'learned'
           learnedCount++
         } else {
           needsAI.push(u)
@@ -158,17 +165,37 @@ export function useAICategorization(
 
         // Apply each AI result back to all transactions sharing that normalized description
         const groupsArray = Array.from(groups.values())
+        const newLearnedRules: any[] = []
+
         groupsArray.forEach((group, i) => {
-          const category = data.categories[i] as string
+          const item = data.categories[i] as any
+          // Handle both old string format and new {category, confidence} format
+          const category   = typeof item === 'string' ? item : (item.category ?? 'Uncategorized')
+          const confidence = typeof item === 'string' ? 'medium' : (item.confidence ?? 'medium')
+
           group.indices.forEach(({ si, ti }) => {
-            updated[si].transactions[ti].category = category
+            updated[si].transactions[ti].category      = category
+            updated[si].transactions[ti].categorizedBy = 'ai'
+            updated[si].transactions[ti].aiConfidence  = confidence
           })
+
           if (category !== 'Uncategorized') {
             aiCount += group.indices.length
+            // Persist to learnedRules so future runs skip the AI for this description
+            const normalizedDesc = normalizeDescription(group.representative)
+            newLearnedRules.push({ normalizedDesc, category, source: 'ai', updatedAt: new Date().toISOString() })
           } else {
             remaining.push({ detail: group.representative, amount: group.amount })
           }
         })
+
+        // Merge new AI-learned rules into vault (keyed by normalizedDesc)
+        if (newLearnedRules.length > 0) {
+          const existingRules: any[] = vault.learnedRules ?? []
+          const ruleMap = new Map(existingRules.map((r: any) => [r.normalizedDesc, r]))
+          newLearnedRules.forEach(r => ruleMap.set(r.normalizedDesc, r))
+          await saveVaultData({ learnedRules: Array.from(ruleMap.values()) })
+        }
       }
 
       await saveVaultData({ statements: updated })

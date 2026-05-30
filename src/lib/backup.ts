@@ -17,6 +17,7 @@ export type BackupData = {
     netWorthSnapshots: any[]
     assetSnapshots: any[]
     rebalanceHistory: any[]
+    learnedRules: any[]
   }
 }
 
@@ -46,6 +47,7 @@ export async function exportBackup(): Promise<BackupData> {
       netWorthSnapshots:  vault.netWorthSnapshots ?? [],
       assetSnapshots:     vault.assetSnapshots ?? [],
       rebalanceHistory:   vault.rebalanceHistory ?? [],
+      learnedRules:       vault.learnedRules ?? [],
     },
   }
 }
@@ -95,6 +97,7 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
   const assetSnapshots = backup.data.assetSnapshots ?? []
 
   const rebalanceHistory = backup.data.rebalanceHistory ?? []
+  const learnedRules     = backup.data.learnedRules     ?? []
 
   if (mode === 'replace') {
     await saveVaultData({
@@ -107,6 +110,7 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       netWorthSnapshots,
       assetSnapshots,
       rebalanceHistory,
+      learnedRules,
     })
     return
   }
@@ -170,6 +174,13 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       ),
       ...rebalanceHistory,
     ].sort((a: any, b: any) => a.savedAt.localeCompare(b.savedAt)).slice(-5),
+    // Merge learned rules by normalizedDesc — backup wins on same key
+    learnedRules: [
+      ...(existingVault.learnedRules ?? []).filter(
+        (r: any) => !learnedRules.find((b: any) => b.normalizedDesc === r.normalizedDesc)
+      ),
+      ...learnedRules,
+    ],
   }
 
   await saveVaultData(newVaultState)

@@ -46,17 +46,30 @@ function SortIcon({ active, asc }: { active: boolean; asc: boolean }) {
   )
 }
 
+const CONFIDENCE_DOT: Record<string, string> = {
+  high:   'bg-green-400',
+  medium: 'bg-amber-400',
+  low:    'bg-red-400',
+}
+
+const CONFIDENCE_LABEL: Record<string, string> = {
+  high:   'AI — high confidence',
+  medium: 'AI — medium confidence',
+  low:    'AI — low confidence',
+}
+
 interface Props {
   transactions: any[]
   recurringSuggestions: any[]
   onRecategorize: (txIndex: number, newCategory: string) => void
   onCategorizeGroup: (indexes: number[], category: string) => void
+  onFlagTransaction?: (txIndex: number, flagged: boolean) => void
   onAICategorize?: () => void
   isAICategorizing?: boolean
 }
 
 export default function TransactionSection({
-  transactions,
+  transactions, onFlagTransaction,
   recurringSuggestions,
   onRecategorize,
   onCategorizeGroup,
@@ -339,7 +352,6 @@ export default function TransactionSection({
                             ref={editingRef}
                             defaultValue={tx.category ?? 'Uncategorized'}
                             onChange={(e) => {
-                              // Fix 1 — use stable original index
                               onRecategorize(tx._idx, e.target.value)
                               setEditingOriginalIndex(null)
                             }}
@@ -351,16 +363,38 @@ export default function TransactionSection({
                             ))}
                           </select>
                         ) : (
-                          <button
-                            onClick={() => setEditingOriginalIndex(tx._idx)}
-                            title="Click to change category"
-                            className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full transition hover:opacity-80 ${colorClass}`}
-                          >
-                            {tx.category ?? 'Uncategorized'}
-                            <svg className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" />
-                            </svg>
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            {/* Category badge with optional AI confidence dot */}
+                            <button
+                              onClick={() => setEditingOriginalIndex(tx._idx)}
+                              title="Click to change category"
+                              className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full transition hover:opacity-80 ${colorClass}`}
+                            >
+                              {tx.categorizedBy === 'ai' && tx.aiConfidence && (
+                                <span
+                                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${CONFIDENCE_DOT[tx.aiConfidence] ?? 'bg-gray-400'}`}
+                                  title={CONFIDENCE_LABEL[tx.aiConfidence]}
+                                />
+                              )}
+                              {tx.category ?? 'Uncategorized'}
+                              <svg className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" />
+                              </svg>
+                            </button>
+
+                            {/* Flag button — only for AI-categorized transactions */}
+                            {tx.categorizedBy === 'ai' && onFlagTransaction && (
+                              <button
+                                onClick={() => onFlagTransaction(tx._idx, !tx.flaggedIncorrect)}
+                                title={tx.flaggedIncorrect ? 'Flagged as incorrect — click category to reassign' : 'Flag as incorrect category'}
+                                className={`p-0.5 rounded transition ${tx.flaggedIncorrect ? 'text-red-500' : 'text-gray-300 dark:text-gray-600 hover:text-amber-400'}`}
+                              >
+                                <svg className="w-3.5 h-3.5" fill={tx.flaggedIncorrect ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18M3 7l9-4 9 4v8l-9 4-9-4V7z" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
                         )}
                       </td>
 

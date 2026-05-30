@@ -147,7 +147,50 @@ export default function Dashboard() {
     return map
   }, [statements])
 
+  function normalizeDesc(detail: string): string {
+    return detail.toLowerCase().replace(/\d+/g, '').replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim()
+  }
+
   async function handleRecategorize(txIndex: number, newCategory: string) {
+    const current = allTransactions[txIndex]
+    if (!current) return
+
+    const vault = getVaultDataSync()
+    const saved = [...vault.statements]
+    const wasAIFlagged = current.flaggedIncorrect && current.categorizedBy === 'ai'
+
+    for (const statement of saved) {
+      for (const tx of statement.transactions || []) {
+        if (
+          tx.transactionDate === current.transactionDate &&
+          tx.detail === current.detail &&
+          tx.amount === current.amount
+        ) {
+          tx.category        = newCategory
+          tx.categorizedBy   = 'manual'
+          tx.flaggedIncorrect = false
+        }
+      }
+    }
+
+    // Auto-save to learnedRules so future AI runs skip this description
+    const normalizedDesc = normalizeDesc(current.detail)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const existingRules: any[] = vault.learnedRules ?? []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ruleMap = new Map(existingRules.map((r: any) => [r.normalizedDesc, r]))
+    ruleMap.set(normalizedDesc, {
+      normalizedDesc,
+      category: newCategory,
+      source: wasAIFlagged ? 'ai-corrected' : 'manual',
+      updatedAt: new Date().toISOString(),
+    })
+
+    await saveVaultData({ statements: saved, learnedRules: Array.from(ruleMap.values()) })
+    reload()
+  }
+
+  async function handleFlagTransaction(txIndex: number, flagged: boolean) {
     const current = allTransactions[txIndex]
     if (!current) return
 
@@ -159,7 +202,7 @@ export default function Dashboard() {
           tx.detail === current.detail &&
           tx.amount === current.amount
         ) {
-          tx.category = newCategory
+          tx.flaggedIncorrect = flagged
         }
       }
     }
@@ -335,6 +378,7 @@ export default function Dashboard() {
               recurringSuggestions={recurringSuggestions}
               onRecategorize={handleRecategorize}
               onCategorizeGroup={handleCategorizeGroup}
+              onFlagTransaction={handleFlagTransaction}
               onAICategorize={categorizeAll}
               isAICategorizing={isCategorizing}
             />

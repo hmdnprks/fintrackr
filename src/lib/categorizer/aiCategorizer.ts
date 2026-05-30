@@ -35,8 +35,9 @@ Rules:
 
 Indonesian context: descriptions mix Indonesian and English. QRIS is a QR payment method — use surrounding context to determine the category.
 
-Respond with ONLY a JSON array of category strings, one per transaction in order.
-Example: ["Food & Dining", "Shopping", "Income"]`
+Respond with ONLY a JSON array, one object per transaction in order:
+[{"c": "Food & Dining", "conf": "high"}, {"c": "Shopping", "conf": "medium"}]
+confidence: "high" = clear, unambiguous match; "medium" = likely but some ambiguity; "low" = best guess, limited info`
 
 const BATCH_SIZE = 25
 
@@ -52,11 +53,29 @@ async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+export type AICategory = {
+  category: string
+  confidence: 'high' | 'medium' | 'low'
+}
+
+function parseAIItem(item: any): AICategory {
+  // Support both new {c, conf} format and legacy plain string
+  if (typeof item === 'string') {
+    return { category: CATEGORIES.includes(item as any) ? item : 'Uncategorized', confidence: 'medium' }
+  }
+  const cat  = item.c || item.category || 'Uncategorized'
+  const conf = item.conf || item.confidence || 'medium'
+  return {
+    category:   CATEGORIES.includes(cat as any) ? cat : 'Uncategorized',
+    confidence: (['high', 'medium', 'low'] as const).includes(conf) ? conf : 'medium',
+  }
+}
+
 async function categorizeBatch(
   batch: { detail: string }[],
   apiKey: string,
   model: string
-): Promise<string[]> {
+): Promise<AICategory[]> {
   const messages: DeepSeekMessage[] = [
     { role: 'system', content: CATEGORIZE_PROMPT },
     { role: 'user',   content: JSON.stringify(batch.map((t) => t.detail)) },
@@ -87,18 +106,13 @@ async function categorizeBatch(
     throw new Error(`Expected JSON array, got ${typeof parsed}`)
   }
 
-  // If AI returned fewer items than sent, retry for the missing ones
   if (parsed.length < batch.length) {
     const missing = batch.slice(parsed.length)
     const filled = await categorizeBatch(missing, apiKey, model)
-    return [...parsed, ...filled].map((c: string) =>
-      CATEGORIES.includes(c as any) ? c : 'Uncategorized'
-    )
+    return [...parsed.map(parseAIItem), ...filled]
   }
 
-  return parsed.slice(0, batch.length).map((c: string) =>
-    CATEGORIES.includes(c as any) ? c : 'Uncategorized'
-  )
+  return parsed.slice(0, batch.length).map(parseAIItem)
 }
 
 async function categorizeBatchWithRetry(
@@ -106,7 +120,7 @@ async function categorizeBatchWithRetry(
   apiKey: string,
   model: string,
   maxRetries = 3
-): Promise<string[]> {
+): Promise<AICategory[]> {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await categorizeBatch(batch, apiKey, model)
@@ -128,9 +142,9 @@ export async function categorizeWithAI(
   transactions: { detail: string; amount: number; type: string }[],
   apiKey: string,
   model = 'deepseek-chat'
-): Promise<string[]> {
+): Promise<AICategory[]> {
   const batches = chunkArray(transactions, BATCH_SIZE)
-  const results: string[][] = []
+  const results: AICategory[][] = []
 
   for (let i = 0; i < batches.length; i++) {
     const result = await categorizeBatchWithRetry(
@@ -139,7 +153,6 @@ export async function categorizeWithAI(
       model
     )
     results.push(result)
-    // Small pause between batches to be gentle on the API
     if (i < batches.length - 1) await sleep(300)
   }
 
