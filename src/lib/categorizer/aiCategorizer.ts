@@ -343,6 +343,14 @@ Respond with ONLY valid JSON, no markdown:
   "leftoverAdvice": "one sentence on what to do with any remainder, or empty string if leftover is 0"
 }`
 
+// Convert English number formatting to Indonesian in AI text output
+// e.g. "Rp52,136,009" → "Rp 52.136.009"
+function fixIDRFormat(text: string): string {
+  return text.replace(/Rp\s?(\d{1,3}(?:,\d{3})+)/g, (_, num) =>
+    'Rp ' + num.replace(/,/g, '.')
+  )
+}
+
 export async function generateWindfallAllocation(
   context: WindfallContext,
   apiKey: string,
@@ -371,14 +379,6 @@ export async function generateWindfallAllocation(
   const parsed = JSON.parse(content)
   if (!parsed.allocations || !Array.isArray(parsed.allocations)) {
     throw new Error('Unexpected response format from AI')
-  }
-
-  // Convert English number formatting to Indonesian in reason text
-  // e.g. "Rp52,136,009" → "Rp 52.136.009"
-  function fixIDRFormat(text: string): string {
-    return text.replace(/Rp\s?(\d{1,3}(?:,\d{3})+)/g, (_, num) =>
-      'Rp ' + num.replace(/,/g, '.')
-    )
   }
 
   // Hard clamp: AI sometimes allocates more than the windfall when a gap
@@ -459,4 +459,114 @@ export async function generateBudgetSuggestions(
   return parsed.filter(
     (s: any) => s.category && typeof s.suggested === 'number' && s.suggested > 0
   )
+}
+
+// ─── Asset Reallocation Advisor ───────────────────────────────────────────────
+
+export type RebalanceSuggestion = {
+  action: 'move' | 'increase' | 'reduce' | 'maintain'
+  from?: string
+  to?: string
+  amount?: number
+  reason: string
+}
+
+export type RebalanceResult = {
+  overallHealth: 'poor' | 'fair' | 'good' | 'excellent'
+  summary: string
+  suggestions: RebalanceSuggestion[]
+  disclaimer: string
+}
+
+export type RebalanceContext = {
+  riskPreference: 'conservative' | 'moderate' | 'aggressive'
+  income:   { avgMonthly: number }
+  expenses: { avgMonthly: number }
+  emergencyFund: { currentMonths: number; targetMonths: number; gapAmount: number; accounts: string[] }
+  liquidCoverage: { months: number; totalLiquid: number }
+  assets: {
+    totalNetWorth: number
+    byType: Record<string, number>
+    items: { name: string; institution: string; type: string; currentValue: number; interestRate?: number; isEmergencyFund?: boolean; contributable?: boolean; platform?: string }[]
+  }
+}
+
+const REBALANCE_PROMPT = `You are a personal financial advisor for an Indonesian user. Currency is IDR.
+
+Analyse the user's current asset allocation and suggest concrete rebalancing actions — not for new money (that's the windfall tool), but for restructuring what they already have.
+
+Indonesian investment products to consider (by risk level):
+- Conservative: Tabungan deposito (3-4% p.a., locked), Reksa Dana Pasar Uang (4-6% p.a., liquid)
+- Moderate: Reksa Dana Pendapatan Tetap / Obligasi (6-9% p.a.)
+- Aggressive: Reksa Dana Saham (10-15% p.a. long-term, volatile), Saham langsung
+
+Rebalancing principles:
+1. Emergency fund must be 3-6 months of expenses in liquid savings — address this first if insufficient
+2. Excess savings beyond 9 months liquid coverage earning <1% should work harder (Reksa Dana Pasar Uang minimum)
+3. Risk allocation by preference:
+   - Conservative: 60-70% savings/deposito, 20-30% reksa dana pasar uang/obligasi, 5-10% saham
+   - Moderate: 40% savings, 30% reksa dana campuran/obligasi, 20-25% saham, 5% gold
+   - Aggressive: 20-30% savings (emergency only), 50-60% saham/reksa dana saham, 10% gold
+4. Gold should generally be 5-15% of portfolio — more is over-concentrated
+5. Savings paying low interest (tabungan biasa <1%) should migrate to higher-yield liquid instruments first
+6. Only suggest moving money between existing assets or into named products — do NOT invent asset names
+
+Format all IDR amounts using Indonesian dots (Rp 50.000.000 not Rp 50,000,000).
+Round amounts to nearest 5.000.000 IDR.
+
+Respond with ONLY valid JSON, no markdown:
+{
+  "overallHealth": "poor|fair|good|excellent",
+  "summary": "2-3 sentence overall assessment of the current allocation",
+  "suggestions": [
+    {
+      "action": "move|increase|reduce|maintain",
+      "from": "source asset name or null",
+      "to": "destination asset name or product type",
+      "amount": number_or_null,
+      "reason": "1-2 sentences with specific numbers and expected outcome"
+    }
+  ],
+  "disclaimer": "one sentence: this is AI-generated guidance, not licensed financial advice"
+}`
+
+export async function generateRebalancingSuggestions(
+  context: RebalanceContext,
+  apiKey: string,
+  model = 'deepseek-chat'
+): Promise<RebalanceResult> {
+  const messages: DeepSeekMessage[] = [
+    { role: 'system', content: REBALANCE_PROMPT },
+    { role: 'user',   content: JSON.stringify(context) },
+  ]
+
+  const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens: 1500 }),
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`DeepSeek API error: ${res.status} - ${err}`)
+  }
+
+  const json = await res.json()
+  let content: string = json.choices?.[0]?.message?.content || ''
+  content = content.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```\s*$/g, '').trim()
+
+  const parsed = JSON.parse(content)
+  if (!parsed.suggestions || !Array.isArray(parsed.suggestions)) {
+    throw new Error('Unexpected response format from AI')
+  }
+
+  return {
+    overallHealth: parsed.overallHealth || 'fair',
+    summary:       fixIDRFormat(parsed.summary     || ''),
+    suggestions:   parsed.suggestions.map((s: any) => ({
+      ...s,
+      reason: fixIDRFormat(s.reason || ''),
+    })),
+    disclaimer:    fixIDRFormat(parsed.disclaimer  || ''),
+  }
 }

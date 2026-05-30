@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { Asset, AssetType, getAssets, deleteAsset, getNetWorthSnapshots, getAssetSnapshots, NetWorthSnapshot, AssetSnapshot } from '@/lib/assetStorage'
 import AssetModal from './AssetModal'
 import WindfallModal from './WindfallModal'
+import RebalanceModal from './RebalanceModal'
 
 interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,6 +58,7 @@ export default function AssetsTab({ statements }: Props) {
   const [assetSnapshots, setAssetSnapshots] = useState<AssetSnapshot[]>(() => getAssetSnapshots())
   const [showModal, setShowModal]         = useState(false)
   const [showWindfall, setShowWindfall]   = useState(false)
+  const [showRebalance, setShowRebalance] = useState(false)
   const [editingAsset, setEditingAsset]   = useState<Asset | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
@@ -102,6 +104,14 @@ export default function AssetsTab({ statements }: Props) {
   }, [assets])
 
   const totalNetWorth = Object.values(totalByType).reduce((s, v) => s + v, 0)
+
+  const lastUpdatedLabel = useMemo(() => {
+    if (!assets.length) return null
+    const latest = assets.reduce((a, b) => new Date(a.updatedAt) > new Date(b.updatedAt) ? a : b)
+    // eslint-disable-next-line react-hooks/purity
+    const diffDays = Math.floor((new Date().getTime() - new Date(latest.updatedAt).getTime()) / 86_400_000)
+    return { diffDays, label: diffDays === 0 ? 'Values updated today' : diffDays === 1 ? 'Values updated yesterday' : `Values updated ${diffDays}d ago` }
+  }, [assets])
 
   // Net worth growth — compare current total to the most recent snapshot
   // that is at least 25 days old (approximates "previous month")
@@ -191,8 +201,25 @@ export default function AssetsTab({ statements }: Props) {
       {assets.length > 0 && (
         <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm p-6">
           <div className="mb-4">
-            <p className="text-sm text-gray-500 dark:text-gray-400">Total Net Worth</p>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mt-0.5 break-all">{formatIDRFull(totalNetWorth)}</p>
+            <div className="flex items-start justify-between gap-3 mb-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400">Total Net Worth</p>
+              <button
+                onClick={() => setShowRebalance(true)}
+                className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 px-2.5 py-1 rounded-lg transition shrink-0"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                </svg>
+                Rebalance with AI
+              </button>
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 break-all">{formatIDRFull(totalNetWorth)}</p>
+            {/* Last updated */}
+            {lastUpdatedLabel && (
+              <p className={`text-xs mt-0.5 ${lastUpdatedLabel.diffDays > 30 ? 'text-amber-500' : 'text-gray-400 dark:text-gray-500'}`}>
+                {lastUpdatedLabel.label}{lastUpdatedLabel.diffDays > 30 ? ' — refresh to track growth' : ''}
+              </p>
+            )}
             {netWorthGrowth !== null && (
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 <span className={`inline-flex items-center gap-1 text-sm font-semibold ${netWorthGrowth.change >= 0 ? 'text-green-600' : 'text-red-500'}`}>
@@ -337,6 +364,16 @@ export default function AssetsTab({ statements }: Props) {
       <WindfallModal
         isOpen={showWindfall}
         onClose={() => setShowWindfall(false)}
+        statements={statements}
+        assets={assets}
+        avgMonthlyExpense={avgMonthlyExpense}
+        emergencyMonths={emergencyMonths}
+        emergencyFundTotal={emergencyFundTotal}
+      />
+
+      <RebalanceModal
+        isOpen={showRebalance}
+        onClose={() => setShowRebalance(false)}
         statements={statements}
         assets={assets}
         avgMonthlyExpense={avgMonthlyExpense}
