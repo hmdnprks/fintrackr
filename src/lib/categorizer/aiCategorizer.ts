@@ -464,16 +464,20 @@ export async function generateBudgetSuggestions(
 // ─── Asset Reallocation Advisor ───────────────────────────────────────────────
 
 export type RebalanceSuggestion = {
+  priority: number           // 1 = highest; order suggestions by this
   action: 'move' | 'increase' | 'reduce' | 'maintain'
   from?: string
   to?: string
   amount?: number
+  confidence: 'high' | 'medium' | 'low'
+  confidenceReason: string   // short phrase: why this confidence
   reason: string
 }
 
 export type RebalanceResult = {
   overallHealth: 'poor' | 'fair' | 'good' | 'excellent'
   summary: string
+  executionNote: string      // e.g. "Run in order shown — each uses the remaining balance after the previous step"
   suggestions: RebalanceSuggestion[]
   disclaimer: string
 }
@@ -511,6 +515,16 @@ Rebalancing principles:
 5. Savings paying low interest (tabungan biasa <1%) should migrate to higher-yield liquid instruments first
 6. Only suggest moving money between existing assets or into named products — do NOT invent asset names
 
+Additional rules:
+- Order suggestions by priority: 1 = most urgent/impactful (e.g. fix emergency fund gap first), highest number = nice-to-have enhancement
+- CRITICAL balance check: if multiple suggestions draw from the same source asset, verify the total withdrawn ≤ source balance. Each suggestion should note the remaining balance in the source after executing it in order.
+- confidence levels:
+  - "high": clear financial benefit, low risk, strongly recommended regardless of short-term market conditions
+  - "medium": good idea but dependent on personal circumstances (e.g. investment horizon, income stability)
+  - "low": optional enhancement, personal preference matters more than financial logic
+- confidenceReason: one short phrase (e.g. "emergency fund gap is urgent", "market timing uncertain", "already adequate")
+- executionNote: explain if suggestions are sequential (run in order, each uses balance after previous) or alternatives (pick one or more independently)
+
 Format all IDR amounts using Indonesian dots (Rp 50.000.000 not Rp 50,000,000).
 Round amounts to nearest 5.000.000 IDR.
 
@@ -518,13 +532,17 @@ Respond with ONLY valid JSON, no markdown:
 {
   "overallHealth": "poor|fair|good|excellent",
   "summary": "2-3 sentence overall assessment of the current allocation",
+  "executionNote": "explain if sequential or alternatives, and what the net effect is if all are run",
   "suggestions": [
     {
+      "priority": 1,
       "action": "move|increase|reduce|maintain",
       "from": "source asset name or null",
       "to": "destination asset name or product type",
       "amount": number_or_null,
-      "reason": "1-2 sentences with specific numbers and expected outcome"
+      "confidence": "high|medium|low",
+      "confidenceReason": "short phrase explaining confidence",
+      "reason": "1-2 sentences with specific numbers, expected outcome, and remaining balance in source after this step"
     }
   ],
   "disclaimer": "one sentence: this is AI-generated guidance, not licensed financial advice"
@@ -560,13 +578,18 @@ export async function generateRebalancingSuggestions(
     throw new Error('Unexpected response format from AI')
   }
 
+  const sorted = (parsed.suggestions as RebalanceSuggestion[])
+    .sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99))
+
   return {
     overallHealth: parsed.overallHealth || 'fair',
-    summary:       fixIDRFormat(parsed.summary     || ''),
-    suggestions:   parsed.suggestions.map((s: any) => ({
+    summary:       fixIDRFormat(parsed.summary       || ''),
+    executionNote: fixIDRFormat(parsed.executionNote || ''),
+    suggestions:   sorted.map((s: any) => ({
       ...s,
-      reason: fixIDRFormat(s.reason || ''),
+      reason:           fixIDRFormat(s.reason           || ''),
+      confidenceReason: fixIDRFormat(s.confidenceReason || ''),
     })),
-    disclaimer:    fixIDRFormat(parsed.disclaimer  || ''),
+    disclaimer:    fixIDRFormat(parsed.disclaimer    || ''),
   }
 }

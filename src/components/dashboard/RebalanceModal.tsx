@@ -46,6 +46,12 @@ const ACTION_COLOR: Record<string, string> = {
   maintain: 'text-gray-500 bg-gray-100 dark:bg-gray-800',
 }
 
+const CONFIDENCE_META: Record<string, { label: string; color: string; dot: string }> = {
+  high:   { label: 'High priority',   color: 'text-green-700 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',  dot: 'bg-green-500'  },
+  medium: { label: 'Consider',        color: 'text-amber-700 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800',  dot: 'bg-amber-400'  },
+  low:    { label: 'Optional',        color: 'text-gray-500 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700',          dot: 'bg-gray-400'   },
+}
+
 function formatIDR(n: number) {
   if (n >= 1_000_000) return `Rp ${(n / 1_000_000).toFixed(1)}jt`
   if (n >= 1_000)     return `Rp ${Math.round(n / 1_000)}rb`
@@ -224,34 +230,80 @@ export default function RebalanceModal({
             <div className="space-y-4">
               {/* Health badge + summary */}
               <div className={`rounded-xl p-4 ${health.bg}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className={`text-xs font-bold uppercase tracking-wide ${health.color}`}>{health.label}</span>
-                </div>
-                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{result.summary}</p>
+                <span className={`text-xs font-bold uppercase tracking-wide ${health.color}`}>{health.label}</span>
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mt-1">{result.summary}</p>
               </div>
 
-              {/* Suggestions */}
+              {/* Execution note */}
+              {result.executionNote && (
+                <div className="flex items-start gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl px-4 py-3">
+                  <svg className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                  </svg>
+                  <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">{result.executionNote}</p>
+                </div>
+              )}
+
+              {/* Suggestions with priority, confidence, running balance */}
               <div className="space-y-3">
-                {result.suggestions.map((s, i) => (
-                  <div key={i} className="border border-gray-100 dark:border-gray-800 rounded-xl p-4">
-                    {/* Action badge + from → to */}
-                    <div className="flex items-start gap-3 mb-2">
-                      <span className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg shrink-0 ${ACTION_COLOR[s.action]}`}>
-                        {ACTION_ICON[s.action]}
-                        {s.action.charAt(0).toUpperCase() + s.action.slice(1)}
-                      </span>
-                      <div className="flex items-center gap-1.5 flex-wrap min-w-0 text-sm">
-                        {s.from && <span className="font-medium text-gray-800 dark:text-gray-200">{s.from}</span>}
-                        {s.from && s.to && <ArrowRightIcon className="w-3.5 h-3.5 text-gray-400 shrink-0" />}
-                        {s.to && <span className="font-medium text-gray-800 dark:text-gray-200">{s.to}</span>}
-                        {s.amount && s.amount > 0 && (
-                          <span className="text-blue-600 dark:text-blue-400 font-semibold ml-1">{formatIDR(s.amount)}</span>
+                {(() => {
+                  // Track running balance per source asset
+                  const sourceBalance: Record<string, number> = {}
+                  for (const a of assets) sourceBalance[a.name] = a.currentValue
+
+                  return result.suggestions.map((s, i) => {
+                    const conf = CONFIDENCE_META[s.confidence] ?? CONFIDENCE_META.medium
+                    // Compute remaining balance in source after this suggestion
+                    const remaining = s.from && s.amount && sourceBalance[s.from] !== undefined
+                      ? sourceBalance[s.from] - s.amount
+                      : null
+                    // Update running balance for next card
+                    if (s.from && s.amount && sourceBalance[s.from] !== undefined) {
+                      sourceBalance[s.from] = Math.max(0, sourceBalance[s.from] - s.amount)
+                    }
+                    const isInsufficient = remaining !== null && remaining < 0
+
+                    return (
+                      <div key={i} className={`border rounded-xl p-4 ${isInsufficient ? 'border-red-200 dark:border-red-800 bg-red-50/30 dark:bg-red-900/10' : 'border-gray-100 dark:border-gray-800'}`}>
+                        {/* Priority + confidence row */}
+                        <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+                          <span className="text-xs font-bold text-gray-400 dark:text-gray-500 w-5">#{s.priority}</span>
+                          <span className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-lg ${ACTION_COLOR[s.action]}`}>
+                            {ACTION_ICON[s.action]}
+                            {s.action.charAt(0).toUpperCase() + s.action.slice(1)}
+                          </span>
+                          <span className={`flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-lg border ${conf.color}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${conf.dot}`} />
+                            {conf.label}
+                          </span>
+                          {s.confidenceReason && (
+                            <span className="text-xs text-gray-400 dark:text-gray-500 italic">{s.confidenceReason}</span>
+                          )}
+                        </div>
+
+                        {/* From → To + amount */}
+                        <div className="flex items-center gap-1.5 flex-wrap text-sm mb-2">
+                          {s.from && <span className="font-semibold text-gray-800 dark:text-gray-200">{s.from}</span>}
+                          {s.from && s.to && <ArrowRightIcon className="w-3.5 h-3.5 text-gray-400 shrink-0" />}
+                          {s.to && <span className="font-semibold text-gray-800 dark:text-gray-200">{s.to}</span>}
+                          {s.amount && s.amount > 0 && (
+                            <span className="text-blue-600 dark:text-blue-400 font-bold ml-1">{formatIDR(s.amount)}</span>
+                          )}
+                        </div>
+
+                        <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-2">{s.reason}</p>
+
+                        {/* Running balance */}
+                        {remaining !== null && (
+                          <div className={`flex items-center gap-1.5 text-xs mt-1 ${isInsufficient ? 'text-red-500' : 'text-gray-400 dark:text-gray-500'}`}>
+                            <span>{isInsufficient ? '⚠ Insufficient funds' : `→ ${s.from} remaining:`}</span>
+                            <span className="font-semibold">{formatIDR(Math.abs(remaining))}{isInsufficient ? ' short' : ''}</span>
+                          </div>
                         )}
                       </div>
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{s.reason}</p>
-                  </div>
-                ))}
+                    )
+                  })
+                })()}
               </div>
 
               {/* Disclaimer */}
