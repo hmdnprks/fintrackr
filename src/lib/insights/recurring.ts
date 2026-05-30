@@ -36,13 +36,16 @@ export function isSafeSimilarityMatch(a: string, b: string): boolean {
 
   // Fallback: numeric-heavy descriptions (CC payments, bank transfer references)
   // where stripping digits leaves nothing useful.
-  // Match by shared long numeric sequence (≥10 digits = card/account number).
-  // e.g. -52432560005447812 52432560005447812= → token 52432560005447812 (17 digits)
-  const numTokens = (s: string): Set<string> => new Set(s.match(/\d{10,}/g) ?? [])
-  const numsA = numTokens(a)
-  if (numsA.size > 0) {
-    for (const n of numTokens(b)) {
-      if (numsA.has(n)) return true
+  // Only apply when BOTH sides lack a meaningful alpha merchant key —
+  // if either side has a readable merchant name (e.g. UBPFFFFFF ≥ 5 chars)
+  // but the other doesn't, they are clearly different transaction types.
+  if (keyA.length < MIN_KEY_LENGTH && keyB.length < MIN_KEY_LENGTH) {
+    const numTokens = (s: string): Set<string> => new Set(s.match(/\d{10,}/g) ?? [])
+    const numsA = numTokens(a)
+    if (numsA.size > 0) {
+      for (const n of numTokens(b)) {
+        if (numsA.has(n)) return true
+      }
     }
   }
 
