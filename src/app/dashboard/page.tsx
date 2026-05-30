@@ -27,6 +27,8 @@ import MonthComparisonSection from '@/components/dashboard/MonthComparisonSectio
 import CalendarSection from '@/components/dashboard/CalendarSection'
 import SavingsRateTrendSection from '@/components/dashboard/SavingsRateTrendSection'
 import SpendingBreakdownSection from '@/components/dashboard/SpendingBreakdownSection'
+import RecurringExpensesSection from '@/components/dashboard/RecurringExpensesSection'
+import InvestmentRateSection from '@/components/dashboard/InvestmentRateSection'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 import { useVault } from '@/context/VaultContext'
 
@@ -80,7 +82,14 @@ export default function Dashboard() {
     allTransactions,
     savingsRateTrend,
     spendingBreakdown,
+    recurringExpenses,
+    investmentRate,
   } = useDashboardData(statements, selectedYear, selectedMonth)
+
+  const avgMonthlyIncome = useMemo(() => {
+    if (!savingsRateTrend.length) return 0
+    return savingsRateTrend.reduce((s, d) => s + d.income, 0) / savingsRateTrend.length
+  }, [savingsRateTrend])
 
   const {
     isCategorizing,
@@ -255,6 +264,18 @@ export default function Dashboard() {
               <SpendingBreakdownSection data={spendingBreakdown} />
 
               <SavingsRateTrendSection data={savingsRateTrend} />
+
+              <RecurringExpensesSection
+                items={recurringExpenses}
+                avgMonthlyIncome={avgMonthlyIncome}
+              />
+
+              <InvestmentRateSection
+                rate={investmentRate.rate}
+                total={investmentRate.total}
+                items={investmentRate.items}
+                totalIncome={totalIncome}
+              />
 
               <MonthlyTrendSection data={trendChartData} />
 

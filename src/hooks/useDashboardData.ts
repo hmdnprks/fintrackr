@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import { categorizeTransaction } from '@/lib/categorizer/mandiri/transactionCategorizer'
 import { aggregateTransactions } from '@/lib/finance'
 import { parseTransactionDate } from '@/lib/formatter'
-import { detectRecurringUncategorized } from '@/lib/insights/recurring'
+import { detectRecurringUncategorized, normalizeDetail } from '@/lib/insights/recurring'
 
 export function useDashboardData(statements: any[], selectedYear: string, selectedMonth: string) {
 
@@ -164,6 +164,82 @@ export function useDashboardData(statements: any[], selectedYear: string, select
     return { income, needs, wants, surplus }
   }, [allTransactions])
 
+  /**
+   * Recurring Expenses — uses ALL statements (no filter) to detect true recurring
+   * patterns across months. Returns monthly average per recurring item.
+   * Only looks at categories that commonly have fixed commitments.
+   */
+  const recurringExpenses = useMemo(() => {
+    const RECURRING_CATS = new Set([
+      'Housing', 'Services', 'Entertainment', 'Insurance',
+      'Bank Charges', 'Health & Medical', 'Transportation',
+    ])
+
+    const groups: Record<string, {
+      sample: string
+      category: string
+      monthAmounts: Record<string, number>
+    }> = {}
+
+    statements.forEach((s: any) => {
+      if (!s.monthKey) return
+      ;(s.transactions || []).forEach((t: any) => {
+        if (t.type !== 'debit') return
+        const cat = t.category || categorizeTransaction(t.detail, t.type)
+        if (!RECURRING_CATS.has(cat)) return
+        const key = normalizeDetail(t.detail || '')
+        if (!key) return
+        if (!groups[key]) groups[key] = { sample: t.detail, category: cat, monthAmounts: {} }
+        groups[key].monthAmounts[s.monthKey] =
+          (groups[key].monthAmounts[s.monthKey] || 0) + (t.amount || 0)
+      })
+    })
+
+    return Object.values(groups)
+      .filter(g => Object.keys(g.monthAmounts).length >= 2)
+      .map(g => {
+        const amounts = Object.values(g.monthAmounts)
+        return {
+          description: g.sample,
+          category: g.category,
+          avgMonthly: amounts.reduce((s, a) => s + a, 0) / amounts.length,
+          months: Object.keys(g.monthAmounts).length,
+        }
+      })
+      .sort((a, b) => b.avgMonthly - a.avgMonthly)
+  }, [statements])
+
+  /**
+   * Investment Rate — keyword-based detection of investment platform transfers
+   * in the current filtered period. Uses a broad list of Indonesian investment
+   * platforms and the user's contributable asset institution names.
+   */
+  const INVESTMENT_KEYWORDS = [
+    'BIBIT', 'STOCKBIT', 'AJAIB', 'BAREKSA', 'IPOT', 'INDOPREMIER',
+    'MOST ', 'MANDIRI SEKURITAS', 'PLUANG', 'REKSADANA', 'REKSA DANA',
+  ]
+
+  const investmentRate = useMemo(() => {
+    let total = 0
+    const items: { description: string; amount: number }[] = []
+
+    for (const tx of allTransactions) {
+      if (tx.type !== 'debit') continue
+      const detail = (tx.detail || '').toUpperCase()
+      if (INVESTMENT_KEYWORDS.some(k => detail.includes(k))) {
+        total += tx.amount || 0
+        items.push({ description: tx.detail, amount: tx.amount || 0 })
+      }
+    }
+
+    return {
+      rate: totalIncome > 0 ? Math.round((total / totalIncome) * 100) : 0,
+      total,
+      items,
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allTransactions, totalIncome])
+
   return {
     totalIncome,
     totalExpense,
@@ -172,5 +248,7 @@ export function useDashboardData(statements: any[], selectedYear: string, select
     recurringSuggestions,
     savingsRateTrend,
     spendingBreakdown,
+    recurringExpenses,
+    investmentRate,
   }
 }
