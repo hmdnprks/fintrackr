@@ -3,9 +3,10 @@ import { formatIDR } from '@/lib/formatter'
 interface Props {
   income: number
   expense: number
+  avgDailyExpense?: number
 }
 
-export default function IncomeExpenseSection({ income, expense }: Props) {
+export default function IncomeExpenseSection({ income, expense, avgDailyExpense = 0 }: Props) {
   const net         = income - expense
   const isPositive  = net >= 0
   const max         = Math.max(income, expense, 1)
@@ -67,6 +68,19 @@ export default function IncomeExpenseSection({ income, expense }: Props) {
           </span>
         </div>
       </div>
+
+      {avgDailyExpense > 0 && (
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-gray-400 dark:text-gray-500">🔥 Burn rate</span>
+            <span className="text-xs text-gray-300 dark:text-gray-600">·</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">avg daily spend this period</span>
+          </div>
+          <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 tabular-nums">
+            {formatIDR(avgDailyExpense)}<span className="text-xs font-normal text-gray-400">/day</span>
+          </span>
+        </div>
+      )}
     </div>
   )
 }

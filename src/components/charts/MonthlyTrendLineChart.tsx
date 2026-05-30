@@ -43,16 +43,32 @@ export default function MonthlyTrendLineChart({ data }: Props) {
 
   const enrichedData = {
     ...data,
-    datasets: data.datasets?.map((ds: any, i: number) => ({
-      ...ds,
-      tension: 0.35,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      borderColor:           i === 0 ? '#22c55e' : '#ef4444',
-      backgroundColor:       i === 0 ? '#22c55e20' : '#ef444420',
-      pointBackgroundColor:  i === 0 ? '#22c55e' : '#ef4444',
-      fill: true,
-    })),
+    datasets: data.datasets?.map((ds: any, i: number) => {
+      // Dataset 2 = Savings % overlay — dashed indigo line on right axis, no fill
+      if (i === 2) return {
+        ...ds,
+        tension: 0.35,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        borderColor: '#8b5cf6',
+        backgroundColor: 'transparent',
+        pointBackgroundColor: '#8b5cf6',
+        fill: false,
+        borderDash: [5, 4],
+        yAxisID: 'y1',
+      }
+      return {
+        ...ds,
+        tension: 0.35,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderColor:          i === 0 ? '#22c55e' : '#ef4444',
+        backgroundColor:      i === 0 ? '#22c55e20' : '#ef444420',
+        pointBackgroundColor: i === 0 ? '#22c55e' : '#ef4444',
+        fill: true,
+        yAxisID: 'y',
+      }
+    }),
   }
 
   return (
@@ -74,6 +90,21 @@ export default function MonthlyTrendLineChart({ data }: Props) {
                 font: { size: 11 },
                 callback: (value) => abbreviateIDR(value as number),
               },
+            },
+            y1: {
+              type: 'linear' as const,
+              display: true,
+              position: 'right' as const,
+              min: 0,
+              max: 100,
+              grid: { drawOnChartArea: false },
+              ticks: {
+                color: '#8b5cf6',
+                font: { size: 10 },
+                callback: (value) => `${value}%`,
+                maxTicksLimit: 5,
+              },
+              border: { dash: [3, 3] },
             },
             x: {
               grid: { display: false },
@@ -98,7 +129,9 @@ export default function MonthlyTrendLineChart({ data }: Props) {
             },
             tooltip: {
               callbacks: {
-                label: (ctx: any) => ` ${ctx.dataset.label}: ${formatIDR(ctx.raw)}`,
+                label: (ctx: any) => ctx.datasetIndex === 2
+                  ? ` ${ctx.dataset.label}: ${ctx.raw}%`
+                  : ` ${ctx.dataset.label}: ${formatIDR(ctx.raw)}`,
               },
             },
           },

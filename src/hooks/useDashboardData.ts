@@ -100,6 +100,17 @@ export function useDashboardData(statements: any[], selectedYear: string, select
           borderColor: '#ef4444',
           backgroundColor: '#ef4444',
         },
+        {
+          label: 'Savings %',
+          data: keys.map((k) => {
+            const inc = map[k].income
+            const exp = map[k].expense
+            return inc > 0 ? Math.round(((inc - exp) / inc) * 100) : 0
+          }),
+          yAxisID: 'y1',
+          borderColor: '#8b5cf6',
+          backgroundColor: '#8b5cf6',
+        },
       ],
     }
   }, [yearFilteredStatements])
@@ -241,9 +252,15 @@ export function useDashboardData(statements: any[], selectedYear: string, select
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allTransactions, totalIncome])
 
+  // Burn rate — average daily expense across filtered months (rough 30-day approx)
+  const avgDailyExpense = yearFilteredStatements.length > 0 && totalExpense > 0
+    ? Math.round(totalExpense / (yearFilteredStatements.length * 30))
+    : 0
+
   return {
     totalIncome,
     totalExpense,
+    avgDailyExpense,
     trendChartData,
     allTransactions,
     recurringSuggestions,

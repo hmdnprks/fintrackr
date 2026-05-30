@@ -33,6 +33,7 @@ import FinancialHealthScore from '@/components/dashboard/FinancialHealthScore'
 import FIRENumberSection from '@/components/dashboard/FIRENumberSection'
 import SpendingForecastSection from '@/components/dashboard/SpendingForecastSection'
 import YearOverYearSection from '@/components/dashboard/YearOverYearSection'
+import IncomeStabilitySection from '@/components/dashboard/IncomeStabilitySection'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 import { useVault } from '@/context/VaultContext'
 
@@ -89,6 +90,7 @@ export default function Dashboard() {
     spendingBreakdown,
     recurringExpenses,
     investmentRate,
+    avgDailyExpense,
   } = useDashboardData(statements, selectedYear, selectedMonth)
 
   const avgMonthlyIncome = useMemo(() => {
@@ -301,6 +303,7 @@ export default function Dashboard() {
               <IncomeExpenseSection
                 income={totalIncome}
                 expense={totalExpense}
+                avgDailyExpense={avgDailyExpense}
               />
 
               <MonthlyTrendSection data={trendChartData} />
@@ -345,6 +348,8 @@ export default function Dashboard() {
                 budgets={budgets}
                 currentMonthSpending={currentMonthSpending}
               />
+
+              <IncomeStabilitySection savingsRateTrend={savingsRateTrend} />
 
               <SpendingBreakdownSection data={spendingBreakdown} />
 
