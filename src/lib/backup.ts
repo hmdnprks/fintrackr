@@ -16,6 +16,7 @@ export type BackupData = {
     assets: any[]
     netWorthSnapshots: any[]
     assetSnapshots: any[]
+    rebalanceHistory: any[]
   }
 }
 
@@ -44,6 +45,7 @@ export async function exportBackup(): Promise<BackupData> {
       assets:             vault.assets ?? [],
       netWorthSnapshots:  vault.netWorthSnapshots ?? [],
       assetSnapshots:     vault.assetSnapshots ?? [],
+      rebalanceHistory:   vault.rebalanceHistory ?? [],
     },
   }
 }
@@ -92,6 +94,8 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
   const netWorthSnapshots = backup.data.netWorthSnapshots ?? []
   const assetSnapshots = backup.data.assetSnapshots ?? []
 
+  const rebalanceHistory = backup.data.rebalanceHistory ?? []
+
   if (mode === 'replace') {
     await saveVaultData({
       statements: backup.data.statements,
@@ -102,6 +106,7 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       assets,
       netWorthSnapshots,
       assetSnapshots,
+      rebalanceHistory,
     })
     return
   }
@@ -158,6 +163,13 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       ),
       ...assetSnapshots,
     ].sort((a: any, b: any) => a.date.localeCompare(b.date)),
+    // Merge rebalance history by id — deduplicate, keep latest 5
+    rebalanceHistory: [
+      ...(existingVault.rebalanceHistory ?? []).filter(
+        (e: any) => !rebalanceHistory.find((b: any) => b.id === e.id)
+      ),
+      ...rebalanceHistory,
+    ].sort((a: any, b: any) => a.savedAt.localeCompare(b.savedAt)).slice(-5),
   }
 
   await saveVaultData(newVaultState)

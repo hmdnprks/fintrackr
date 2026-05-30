@@ -88,6 +88,10 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] Windfall allocation — AI-powered plan for bonus/THR/freelance; emergency fund + pockets + investments + reward slice; two progress bars per destination; hard clamp prevents over-allocation
 - [x] All icons via @heroicons/react
 - [x] **Asset Reallocation Advisor** — AI CTA in the net worth card to analyse current asset distribution and suggest rebalancing; risk preference selector (Conservative / Moderate / Aggressive); AI considers emergency fund adequacy, excess low-yield savings, investment under-allocation, and Indonesian products (Reksa Dana Pasar Uang, Reksa Dana Saham, Deposito); returns structured suggestions with from/to/amount/reason; net worth card also shows last-updated timestamp
+- [x] **Rebalance result persistence** — auto-saves every analysis to vault (last 5 entries); "Load" banner on next open restores the previous result without re-running AI; included in JSON backup export and restore
+- [x] **Rebalance PDF export** — Export PDF button opens a print-ready HTML page (no library dependency) with health badge, summary, execution note, suggestion cards, safety check, and disclaimer
+- [x] **Rebalance safety check** — AI computes remaining liquid savings after all moves and states months of expense coverage; verdict badge (Safe green / Caution amber / Warning red) shown below suggestion cards
+- [x] **Rebalance UX improvements** — priority ordering (#1 most urgent), confidence badges (High priority / Consider / Optional) with reason phrases, running balance shown per suggestion card, insufficient-funds warning when accumulated withdrawals exceed source balance
 - [ ] **Vehicle / Property asset type** — depreciating assets (car, motorcycle, house, land); excluded from liquid coverage and emergency fund calculations; value depreciation model
 - [ ] **Stale asset indicator** — amber badge on cards and net worth summary when any asset value hasn't been updated in 30+ days; prompts user to refresh values
 - [ ] **Net worth trend chart** — line chart showing aggregate net worth over time using stored snapshots; visual growth story
@@ -100,7 +104,7 @@ Checklist of shipped features and planned improvements. Items without a check ar
 
 ## Data & Backup
 
-- [x] JSON backup v4 — statements, transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots
+- [x] JSON backup v4 — statements, transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots, rebalance history
 - [x] Backwards-compatible restore — v1/v2/v3 backups load cleanly
 - [x] Merge restore — deduplicates by ID; backup wins on same-day snapshots
 - [x] CSV export — filtered transaction list
@@ -116,6 +120,7 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] AI Insights — period-aware; excludes Transfer/Bank Charges from spending analysis; 4-bullet structured output
 - [x] AI Budget Suggestions — based on 3-month average spending; editable before applying
 - [x] AI Windfall Allocation — full financial context (income, assets, goals, emergency fund gap); reward slice; THR-aware
+- [x] AI Rebalance Advisor — priority-ordered suggestions, confidence levels, running balance per step, savings safety check post-rebalance; auto-saved to vault; exportable as PDF
 - [x] User-provided DeepSeek API key stored in vault
 - [x] Server-side `DEEPSEEK_API_KEY` env var override
 - [ ] **Switch AI provider** — allow user to choose DeepSeek / OpenAI / Claude via settings

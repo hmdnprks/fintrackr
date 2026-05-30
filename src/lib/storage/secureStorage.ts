@@ -20,6 +20,7 @@ export type VaultData = {
   netWorthSnapshots: { date: string; value: number }[]
   assetSnapshots: { assetId: string; date: string; value: number }[]
   settings: Record<string, string> // e.g. chat API keys
+  rebalanceHistory: any[]          // last 5 RebalanceSavedEntry objects
 }
 
 const defaultVaultData: VaultData = {
@@ -32,6 +33,7 @@ const defaultVaultData: VaultData = {
   netWorthSnapshots: [],
   assetSnapshots: [],
   settings: {},
+  rebalanceHistory: [],
 }
 
 // ============================

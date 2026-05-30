@@ -478,8 +478,16 @@ export type RebalanceResult = {
   overallHealth: 'poor' | 'fair' | 'good' | 'excellent'
   summary: string
   executionNote: string      // e.g. "Run in order shown — each uses the remaining balance after the previous step"
+  safetyCheck: string        // AI assessment of whether remaining liquid savings is adequate post-rebalance
   suggestions: RebalanceSuggestion[]
   disclaimer: string
+}
+
+export type RebalanceSavedEntry = {
+  id: string
+  savedAt: string   // ISO timestamp
+  riskPreference: 'conservative' | 'moderate' | 'aggressive'
+  result: RebalanceResult
 }
 
 export type RebalanceContext = {
@@ -524,6 +532,7 @@ Additional rules:
   - "low": optional enhancement, personal preference matters more than financial logic
 - confidenceReason: one short phrase (e.g. "emergency fund gap is urgent", "market timing uncertain", "already adequate")
 - executionNote: explain if suggestions are sequential (run in order, each uses balance after previous) or alternatives (pick one or more independently)
+- safetyCheck: after all move suggestions are applied, compute the remaining liquid savings (savings accounts minus total moved out). Express how many months of avg monthly expenses that covers. Use one of three verdicts: "safe" (≥6 months), "caution" (3–5 months), or "warning" (<3 months). Include actual numbers, e.g. "After rebalancing, remaining liquid savings will be Rp 45.000.000 — covering ~4,5 months of expenses. This is in the caution zone; consider keeping more in savings before investing."
 
 Format all IDR amounts using Indonesian dots (Rp 50.000.000 not Rp 50,000,000).
 Round amounts to nearest 5.000.000 IDR.
@@ -533,6 +542,7 @@ Respond with ONLY valid JSON, no markdown:
   "overallHealth": "poor|fair|good|excellent",
   "summary": "2-3 sentence overall assessment of the current allocation",
   "executionNote": "explain if sequential or alternatives, and what the net effect is if all are run",
+  "safetyCheck": "verdict (safe/caution/warning) with remaining liquid amount and months covered after all moves",
   "suggestions": [
     {
       "priority": 1,
@@ -590,6 +600,7 @@ export async function generateRebalancingSuggestions(
       reason:           fixIDRFormat(s.reason           || ''),
       confidenceReason: fixIDRFormat(s.confidenceReason || ''),
     })),
+    safetyCheck:   fixIDRFormat(parsed.safetyCheck   || ''),
     disclaimer:    fixIDRFormat(parsed.disclaimer    || ''),
   }
 }
