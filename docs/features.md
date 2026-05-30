@@ -42,6 +42,8 @@ Five-tab layout with shared year/month filter:
 - Summary cards — total income, expense, net with month-over-month delta badges (↑/↓ % vs last month); net card turns red when negative
 - Income vs Expense — CSS progress bars showing income, expense, and net with savings rate badge (e.g. "Saved 25%")
 - Monthly trend line chart — respects the active year filter; IDR-abbreviated Y-axis, smooth curves, green/red dataset colors, filled area; 12-month sliding window with ← → navigation; guards for single or zero data points
+- **Spending Forecast** — projects next month's income, expenses, and net using 3-month rolling average; excludes Transfer, Loan, Bank Charges; confidence badge (high/medium/low) based on coefficient of variation
+- **Year-over-Year comparison** — adapts to active filter: specific month selected → same month vs same month last year; year selected → year totals vs prior year (same months only, for fair partial-year comparison); all time → most recent complete year vs the one before; % delta badges on income/expenses/net; top-5 expense categories with dual progress bars
 - **Daily spending calendar** — heat map grid (Mon–Sun) when a specific month is selected; cells colored white→amber→red by daily spend; shows abbreviated amount per day; income dot, today indicator, click to expand full transaction list for that day
 - Month comparison section — per-category breakdown vs prior month; expense categories only; sorted by biggest % change; dual bars (prev/current); amber highlight for increases ≥30%
 

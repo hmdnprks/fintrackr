@@ -8,7 +8,7 @@ Built with [Next.js](https://nextjs.org) (App Router), React 19, TypeScript, Tai
 
 - **PDF Import** — Parse Mandiri bank statements; drop multiple PDFs at once for batch import with live progress list
 - **Categorization** — 15 categories; 50+ Indonesian default rules (incl. Loan: KKB/KPR/Angsuran, ATM withdrawal → Transfer) + persisted learned rules + AI-powered deduplication; confidence scores (colored dot per badge); wrong-category flag triggers auto-learning; every manual override saved to learned rules; apply-to-similar inline prompt with per-row exclusion; bulk search categorize; merchant label aliases for cryptic descriptions
-- **Dashboard tabs** — Overview (charts, calendar, month comparison) · Insights (AI, health score, 50/30/20, savings trend, investment rate) · Budget (limits, goals, category breakdown, fixed commitments) · Transactions (search, filter, sort, recategorize) · Assets
+- **Dashboard tabs** — Overview (charts, spending forecast, year-over-year comparison, calendar, month comparison) · Insights (AI, health score, 50/30/20, savings trend, investment rate) · Budget (limits, goals, category breakdown, fixed commitments) · Transactions (search, filter, sort, recategorize) · Assets
 - **Financial metrics** — 50/30/20 spending breakdown, savings rate trend, investment rate, fixed monthly commitments — all computed from your real transaction data
 - **Daily calendar** — Heat map calendar showing spending intensity per day; click any day to see its transactions
 - **Manual transactions** — Add expenses/income manually without a PDF

@@ -47,8 +47,8 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] Monthly trend line chart — year-filtered, 12-month sliding window with ← → navigation
 - [x] Month comparison — per-category breakdown vs prior month; dual bars; amber highlight ≥30% increase
 - [x] Daily spending calendar — heat map grid; click any day to see transactions with inline recategorization
-- [ ] Spending forecast — project next month's income/expense based on recurring patterns
-- [ ] Year-over-year comparison (not just month-over-month)
+- [x] **Spending forecast** — projects next month income, expenses, and net using 3-month rolling average; excludes Transfer/Loan/Bank Charges; confidence badge (high/medium/low) based on variance; placed in Overview tab
+- [x] **Year-over-year comparison** — adapts to active filter: month selected → same month vs last year; year selected → year totals vs prior year (same months only); all time → most recent year vs previous; % delta badges on income/expenses/net; top-5 category dual-bar breakdown
 
 ---
 
