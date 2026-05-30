@@ -31,7 +31,7 @@ export default function SavingsRateTrendSection({ data }: Props) {
       <div className="flex items-start justify-between mb-1">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Savings Rate</h2>
-          <p className="text-xs text-gray-400 mt-0.5">% of income kept after real spending (transfers excluded)</p>
+          <p className="text-xs text-gray-400 mt-0.5">% of income kept after categorized spending — Transfer excluded (see note below)</p>
         </div>
         <div className="text-right shrink-0 ml-4">
           <p className={`text-2xl font-bold ${avg >= IDEAL ? 'text-green-600' : avg >= 10 ? 'text-amber-500' : 'text-red-500'}`}>
@@ -118,6 +118,24 @@ export default function SavingsRateTrendSection({ data }: Props) {
           ? `Savings rate of ${avg}% is below the 20% target. Review your wants spending to find room to save more.`
           : `Savings rate of ${avg}% is critically low. Your spending is consuming most of your income — review your budget urgently.`}
       </p>
+
+      {/* Transfer exclusion note */}
+      <div className="mt-4 bg-gray-50 rounded-xl px-4 py-3 text-xs text-gray-500 leading-relaxed space-y-1">
+        <p className="font-medium text-gray-600">Why transfers are excluded</p>
+        <p>
+          The Transfer category mixes three things with very different meanings:
+          credit card payments (spending already counted when you used the card),
+          e-wallet top-ups (GoPay, OVO — will be spent, not saved), and
+          transfers to savings or investment accounts (actual savings).
+        </p>
+        <p>
+          Including all of them would double-count credit card spending and make
+          your rate look lower than reality. Excluding all of them means investment
+          transfers (e.g. to Bibit) are invisible here. This rate reflects your
+          spending discipline on categorized purchases — use the <strong>Assets tab</strong> to
+          track your true accumulated savings and investments.
+        </p>
+      </div>
     </div>
   )
 }
