@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import { useMemo, useState, useRef, useEffect } from 'react'
+import { useMemo, useState, useRef, useEffect, Fragment } from 'react'
 import RecurringSuggestionPanel from './RecurringSuggestionPanel'
 import { formatIDR } from '@/lib/formatter'
 import { normalizeDetail } from '@/lib/insights/recurring'
@@ -108,8 +108,20 @@ export default function TransactionSection({
   const [page, setPage]                   = useState(1)
   const editingRef = useRef<HTMLSelectElement>(null)
 
-  type SimilarPrompt = { indexes: number[]; category: string; label: string }
+  type SimilarPrompt = {
+    editedIdx: number
+    indexes: number[]
+    category: string
+    step: 'prompt' | 'success'
+  }
   const [similarPrompt, setSimilarPrompt] = useState<SimilarPrompt | null>(null)
+
+  function applyAllSimilar() {
+    if (!similarPrompt) return
+    onCategorizeGroup(similarPrompt.indexes, similarPrompt.category)
+    setSimilarPrompt(p => p ? { ...p, step: 'success' } : null)
+    setTimeout(() => setSimilarPrompt(null), 2000)
+  }
 
   const isFiltered = search || filterCategory !== 'all' || filterType !== 'all'
 
@@ -226,32 +238,6 @@ export default function TransactionSection({
         formatIDR={formatIDR}
         onCategorizeGroup={onCategorizeGroup}
       />
-
-      {/* Apply-to-all-similar prompt */}
-      {similarPrompt && (
-        <div className="flex items-center justify-between gap-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl px-4 py-3">
-          <p className="text-sm text-blue-700 dark:text-blue-300">
-            <span className="font-semibold">{similarPrompt.indexes.length} other transaction{similarPrompt.indexes.length !== 1 ? 's' : ''}</span> match this merchant pattern. Apply <span className="font-semibold">{similarPrompt.category}</span> to all?
-          </p>
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => {
-                onCategorizeGroup(similarPrompt.indexes, similarPrompt.category)
-                setSimilarPrompt(null)
-              }}
-              className="text-xs font-semibold px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
-            >
-              Apply to all
-            </button>
-            <button
-              onClick={() => setSimilarPrompt(null)}
-              className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
-            >
-              Dismiss
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Filter bar */}
       <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm px-4 py-3 space-y-3">
@@ -380,15 +366,15 @@ export default function TransactionSection({
                   const isCredit        = tx.type === 'credit'
                   const colorClass      = CATEGORY_COLORS[tx.category] ?? CATEGORY_COLORS['Uncategorized']
                   const isEditing       = editingOriginalIndex === tx._idx
+                  const showInlinePrompt = similarPrompt?.editedIdx === tx._idx
 
-                  // Fix 6 — show year when spanning multiple years
                   const dateFormat: Intl.DateTimeFormatOptions = showYear
                     ? { day: '2-digit', month: 'short', year: '2-digit' }
                     : { day: '2-digit', month: 'short' }
 
                   return (
+                    <Fragment key={tx._idx}>
                     <tr
-                      key={tx._idx}
                       className={`transition hover:bg-gray-50 dark:hover:bg-gray-800 ${isUncategorized ? 'border-l-2 border-l-amber-400' : ''}`}
                       onClick={() => setEditingOriginalIndex(null)}
                     >
@@ -407,7 +393,6 @@ export default function TransactionSection({
                             defaultValue={tx.category ?? 'Uncategorized'}
                             onChange={(e) => {
                               const newCat = e.target.value
-                              // Find other transactions with the same normalized merchant pattern
                               const key = normalizeDetail(tx.detail)
                               const similarIdxs = key
                                 ? transactions
@@ -416,11 +401,10 @@ export default function TransactionSection({
                                 : []
                               onRecategorize(tx._idx, newCat)
                               setEditingOriginalIndex(null)
-                              if (similarIdxs.length > 0) {
-                                setSimilarPrompt({ indexes: similarIdxs, category: newCat, label: newCat })
-                              } else {
-                                setSimilarPrompt(null)
-                              }
+                              setSimilarPrompt(similarIdxs.length > 0
+                                ? { editedIdx: tx._idx, indexes: similarIdxs, category: newCat, step: 'prompt' }
+                                : null
+                              )
                             }}
                             onBlur={() => setEditingOriginalIndex(null)}
                             className="text-xs border border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
@@ -469,13 +453,82 @@ export default function TransactionSection({
                         )}
                       </td>
 
-                      {/* Fix 7 — debit amounts colored red */}
+                      {/* Amount */}
                       <td className="px-5 py-3 text-right whitespace-nowrap">
                         <span className={`font-medium tabular-nums ${isCredit ? 'text-green-600' : 'text-red-500'}`}>
                           {isCredit ? '+' : '−'}{formatIDR(tx.amount)}
                         </span>
                       </td>
                     </tr>
+
+                    {/* Inline similar-transactions prompt anchored to this row */}
+                    {showInlinePrompt && similarPrompt && (
+                      <tr className="bg-blue-50 dark:bg-blue-900/10">
+                        <td colSpan={4} className="px-5 py-3">
+                          {similarPrompt.step === 'success' ? (
+                            <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400 font-medium">
+                              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              Applied <span className="font-bold">{similarPrompt.category}</span> to {similarPrompt.indexes.length} transaction{similarPrompt.indexes.length !== 1 ? 's' : ''}
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <p className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                                {similarPrompt.indexes.length} other transaction{similarPrompt.indexes.length !== 1 ? 's' : ''} match this merchant — apply <span className="font-bold">{similarPrompt.category}</span> to all?
+                              </p>
+
+                              {/* Mini list of similar transactions */}
+                              <div className="rounded-xl border border-blue-100 dark:border-blue-800 overflow-hidden divide-y divide-blue-50 dark:divide-blue-900">
+                                {similarPrompt.indexes
+                                  .map(idx => transactions.find((t: any) => t._idx === idx))
+                                  .filter(Boolean)
+                                  .sort((a: any, b: any) => {
+                                    const da = a.fullDate instanceof Date ? a.fullDate : new Date(a.transactionDate)
+                                    const db = b.fullDate instanceof Date ? b.fullDate : new Date(b.transactionDate)
+                                    return db.getTime() - da.getTime()
+                                  })
+                                  .slice(0, 5)
+                                  .map((t: any, i: number) => {
+                                    const d = t.fullDate instanceof Date ? t.fullDate : new Date(t.transactionDate)
+                                    const dateStr = isNaN(d.getTime()) ? t.transactionDate : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' })
+                                    return (
+                                      <div key={i} className="flex items-center gap-3 px-3 py-1.5 text-xs">
+                                        <span className="text-blue-400 dark:text-blue-500 tabular-nums shrink-0 w-20">{dateStr}</span>
+                                        <span className="flex-1 text-blue-700 dark:text-blue-300 truncate">{t.detail}</span>
+                                        <span className={`tabular-nums font-medium shrink-0 ${t.type === 'credit' ? 'text-green-600' : 'text-red-500'}`}>
+                                          {t.type === 'credit' ? '+' : '−'}{formatIDR(t.amount)}
+                                        </span>
+                                      </div>
+                                    )
+                                  })}
+                                {similarPrompt.indexes.length > 5 && (
+                                  <div className="px-3 py-1.5 text-xs text-blue-400 dark:text-blue-500">
+                                    + {similarPrompt.indexes.length - 5} more
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-2 pt-1">
+                                <button
+                                  onClick={applyAllSimilar}
+                                  className="text-xs font-semibold px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                                >
+                                  Apply to all {similarPrompt.indexes.length}
+                                </button>
+                                <button
+                                  onClick={() => setSimilarPrompt(null)}
+                                  className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                >
+                                  Dismiss
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   )
                 })}
               </tbody>
