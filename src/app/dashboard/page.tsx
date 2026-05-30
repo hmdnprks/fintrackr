@@ -296,25 +296,23 @@ export default function Dashboard() {
 
               <SavingsRateTrendSection data={savingsRateTrend} />
 
-              <RecurringExpensesSection
-                items={recurringExpenses}
-                avgMonthlyIncome={avgMonthlyIncome}
-              />
-
               <InvestmentRateSection
                 rate={investmentRate.rate}
                 total={investmentRate.total}
                 items={investmentRate.items}
                 totalIncome={totalIncome}
               />
-
-              <FIRENumberSection savingsRateTrend={savingsRateTrend} />
             </div>
           )}
 
           {/* Budget tab */}
           {activeTab === 'budget' && (
             <div className="space-y-8">
+              <RecurringExpensesSection
+                items={recurringExpenses}
+                avgMonthlyIncome={avgMonthlyIncome}
+              />
+
               <BudgetSection
                 budgets={budgets}
                 spending={currentMonthSpending}
@@ -344,8 +342,11 @@ export default function Dashboard() {
 
           {/* Assets tab */}
           {activeTab === 'assets' && (
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            <AssetsTab statements={statements as any[]} />
+            <div className="space-y-8">
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              <AssetsTab statements={statements as any[]} />
+              <FIRENumberSection savingsRateTrend={savingsRateTrend} />
+            </div>
           )}
 
         </div>
