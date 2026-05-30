@@ -87,6 +87,7 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] Contributable toggle — marks auto-managed funds (BPJS JHT) as non-contributable; excluded from windfall allocation
 - [x] Windfall allocation — AI-powered plan for bonus/THR/freelance; emergency fund + pockets + investments + reward slice; two progress bars per destination; hard clamp prevents over-allocation
 - [x] All icons via @heroicons/react
+- [x] **Asset Reallocation Advisor** — AI CTA in the net worth card to analyse current asset distribution and suggest rebalancing; risk preference selector (Conservative / Moderate / Aggressive); AI considers emergency fund adequacy, excess low-yield savings, investment under-allocation, and Indonesian products (Reksa Dana Pasar Uang, Reksa Dana Saham, Deposito); returns structured suggestions with from/to/amount/reason; net worth card also shows last-updated timestamp
 - [ ] **Vehicle / Property asset type** — depreciating assets (car, motorcycle, house, land); excluded from liquid coverage and emergency fund calculations; value depreciation model
 - [ ] **Stale asset indicator** — amber badge on cards and net worth summary when any asset value hasn't been updated in 30+ days; prompts user to refresh values
 - [ ] **Net worth trend chart** — line chart showing aggregate net worth over time using stored snapshots; visual growth story
