@@ -16,10 +16,14 @@
 
 - **Rule-based** — keyword matching against configurable rules (user rules override system defaults)
 - **50+ Indonesian default rules** covering: Alfamart/Indomaret/Superindo (Groceries), Gojek/Grab/Pertamina/KAI (Transportation), PLN/PDAM/Indihome (Housing), Shopee/Lazada/Blibli (Shopping), Telkomsel/Indosat/XL (Services), Netflix/Spotify/Steam (Entertainment), GoPay/OVO/DANA/ShopeePay (Transfer), Apotek/Halodoc/Klinik (Health), and more
-- **AI-powered** — DeepSeek API categorizes uncategorized transactions with Indonesian-context prompt; three-phase smart pipeline:
-  1. **Learned rules** — builds a map of normalized descriptions from already-categorized transactions; same merchant across different branch codes or reference numbers reuses the known category with zero API calls
-  2. **Deduplication** — groups remaining transactions by normalized description (numbers/punctuation stripped); only unique merchant names are sent to AI — 2,000 transactions with 20 unique merchants become 20 API rows, not 2,000; AI result is applied back to all matching transactions
-  3. **AI fallback** — novel descriptions that passed both prior phases are batch-sent to DeepSeek with exponential backoff on rate limits
+- **AI-powered** — DeepSeek API categorizes uncategorized transactions with Indonesian-context prompt; four-phase smart pipeline:
+  1. **Persisted learned rules** — checks `vault.learnedRules` first (manual overrides + AI corrections from all past sessions); zero API calls for known descriptions
+  2. **Transaction history** — overlays categories from already-categorized transactions in vault; same merchant across different branch codes or reference numbers reuses the known category
+  3. **Deduplication** — groups remaining by normalized description; only unique merchants sent to AI — 2,000 transactions with 20 unique merchants = 20 API rows
+  4. **AI fallback** — novel descriptions batch-sent to DeepSeek with exponential backoff; results persisted to `learnedRules` so future runs skip the API
+- **Confidence scores** — AI returns high/medium/low confidence per result; stored on each transaction; AI-categorized badges show a colored dot (green=high, amber=medium, red=low) with tooltip
+- **Wrong category flag** — flag icon on AI-categorized rows; clicking marks the transaction as incorrect; reassigning a flagged transaction records the correction in `learnedRules` with source `ai-corrected`
+- **Auto-learn from manual overrides** — every inline category change upserts the normalized description → new category into `vault.learnedRules`; no need to re-run AI for the same merchant again
 - Live status text during processing shows each phase; result modal breaks down counts: "X from learned rules · Y via AI"
 - **Manual override** — click any category badge in the transaction table to reassign inline
 - **Recurring batch** — detect repeating uncategorized transactions and assign category to all occurrences at once
@@ -147,7 +151,7 @@ Two goal types displayed as cards in the Budget tab:
 ## Data Export
 
 - **CSV export** — download currently filtered transactions (Date, Description, Amount, Type, Category, Balance)
-- **JSON backup** — full vault export: statements, manual transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots, rebalance history
+- **JSON backup** — full vault export: statements, manual transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots, rebalance history, learned categorization rules
 - Vault credentials excluded (device-specific)
 
 ## Data Backup & Restore

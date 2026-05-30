@@ -29,9 +29,9 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] Manual inline override — click any category badge to reassign
 - [x] Recurring uncategorized pattern panel — bulk-assign categories
 - [x] Categorization result modal shows learned vs AI counts
-- [ ] Confidence score per AI-categorized transaction
-- [ ] User feedback loop — "wrong category" flag that improves future categorization
-- [ ] Learn from manual overrides automatically (add to learned rules without re-running AI)
+- [x] Confidence score per AI-categorized transaction — AI returns high/medium/low confidence per result; stored on each transaction; colored dot on category badge (green/amber/red) with tooltip
+- [x] User feedback loop — "wrong category" flag on AI-categorized rows; flagged + reassigned transactions recorded in learnedRules with source 'ai-corrected'; improves future categorization without re-running AI
+- [x] Learn from manual overrides automatically — every inline category change upserts normalizedDesc → category into vault learnedRules; Phase 1 seeds from learnedRules before scanning transaction history; AI results also persisted to learnedRules; included in backup
 
 ---
 
