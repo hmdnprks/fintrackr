@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Asset, AssetType, getAssets, deleteAsset, getNetWorthSnapshots, NetWorthSnapshot } from '@/lib/assetStorage'
+import { Asset, AssetType, getAssets, deleteAsset, getNetWorthSnapshots, getAssetSnapshots, NetWorthSnapshot, AssetSnapshot } from '@/lib/assetStorage'
 import AssetModal from './AssetModal'
 import WindfallModal from './WindfallModal'
 
@@ -53,7 +53,8 @@ function relativeDate(iso: string) {
 
 export default function AssetsTab({ statements }: Props) {
   const [assets, setAssets] = useState<Asset[]>(() => getAssets())
-  const [snapshots, setSnapshots] = useState<NetWorthSnapshot[]>(() => getNetWorthSnapshots())
+  const [snapshots, setSnapshots]         = useState<NetWorthSnapshot[]>(() => getNetWorthSnapshots())
+  const [assetSnapshots, setAssetSnapshots] = useState<AssetSnapshot[]>(() => getAssetSnapshots())
   const [showModal, setShowModal]         = useState(false)
   const [showWindfall, setShowWindfall]   = useState(false)
   const [editingAsset, setEditingAsset]   = useState<Asset | null>(null)
@@ -62,6 +63,7 @@ export default function AssetsTab({ statements }: Props) {
   function reload() {
     setAssets(getAssets())
     setSnapshots(getNetWorthSnapshots())
+    setAssetSnapshots(getAssetSnapshots())
   }
 
   // Average real monthly expense from the 6 most recent months.
@@ -289,6 +291,7 @@ export default function AssetsTab({ statements }: Props) {
                     asset={asset}
                     meta={meta}
                     avgMonthlyExpense={avgMonthlyExpense}
+                    snapshots={assetSnapshots.filter(s => s.assetId === asset.id)}
                     onEdit={() => { setEditingAsset(asset); setShowModal(true) }}
                     onDelete={() => setConfirmDelete(asset.id)}
                   />
@@ -524,11 +527,25 @@ interface CardProps {
   asset: Asset
   meta: { label: string; color: string; bg: string; Icon: IconComponent }
   avgMonthlyExpense: number
+  snapshots: AssetSnapshot[]
   onEdit: () => void
   onDelete: () => void
 }
 
-function AssetCard({ asset, meta, avgMonthlyExpense, onEdit, onDelete }: CardProps) {
+function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete }: CardProps) {
+  // Find the most recent snapshot ≥25 days old for growth comparison
+  const assetGrowth = useMemo(() => {
+    if (snapshots.length < 2) return null
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - 25)
+    const cutoffStr = cutoff.toISOString().split('T')[0]
+    const older = snapshots.filter(s => s.date <= cutoffStr)
+    if (!older.length) return null
+    const prev = older[older.length - 1]
+    const change = asset.currentValue - prev.value
+    const pct = prev.value > 0 ? (change / prev.value) * 100 : 0
+    return { change, pct, since: prev.date }
+  }, [snapshots, asset.currentValue])
   const pocketProgress = asset.type === 'pocket' && asset.goalTarget
     ? Math.min(100, (asset.currentValue / asset.goalTarget) * 100)
     : null
@@ -575,10 +592,19 @@ function AssetCard({ asset, meta, avgMonthlyExpense, onEdit, onDelete }: CardPro
         </div>
       </div>
 
-      {/* Value */}
-      <p className="text-xl font-bold text-gray-900 mt-3">
-        {formatIDRFull(asset.currentValue)}
-      </p>
+      {/* Value + growth */}
+      <div className="mt-3">
+        <p className="text-xl font-bold text-gray-900">{formatIDRFull(asset.currentValue)}</p>
+        {assetGrowth !== null && (
+          <p className={`text-xs font-medium mt-0.5 ${assetGrowth.change >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+            {assetGrowth.change >= 0 ? '↑' : '↓'} {formatIDR(Math.abs(assetGrowth.change))}
+            {' '}({Math.abs(assetGrowth.pct).toFixed(1)}%)
+            <span className="text-gray-400 font-normal ml-1">
+              since {new Date(assetGrowth.since).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
+          </p>
+        )}
+      </div>
 
       {/* Type-specific detail */}
       <div className="mt-2 space-y-1.5">

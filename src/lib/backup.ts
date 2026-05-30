@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getVaultData, saveVaultData, VaultData } from '@/lib/storage/secureStorage'
 
-const BACKUP_VERSION = 3
+const BACKUP_VERSION = 4
 
 export type BackupData = {
   version: number
@@ -15,6 +15,7 @@ export type BackupData = {
     goals: any[]
     assets: any[]
     netWorthSnapshots: any[]
+    assetSnapshots: any[]
   }
 }
 
@@ -42,6 +43,7 @@ export async function exportBackup(): Promise<BackupData> {
       goals:              vault.goals,
       assets:             vault.assets ?? [],
       netWorthSnapshots:  vault.netWorthSnapshots ?? [],
+      assetSnapshots:     vault.assetSnapshots ?? [],
     },
   }
 }
@@ -88,6 +90,7 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
 
   const assets = backup.data.assets ?? []
   const netWorthSnapshots = backup.data.netWorthSnapshots ?? []
+  const assetSnapshots = backup.data.assetSnapshots ?? []
 
   if (mode === 'replace') {
     await saveVaultData({
@@ -98,6 +101,7 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       goals,
       assets,
       netWorthSnapshots,
+      assetSnapshots,
     })
     return
   }
@@ -140,12 +144,19 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       ...existingAssets,
       ...assets.filter((a) => !existingAssetIds.has(a.id)),
     ],
-    // Merge snapshots by date — backup snapshot wins on same day
+    // Merge net worth snapshots by date — backup wins on same day
     netWorthSnapshots: [
       ...(existingVault.netWorthSnapshots ?? []).filter(
         (s: any) => !netWorthSnapshots.find((b: any) => b.date === s.date)
       ),
       ...netWorthSnapshots,
+    ].sort((a: any, b: any) => a.date.localeCompare(b.date)),
+    // Merge per-asset snapshots by assetId+date — backup wins on same day
+    assetSnapshots: [
+      ...(existingVault.assetSnapshots ?? []).filter(
+        (s: any) => !assetSnapshots.find((b: any) => b.assetId === s.assetId && b.date === s.date)
+      ),
+      ...assetSnapshots,
     ].sort((a: any, b: any) => a.date.localeCompare(b.date)),
   }
 

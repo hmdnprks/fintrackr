@@ -18,6 +18,7 @@ export type VaultData = {
   goals: any[]
   assets: any[]
   netWorthSnapshots: { date: string; value: number }[]
+  assetSnapshots: { assetId: string; date: string; value: number }[]
   settings: Record<string, string> // e.g. chat API keys
 }
 
@@ -29,6 +30,7 @@ const defaultVaultData: VaultData = {
   goals: [],
   assets: [],
   netWorthSnapshots: [],
+  assetSnapshots: [],
   settings: {},
 }
 
