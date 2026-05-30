@@ -23,33 +23,26 @@ export function normalizeDetail(detail: string) {
 //    — this catches cases where two descriptions normalize to the same short key
 //    but are clearly different merchants (e.g. "JPN-APPLE" vs "JPN-NETFLIX")
 export function isSafeSimilarityMatch(a: string, b: string): boolean {
+  // Numeric path — for descriptions dominated by numbers (CC payments, bank references).
+  // A 12+ digit sequence is specific enough to be a card/account identifier.
+  // Use bidirectional raw substring search: if either description's long number
+  // appears anywhere inside the other description, they refer to the same account.
+  // This handles: same CC payment → match, CC vs UBP → no match (different numbers).
+  const longNums = (s: string): string[] => s.match(/\d{12,}/g) ?? []
+  const numsA = longNums(a)
+  const numsB = longNums(b)
+  if (numsA.length > 0 || numsB.length > 0) {
+    return numsA.some(n => b.includes(n)) || numsB.some(n => a.includes(n))
+  }
+
+  // Alpha path — descriptions with a merchant name (no long numerics on either side).
   const keyA = normalizeDetail(a)
   const keyB = normalizeDetail(b)
-
-  // Primary path: descriptions with a meaningful alpha merchant key (e.g. VAPAPPLECOMB)
-  if (keyA === keyB && keyA.length >= MIN_KEY_LENGTH) {
-    const tokens = (s: string) =>
-      s.toUpperCase().replace(/[^A-Z\s]/g, ' ').split(/\s+/).filter(t => t.length >= 3)
-    const setA = new Set(tokens(a))
-    return tokens(b).some(t => setA.has(t))
-  }
-
-  // Fallback: numeric-heavy descriptions (CC payments, bank transfer references)
-  // where stripping digits leaves nothing useful.
-  // Only apply when BOTH sides lack a meaningful alpha merchant key —
-  // if either side has a readable merchant name (e.g. UBPFFFFFF ≥ 5 chars)
-  // but the other doesn't, they are clearly different transaction types.
-  if (keyA.length < MIN_KEY_LENGTH && keyB.length < MIN_KEY_LENGTH) {
-    const numTokens = (s: string): Set<string> => new Set(s.match(/\d{10,}/g) ?? [])
-    const numsA = numTokens(a)
-    if (numsA.size > 0) {
-      for (const n of numTokens(b)) {
-        if (numsA.has(n)) return true
-      }
-    }
-  }
-
-  return false
+  if (keyA !== keyB || keyA.length < MIN_KEY_LENGTH) return false
+  const tokens = (s: string) =>
+    s.toUpperCase().replace(/[^A-Z\s]/g, ' ').split(/\s+/).filter(t => t.length >= 3)
+  const setA = new Set(tokens(a))
+  return tokens(b).some(t => setA.has(t))
 }
 
 // Minimum chars a normalized key must have to be a safe grouping key.
