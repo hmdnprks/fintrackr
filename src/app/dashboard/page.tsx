@@ -31,6 +31,8 @@ import RecurringExpensesSection from '@/components/dashboard/RecurringExpensesSe
 import InvestmentRateSection from '@/components/dashboard/InvestmentRateSection'
 import FinancialHealthScore from '@/components/dashboard/FinancialHealthScore'
 import FIRENumberSection from '@/components/dashboard/FIRENumberSection'
+import SpendingForecastSection from '@/components/dashboard/SpendingForecastSection'
+import YearOverYearSection from '@/components/dashboard/YearOverYearSection'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 import { useVault } from '@/context/VaultContext'
 
@@ -302,6 +304,15 @@ export default function Dashboard() {
               />
 
               <MonthlyTrendSection data={trendChartData} />
+
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              <SpendingForecastSection statements={statements as any[]} />
+
+              <YearOverYearSection
+                statements={statements}
+                selectedYear={selectedYear}
+                selectedMonth={selectedMonth}
+              />
 
               {comparison && (
                 <MonthComparisonSection comparison={comparison} />
