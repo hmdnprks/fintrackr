@@ -22,7 +22,7 @@ Built with [Next.js](https://nextjs.org) (App Router), React 19, TypeScript, Tai
 - **Asset Reallocation Advisor** — AI restructures your existing portfolio (not new money); risk preference selector; priority-ordered suggestions with confidence levels, running balance, and savings safety check post-rebalance; result auto-saved to vault; exportable as PDF
 - **Data backup** — JSON export/import (v4); includes statements, assets, net worth snapshots, per-asset history, rebalance history; v1–v3 backups remain compatible; merge or replace modes
 - **CSV export** — Download filtered transactions as CSV
-- **Secure vault** — AES-GCM encryption, PBKDF2 key derivation, confirm-on-create, all data local
+- **Secure vault** — AES-GCM encryption, PBKDF2 key derivation, confirm-on-create, all data local; biometric unlock (Face ID / Touch ID / fingerprint) via WebAuthn on supported devices
 - **Privacy-first** — No server, no database, no tracking; AI features are explicitly opt-in
 - **Mobile-friendly** — Bottom navigation bar, scrollable tabs, stacked filter rows, swipeable savings rate chart, responsive modals and cards
 - **Dark mode** — OS-preference detection, localStorage persistence, full coverage across all components; toggle in nav bar

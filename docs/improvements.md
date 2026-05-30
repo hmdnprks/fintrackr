@@ -165,7 +165,7 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] Password show/hide toggle and strength indicator
 - [x] Change master password (re-encrypts all data)
 - [x] Session restored from sessionStorage on page refresh
-- [ ] Biometric unlock (Face ID / Touch ID via WebAuthn) on supported devices
+- [x] Biometric unlock (Face ID / Touch ID via WebAuthn) on supported devices — platform authenticator via `navigator.credentials`; credential + vault password stored in IndexedDB; enable/disable in Settings; auto-revoked on master password change; graceful fallback to password on unsupported devices
 - [ ] Vault inactivity timeout — auto-lock after X minutes
 
 ---

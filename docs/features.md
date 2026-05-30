@@ -190,6 +190,7 @@ Available in Settings:
 - Session restored from sessionStorage on page refresh
 - Change master password in Settings (re-encrypts all data)
 - VaultGate blocks all pages until vault is unlocked
+- **Biometric unlock** — WebAuthn platform authenticator (Face ID / Touch ID / fingerprint); enrol in Settings with one tap using the active session password (no re-entry required); biometric button appears on the lock screen above the password form; auto-revoked when master password is changed; graceful fallback to password on unsupported devices or user cancellation; credential and vault password stored in IndexedDB under `fintrackr_biometric`
 
 ## Privacy
 
