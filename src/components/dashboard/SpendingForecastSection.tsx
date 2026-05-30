@@ -65,9 +65,30 @@ export default function SpendingForecastSection({ statements }: Props) {
   if (!forecast) return null
 
   const CONF = {
-    high:   { label: 'High confidence',   color: 'text-green-600 dark:text-green-400',  bg: 'bg-green-50 dark:bg-green-900/20'  },
-    medium: { label: 'Medium confidence', color: 'text-amber-600 dark:text-amber-400',  bg: 'bg-amber-50 dark:bg-amber-900/20'  },
-    low:    { label: 'Low confidence',    color: 'text-gray-500 dark:text-gray-400',    bg: 'bg-gray-50 dark:bg-gray-800'        },
+    high: {
+      label: 'High confidence',
+      color: 'text-green-600 dark:text-green-400',
+      bg:    'bg-green-50 dark:bg-green-900/20',
+      icon:  '✓',
+      explanation: 'Your income and spending have been very consistent over the last 3 months (less than 15% variation). This projection is a reliable estimate.',
+      hint: 'Good time to set a monthly budget based on these numbers — your patterns are stable enough to plan around.',
+    },
+    medium: {
+      label: 'Medium confidence',
+      color: 'text-amber-600 dark:text-amber-400',
+      bg:    'bg-amber-50 dark:bg-amber-900/20',
+      icon:  '~',
+      explanation: 'Your spending varied 15–35% across the last 3 months — at least one month was noticeably different from the others.',
+      hint: 'Check which category drove the spike. If it was a one-time purchase (travel, annual subscription), the forecast may actually be more accurate than it looks.',
+    },
+    low: {
+      label: 'Low confidence',
+      color: 'text-red-500 dark:text-red-400',
+      bg:    'bg-red-50 dark:bg-red-900/20',
+      icon:  '!',
+      explanation: 'Your spending varied more than 35% month to month — the pattern is too irregular for a reliable projection.',
+      hint: 'Possible causes: irregular income (freelance, bonus), large one-time expenses, or many Uncategorized transactions skewing the numbers. Recategorize your transactions and check again — a cleaner dataset will improve accuracy.',
+    },
   }
   const conf = CONF[forecast.confidence as keyof typeof CONF]
 
@@ -103,9 +124,21 @@ export default function SpendingForecastSection({ statements }: Props) {
         </div>
       </div>
 
+      {/* Confidence explanation */}
+      <div className={`mt-4 rounded-xl px-4 py-3 ${conf.bg}`}>
+        <p className={`text-xs font-semibold ${conf.color} mb-1`}>
+          {conf.icon} {conf.label} — what this means
+        </p>
+        <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-1.5">
+          {conf.explanation}
+        </p>
+        <p className={`text-xs leading-relaxed font-medium ${conf.color}`}>
+          → {conf.hint}
+        </p>
+      </div>
+
       <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 leading-relaxed">
         Simple average of the last {forecast.months} months. Excludes Transfer, Loan, and Bank Charges.
-        {forecast.confidence === 'low' && ' High variance detected — actual figures may differ significantly.'}
       </p>
     </div>
   )
