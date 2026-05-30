@@ -25,13 +25,28 @@ export function normalizeDetail(detail: string) {
 export function isSafeSimilarityMatch(a: string, b: string): boolean {
   const keyA = normalizeDetail(a)
   const keyB = normalizeDetail(b)
-  if (keyA !== keyB) return false
-  if (keyA.length < MIN_KEY_LENGTH) return false
-  // Check that both descriptions share at least one meaningful alpha token
-  const tokens = (s: string) =>
-    s.toUpperCase().replace(/[^A-Z\s]/g, ' ').split(/\s+/).filter(t => t.length >= 3)
-  const setA = new Set(tokens(a))
-  return tokens(b).some(t => setA.has(t))
+
+  // Primary path: descriptions with a meaningful alpha merchant key (e.g. VAPAPPLECOMB)
+  if (keyA === keyB && keyA.length >= MIN_KEY_LENGTH) {
+    const tokens = (s: string) =>
+      s.toUpperCase().replace(/[^A-Z\s]/g, ' ').split(/\s+/).filter(t => t.length >= 3)
+    const setA = new Set(tokens(a))
+    return tokens(b).some(t => setA.has(t))
+  }
+
+  // Fallback: numeric-heavy descriptions (CC payments, bank transfer references)
+  // where stripping digits leaves nothing useful.
+  // Match by shared long numeric sequence (≥10 digits = card/account number).
+  // e.g. -52432560005447812 52432560005447812= → token 52432560005447812 (17 digits)
+  const numTokens = (s: string): Set<string> => new Set(s.match(/\d{10,}/g) ?? [])
+  const numsA = numTokens(a)
+  if (numsA.size > 0) {
+    for (const n of numTokens(b)) {
+      if (numsA.has(n)) return true
+    }
+  }
+
+  return false
 }
 
 // Minimum chars a normalized key must have to be a safe grouping key.
@@ -55,8 +70,11 @@ export function detectRecurringUncategorized(
     const tx = transactions[i]
     if (tx.category !== 'Uncategorized') continue
 
-    const key = normalizeDetail(tx.detail)
-    if (!key || key.length < MIN_KEY_LENGTH) continue
+    const alphaKey = normalizeDetail(tx.detail)
+    // Use alpha key when long enough; otherwise fall back to first 10+ digit numeric sequence
+    const longNums = tx.detail.match(/\d{10,}/g) ?? []
+    const key = alphaKey.length >= MIN_KEY_LENGTH ? alphaKey : (longNums[0] ?? '')
+    if (!key) continue
 
     if (!map[key]) {
       map[key] = {
