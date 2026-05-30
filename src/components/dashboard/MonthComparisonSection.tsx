@@ -10,9 +10,9 @@ const BIG_CHANGE = 30
 export default function MonthComparisonSection({ comparison }: Props) {
   if (!comparison.hasPrevData) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm px-6 py-5">
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">Month Comparison</h2>
-        <p className="text-sm text-gray-400">
+      <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm px-6 py-5">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">Month Comparison</h2>
+        <p className="text-sm text-gray-400 dark:text-gray-500">
           No data for {comparison.prevMonthLabel} — import two consecutive months to see comparisons.
         </p>
       </div>
@@ -29,15 +29,15 @@ export default function MonthComparisonSection({ comparison }: Props) {
   const maxAmount = Math.max(...expenseChanges.map((c) => Math.max(c.current, c.prev)), 1)
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+    <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
+      <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Month Comparison</h2>
-          <p className="text-sm text-gray-400 mt-0.5">Spending vs {prevMonthLabel}</p>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Month Comparison</h2>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">Spending vs {prevMonthLabel}</p>
         </div>
-        <div className="flex items-center gap-4 text-xs text-gray-400">
+        <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-1.5 rounded-full bg-gray-200" />
+            <div className="w-3 h-1.5 rounded-full bg-gray-200 dark:bg-gray-600" />
             <span>{prevMonthLabel}</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -47,7 +47,7 @@ export default function MonthComparisonSection({ comparison }: Props) {
         </div>
       </div>
 
-      <div className="divide-y divide-gray-50">
+      <div className="divide-y divide-gray-50 dark:divide-gray-800">
         {expenseChanges.map((item) => {
           const isIncrease = item.delta > 0
           const isNew      = item.prev === 0
@@ -60,26 +60,26 @@ export default function MonthComparisonSection({ comparison }: Props) {
             <div key={item.category} className="px-6 py-3.5 space-y-1.5">
               {/* Row header */}
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">{item.category}</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{item.category}</span>
                 <div className="flex items-center gap-3">
                   {/* Amounts */}
                   {!isNew && !isGone && (
-                    <span className="text-xs text-gray-400 tabular-nums">
+                    <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums">
                       {formatIDR(item.prev)}
-                      <span className="mx-1.5 text-gray-300">→</span>
+                      <span className="mx-1.5 text-gray-300 dark:text-gray-600">→</span>
                       <span className={`font-medium ${isIncrease ? 'text-gray-700' : 'text-gray-700'}`}>
                         {formatIDR(item.current)}
                       </span>
                     </span>
                   )}
                   {isNew && (
-                    <span className="text-xs text-gray-400 tabular-nums">
+                    <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums">
                       —<span className="mx-1.5 text-gray-300">→</span>
                       <span className="font-medium text-gray-700">{formatIDR(item.current)}</span>
                     </span>
                   )}
                   {isGone && (
-                    <span className="text-xs text-gray-400 tabular-nums">
+                    <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums">
                       {formatIDR(item.prev)}<span className="mx-1.5 text-gray-300">→</span>—
                     </span>
                   )}
@@ -88,7 +88,7 @@ export default function MonthComparisonSection({ comparison }: Props) {
                   {isNew ? (
                     <span className="text-xs font-medium bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full w-14 text-center">New</span>
                   ) : isGone ? (
-                    <span className="text-xs font-medium bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full w-14 text-center">Gone</span>
+                    <span className="text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 px-2 py-0.5 rounded-full w-14 text-center">Gone</span>
                   ) : item.pct !== null ? (
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full w-14 text-center ${
                       isBig && isIncrease ? 'bg-amber-50 text-amber-600'
@@ -103,11 +103,11 @@ export default function MonthComparisonSection({ comparison }: Props) {
 
               {/* Dual bar */}
               <div className="space-y-1">
-                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                   <div className="h-full bg-gray-300 rounded-full transition-all duration-500"
                     style={{ width: prevWidth }} />
                 </div>
-                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
                       isBig && isIncrease ? 'bg-amber-400' : 'bg-blue-400'

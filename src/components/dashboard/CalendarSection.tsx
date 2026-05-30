@@ -108,25 +108,25 @@ export default function CalendarSection({ allTransactions, selectedMonth, onReca
   const selectedData = selectedDay ? byDay[selectedDay] : null
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
 
       {/* Header */}
-      <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+      <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Daily Spending</h2>
-          <p className="text-sm text-gray-400 mt-0.5">{monthLabel}</p>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Daily Spending</h2>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">{monthLabel}</p>
         </div>
         <div className="flex items-center gap-6 text-right">
           {avgPerActive > 0 && (
             <div>
-              <p className="text-xs text-gray-400">Avg per active day</p>
-              <p className="text-sm font-semibold text-gray-800">{formatIDR(avgPerActive)}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">Avg per active day</p>
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{formatIDR(avgPerActive)}</p>
             </div>
           )}
           {busiestDay && (
             <div>
-              <p className="text-xs text-gray-400">Busiest day</p>
-              <p className="text-sm font-semibold text-gray-800">
+              <p className="text-xs text-gray-400 dark:text-gray-500">Busiest day</p>
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                 {new Date(year, month - 1, busiestDay).toLocaleDateString('en-US', {
                   month: 'short', day: 'numeric',
                 })}
@@ -182,15 +182,15 @@ export default function CalendarSection({ allTransactions, selectedMonth, onReca
                     : 'border-transparent hover:border-gray-300 hover:scale-105'}
                   ${spending === 0
                     ? isWeekend
-                      ? 'bg-gray-100 hover:bg-gray-150'
-                      : 'bg-gray-50 hover:bg-gray-100'
+                      ? 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-150 dark:hover:bg-gray-700'
+                      : 'bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700'
                     : 'hover:opacity-90'}
                 `}
                 style={{ backgroundColor: color || undefined }}
               >
                 {/* Day number */}
                 <span className={`text-xs font-semibold leading-none ${
-                  dark ? 'text-white' : isWeekend ? 'text-gray-500' : 'text-gray-700'
+                  dark ? 'text-white' : isWeekend ? 'text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-300'
                 }`}>
                   {day}
                 </span>
@@ -198,7 +198,7 @@ export default function CalendarSection({ allTransactions, selectedMonth, onReca
                 {/* Spending amount */}
                 {spending > 0 && (
                   <span className={`text-xs leading-none font-medium ${
-                    dark ? 'text-white/80' : 'text-gray-600'
+                    dark ? 'text-white/80' : 'text-gray-600 dark:text-gray-400'
                   }`}>
                     {abbreviate(spending)}
                   </span>
@@ -220,7 +220,7 @@ export default function CalendarSection({ allTransactions, selectedMonth, onReca
 
         {/* Legend */}
         <div className="flex items-center justify-end gap-2 mt-4">
-          <span className="text-xs text-gray-400">Low</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">Low</span>
           {[0.15, 0.35, 0.55, 0.75, 1.0].map((t) => (
             <div
               key={t}
@@ -228,22 +228,22 @@ export default function CalendarSection({ allTransactions, selectedMonth, onReca
               style={{ backgroundColor: heatColor(t * maxSpending, maxSpending) }}
             />
           ))}
-          <span className="text-xs text-gray-400">High</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">High</span>
           <div className="w-3" />
           <div className="w-3 h-3 rounded-full bg-green-400 border border-white shadow-sm" />
-          <span className="text-xs text-gray-400">Income</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">Income</span>
           <div className="w-3" />
           <div className="w-2 h-2 rounded-full bg-blue-500" />
-          <span className="text-xs text-gray-400">Today</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">Today</span>
         </div>
       </div>
 
       {/* Selected day detail panel */}
       {selectedDay && selectedData && (
-        <div className="border-t border-gray-100 bg-gray-50 px-6 py-4 space-y-3">
+        <div className="border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 px-6 py-4 space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                 {new Date(year, month - 1, selectedDay).toLocaleDateString('en-US', {
                   weekday: 'long', month: 'long', day: 'numeric',
                 })}
@@ -259,7 +259,7 @@ export default function CalendarSection({ allTransactions, selectedMonth, onReca
                     +{formatIDR(selectedData.income)} received
                   </span>
                 )}
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-gray-400 dark:text-gray-500">
                   {selectedData.txs.length} transaction{selectedData.txs.length !== 1 ? 's' : ''} — click a category to change it
                 </span>
               </div>
@@ -274,7 +274,7 @@ export default function CalendarSection({ allTransactions, selectedMonth, onReca
             </button>
           </div>
 
-          <div className="bg-white rounded-xl overflow-hidden border border-gray-100">
+          <div className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700">
             {[...selectedData.txs]
               .sort((a, b) => b.tx.amount - a.tx.amount)
               .map(({ tx, originalIdx }) => {
@@ -283,7 +283,7 @@ export default function CalendarSection({ allTransactions, selectedMonth, onReca
                 return (
                   <div
                     key={originalIdx}
-                    className="flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-0"
+                    className="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-gray-800 last:border-0"
                     onClick={() => setEditingIdx(null)}
                   >
                     <span className={`text-sm font-semibold tabular-nums shrink-0 ${
@@ -292,7 +292,7 @@ export default function CalendarSection({ allTransactions, selectedMonth, onReca
                       {tx.type === 'credit' ? '+' : '−'}{formatIDR(tx.amount)}
                     </span>
 
-                    <span className="flex-1 text-sm text-gray-700 truncate">{tx.detail}</span>
+                    <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 truncate">{tx.detail}</span>
 
                     {/* Editable category */}
                     <div onClick={(e) => e.stopPropagation()}>
