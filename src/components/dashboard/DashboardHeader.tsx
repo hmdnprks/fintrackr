@@ -59,30 +59,33 @@ export default function DashboardHeader({
         )}
       </div>
 
-      {/* Row 2 — filters (left) + actions (right), stacks on mobile */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Row 2 — on mobile: selects fill width in a 2-col grid, actions sit below.
+               on desktop: one row with selects left and actions pushed right. */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
 
-        {/* Period selects */}
-        <select
-          value={selectedYear}
-          onChange={(e) => onYearChange(e.target.value)}
-          className="text-sm border border-gray-200 rounded-xl px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="all">All Years</option>
-          {years.map((y) => <option key={y} value={y}>{y}</option>)}
-        </select>
+        {/* Period selects — 2-col grid on mobile, inline on desktop */}
+        <div className="grid grid-cols-2 sm:flex gap-2">
+          <select
+            value={selectedYear}
+            onChange={(e) => onYearChange(e.target.value)}
+            className="w-full sm:w-auto text-sm border border-gray-200 rounded-xl px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All Years</option>
+            {years.map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
 
-        <select
-          value={selectedMonth}
-          onChange={(e) => onMonthChange(e.target.value)}
-          className="text-sm border border-gray-200 rounded-xl px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="all">All Months</option>
-          {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-        </select>
+          <select
+            value={selectedMonth}
+            onChange={(e) => onMonthChange(e.target.value)}
+            className="w-full sm:w-auto text-sm border border-gray-200 rounded-xl px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All Months</option>
+            {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+          </select>
+        </div>
 
-        {/* Actions pushed right */}
-        <div className="flex items-center gap-2 ml-auto">
+        {/* Actions — own row on mobile, pushed right on desktop */}
+        <div className="flex items-center gap-2 sm:ml-auto">
           {onExportCSV && (
             <button
               onClick={onExportCSV}
