@@ -190,8 +190,14 @@ Available in Settings:
 ## Mobile
 
 - Responsive layout across all pages — `px-4 py-6` on mobile, `sm:px-6 sm:py-10` on desktop
-- Navigation bar: sticky top, compact height, responsive link spacing
-- Dashboard header: action button labels hidden on mobile (icon + tooltip only); tab navigation fills full width on mobile
+- **Navigation**: hamburger menu on mobile (Bars3Icon / XMarkIcon); full-width dropdown with 44px+ touch targets and active route highlight; auto-closes on navigation or Escape key; desktop shows inline links
+- **Dashboard tabs**: horizontally scrollable on mobile — 5 tabs scroll with `overflow-x-auto`, `shrink-0` + `whitespace-nowrap` prevents label wrapping
+- **Dashboard header filters**: year and month selects in a 2-column grid on mobile; action buttons (Export, Delete, Clear) on a separate row below
+- **Transaction tab**: title and AI Categorize button stack vertically on mobile; category filter goes full width; type toggle and Clear sit on a row below
+- **Budget tab**: header stacks on mobile; each budget row shows amount below the category name instead of competing with action buttons on the same line
+- **Savings rate chart**: horizontally scrollable with `min-w-[20px]` per bar; auto-scrolls to latest months on load; right-edge fade gradient and swipe hint label; Y-axis labels fixed outside scroll area
+- **Fixed monthly commitments**: each item is a card — description full width on top (`break-words`), category badge + months + amount on the row below
+- **Assets tab**: net worth breakdown bars stack label above bar; asset modal field grids stack on mobile; windfall allocation cards stack destination name above amount
 - Transaction table: horizontally scrollable on mobile with `min-w-[560px]` so columns never collapse
 - Calendar day cells: `h-10` on mobile, `h-14` on desktop
 - All modals: constrained width with `p-4` backdrop padding to prevent viewport overflow

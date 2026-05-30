@@ -21,7 +21,7 @@ Built with [Next.js](https://nextjs.org) (App Router), React 19, TypeScript, Tai
 - **CSV export** — Download filtered transactions as CSV
 - **Secure vault** — AES-GCM encryption, PBKDF2 key derivation, confirm-on-create, all data local
 - **Privacy-first** — No server, no database, no tracking; AI features are explicitly opt-in
-- **Mobile-friendly** — Responsive layout, horizontally scrollable tables, compact calendar cells
+- **Mobile-friendly** — Hamburger nav, scrollable tabs, stacked filter rows, swipeable savings rate chart, responsive modals and cards
 
 See [`docs/features.md`](docs/features.md) for the full feature reference.
 
