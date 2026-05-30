@@ -25,6 +25,8 @@ import { getBudgets } from '@/lib/budgetStorage'
 import { downloadCSV } from '@/lib/csvExport'
 import MonthComparisonSection from '@/components/dashboard/MonthComparisonSection'
 import CalendarSection from '@/components/dashboard/CalendarSection'
+import SavingsRateTrendSection from '@/components/dashboard/SavingsRateTrendSection'
+import SpendingBreakdownSection from '@/components/dashboard/SpendingBreakdownSection'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 import { useVault } from '@/context/VaultContext'
 
@@ -76,6 +78,8 @@ export default function Dashboard() {
     trendChartData,
     recurringSuggestions,
     allTransactions,
+    savingsRateTrend,
+    spendingBreakdown,
   } = useDashboardData(statements, selectedYear, selectedMonth)
 
   const {
@@ -247,6 +251,10 @@ export default function Dashboard() {
                 income={totalIncome}
                 expense={totalExpense}
               />
+
+              <SpendingBreakdownSection data={spendingBreakdown} />
+
+              <SavingsRateTrendSection data={savingsRateTrend} />
 
               <MonthlyTrendSection data={trendChartData} />
 

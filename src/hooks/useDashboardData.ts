@@ -111,11 +111,66 @@ export function useDashboardData(statements: any[], selectedYear: string, select
     return detectRecurringUncategorized(allTransactions, 2)
   }, [allTransactions])
 
+  /**
+   * Savings Rate Trend — per month, year-filtered (ignores month filter)
+   * Excludes Transfer so credit card payments don't inflate expenses.
+   */
+  const savingsRateTrend = useMemo(() => {
+    const EXCLUDE = new Set(['Transfer'])
+    const map: Record<string, { label: string; income: number; expense: number }> = {}
+
+    yearFilteredStatements.forEach((s) => {
+      if (!s.monthKey) return
+      if (!map[s.monthKey]) map[s.monthKey] = { label: s.monthLabel, income: 0, expense: 0 }
+      s.transactions?.forEach((t: any) => {
+        if (t.type === 'credit') map[s.monthKey].income += t.amount || 0
+        if (t.type === 'debit' && !EXCLUDE.has(t.category || categorizeTransaction(t.detail, t.type)))
+          map[s.monthKey].expense += t.amount || 0
+      })
+    })
+
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, { label, income, expense }]) => ({
+        label,
+        income,
+        expense,
+        rate: income > 0 ? Math.round(((income - expense) / income) * 100) : 0,
+      }))
+  }, [yearFilteredStatements])
+
+  /**
+   * 50/30/20 Breakdown — uses filtered transactions (respects month selector)
+   * Needs: essential fixed categories
+   * Wants: discretionary + uncategorized (conservative assumption)
+   * Surplus: income not spent on needs or wants (available for savings/investments)
+   */
+  const spendingBreakdown = useMemo(() => {
+    const NEEDS = new Set(['Housing', 'Health & Medical', 'Groceries', 'Transportation', 'Insurance', 'Services', 'Education'])
+    const WANTS = new Set(['Food & Dining', 'Shopping', 'Entertainment', 'Bank Charges', 'Uncategorized'])
+    const EXCLUDE = new Set(['Transfer', 'Income'])
+
+    let income = 0, needs = 0, wants = 0
+
+    for (const tx of allTransactions) {
+      const cat = tx.category || categorizeTransaction(tx.detail, tx.type)
+      if (tx.type === 'credit') { income += tx.amount || 0; continue }
+      if (EXCLUDE.has(cat)) continue
+      if (NEEDS.has(cat)) needs += tx.amount || 0
+      else if (WANTS.has(cat)) wants += tx.amount || 0
+    }
+
+    const surplus = Math.max(0, income - needs - wants)
+    return { income, needs, wants, surplus }
+  }, [allTransactions])
+
   return {
     totalIncome,
     totalExpense,
     trendChartData,
     allTransactions,
     recurringSuggestions,
+    savingsRateTrend,
+    spendingBreakdown,
   }
 }
