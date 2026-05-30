@@ -8,8 +8,8 @@ Built with [Next.js](https://nextjs.org) (App Router), React 19, TypeScript, Tai
 
 - **PDF Import** — Parse Mandiri bank statements; drop multiple PDFs at once for batch import with live progress list
 - **Categorization** — 50+ Indonesian default rules + learned-rules from history + AI-powered deduplication (DeepSeek) + manual inline override; 2,000 transactions with 20 unique merchants send only 20 rows to AI
-- **Dashboard tabs** — Overview (charts, financial metrics, calendar, AI insights, month comparison) · Budget (limits, goals) · Transactions (search, filter, sort, recategorize)
-- **Financial metrics** — 50/30/20 spending breakdown, savings rate trend, fixed monthly commitments, investment rate — all computed from your real transaction data
+- **Dashboard tabs** — Overview (charts, calendar, month comparison) · Insights (AI, health score, 50/30/20, savings trend, investment rate) · Budget (limits, goals, category breakdown, fixed commitments) · Transactions (search, filter, sort, recategorize) · Assets
+- **Financial metrics** — 50/30/20 spending breakdown, savings rate trend, investment rate, fixed monthly commitments — all computed from your real transaction data
 - **Daily calendar** — Heat map calendar showing spending intensity per day; click any day to see its transactions
 - **Manual transactions** — Add expenses/income manually without a PDF
 - **Budget tracking** — Monthly spend limits per category with progress bars and warnings
@@ -17,6 +17,8 @@ Built with [Next.js](https://nextjs.org) (App Router), React 19, TypeScript, Tai
 - **Month comparison** — Delta badges on summary cards + per-category breakdown vs prior month
 - **Assets profile** — Track savings, gold, investments, and goal pockets; net worth growth tracking; per-asset value history (up to 365 days); emergency fund + liquid coverage ratio side-by-side; contributable flag excludes auto-managed funds (BPJS JHT) from suggestions
 - **Windfall allocation** — AI-powered plan for bonus/THR/freelance windfalls; allocates across emergency fund, goal pockets, investments, and a reward slice based on your real financial data
+- **Financial Health Score** — composite 0–100 (grades A+–D) across savings rate, emergency fund, investment rate, and budget adherence; per-dimension bars with motivating message
+- **FIRE Number** — 25× annual expenses target; progress bar vs net worth; projected FIRE age and year from birth year (saved to vault); collapsible FIRE explainer
 - **Asset Reallocation Advisor** — AI restructures your existing portfolio (not new money); risk preference selector; priority-ordered suggestions with confidence levels, running balance, and savings safety check post-rebalance; result auto-saved to vault; exportable as PDF
 - **Data backup** — JSON export/import (v4); includes statements, assets, net worth snapshots, per-asset history, rebalance history; v1–v3 backups remain compatible; merge or replace modes
 - **CSV export** — Download filtered transactions as CSV

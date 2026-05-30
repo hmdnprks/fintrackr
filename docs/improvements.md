@@ -54,8 +54,8 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] Savings Rate Trend — monthly bar chart; horizontally scrollable (min 20px/bar, auto-scrolls to latest); 20% target line; best month label
 - [x] Fixed Monthly Commitments — auto-detects recurring expenses across ≥2 months; card layout with full description visible
 - [x] Investment Rate — keyword-based detection of investment platform transfers (Bibit, Stockbit, Ajaib, etc.)
-- [ ] **Financial Health Score** — composite 0–100 (or A/B/C/D) based on savings rate, emergency fund tier, investment rate, budget adherence; single motivating number
-- [ ] **FIRE Number** — 25× annual expenses; shows current net worth vs target and estimated years away at current savings rate
+- [x] **Financial Health Score** — composite 0–100 score (grades A+/A/B/C/D) across savings rate (30 pts), emergency fund (30 pts), investment rate (20 pts), budget adherence (20 pts); per-dimension progress bars; motivating message per grade; placed in Insights tab
+- [x] **FIRE Number** — 25× annual expenses; progress bar (net worth vs target); stats grid (annual expenses, savings, years to FIRE); birth year input saved to vault → shows projected FIRE age and target year; collapsible FIRE explainer (4% rule, Indonesian context, FIRE variants); placed in Assets tab
 - [ ] Cash Flow Forecast — based on avg income and spending, project next month's expected balance change
 - [ ] Income stability score — variance in monthly income; high variance → flag need for larger emergency fund
 - [ ] Burn rate — average daily spending; useful for travel planning and cash management

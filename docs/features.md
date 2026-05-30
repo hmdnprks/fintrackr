@@ -27,19 +27,21 @@
 
 ## Dashboard
 
-Three-tab layout with shared year/month filter:
+Five-tab layout with shared year/month filter:
 
 ### Overview tab
 - Summary cards — total income, expense, net with month-over-month delta badges (↑/↓ % vs last month); net card turns red when negative
 - Income vs Expense — CSS progress bars showing income, expense, and net with savings rate badge (e.g. "Saved 25%")
-- **50/30/20 Spending Breakdown** — classifies debit transactions into Needs (Housing, Groceries, Transport, Health, Insurance, Services, Education), Wants (Food & Dining, Shopping, Entertainment, Bank Charges, Uncategorized), and Surplus (income not spent); each row shows actual %, IDR amount, a bar with the ideal threshold marked, and a status message; warns when a large portion is uncategorized; Indonesian context note included
-- **Savings Rate Trend** — monthly bar chart for the selected year; bars colored green (≥20%), amber (10–19%), red (<10%); dashed reference line at 20% target; hover tooltip with exact rate; avg rate headline + insight line with best month (name + year + %); Transfer excluded with an explanation note covering the credit card double-count problem and what to use for true savings tracking
-- **Fixed Monthly Commitments** — auto-detects expenses recurring in ≥2 distinct months across Housing, Services, Entertainment, Insurance, Bank Charges, Health & Medical, Transportation; shows monthly average per item, total fixed cost, and % of avg income; insight line rates the fixed cost burden; hidden when no recurring patterns found
-- **Investment Rate** — keyword-based detection of investment platform transfers (Bibit, Stockbit, Ajaib, Bareksa, IPOT, Indopremier, Mandiri Sekuritas, Pluang) in the filtered period; progress bar with 15% minimum and 20% great markers; lists detected transactions; note explains keyword detection and how to add custom keywords in Settings
-- Monthly trend line chart — respects the active year filter (shows only the selected year's months); IDR-abbreviated Y-axis (1.5M/500K), smooth curves, green/red dataset colors, filled area; when data spans more than 12 months, shows a 12-month sliding window with ← → navigation (steps 6 months per click) and a range label (e.g. "Jan '25 – Dec '25"); guards for single or zero data points
+- Monthly trend line chart — respects the active year filter; IDR-abbreviated Y-axis, smooth curves, green/red dataset colors, filled area; 12-month sliding window with ← → navigation; guards for single or zero data points
 - **Daily spending calendar** — heat map grid (Mon–Sun) when a specific month is selected; cells colored white→amber→red by daily spend; shows abbreviated amount per day; income dot, today indicator, click to expand full transaction list for that day
-- AI Insights — persistent card with Generate/Regenerate/Clear; sends pre-aggregated category summary + period label (not raw rows) to DeepSeek; structured 4-bullet output: top spending, concern, positive, action
 - Month comparison section — per-category breakdown vs prior month; expense categories only; sorted by biggest % change; dual bars (prev/current); amber highlight for increases ≥30%
+
+### Insights tab
+- **AI Insights** — persistent card with Generate/Regenerate/Clear; sends pre-aggregated category summary + period label (not raw rows) to DeepSeek; structured 4-bullet output: top spending, concern, positive, action
+- **Financial Health Score** — composite 0–100 score (grades A+/A/B/C/D) across 4 weighted dimensions: Savings Rate (30 pts), Emergency Fund (30 pts), Investment Rate (20 pts), Budget Adherence (20 pts); per-dimension progress bars coloured green/amber/red; motivating message per grade; reads emergency fund from Assets tab
+- **50/30/20 Spending Breakdown** — classifies debit transactions into Needs, Wants, and Surplus; each row shows actual %, IDR amount, a bar with the ideal threshold marked, and a status message; warns when a large portion is uncategorized
+- **Savings Rate Trend** — monthly bar chart for the selected year; bars colored green (≥20%), amber (10–19%), red (<10%); dashed reference line at 20% target; avg rate headline + insight line with best month
+- **Investment Rate** — keyword-based detection of investment platform transfers (Bibit, Stockbit, Ajaib, Bareksa, IPOT, Indopremier, Mandiri Sekuritas, Pluang) in the filtered period; progress bar with 15% min and 20% great markers; lists detected transactions
 
 ### Budget tab
 - Monthly budget tracker — set spending limits per category, progress bars with green/amber/red thresholds (80% warning, 100% over)
@@ -48,6 +50,7 @@ Three-tab layout with shared year/month filter:
 - Budgets always compare against current calendar month, regardless of dashboard filter
 - **Financial goals** — savings goals and spending habit goals (see Goals section)
 - Category breakdown — donut chart + ranked list showing color dot, name, proportional bar, amount, percentage; Expenses/Income toggle
+- **Fixed Monthly Commitments** — auto-detects expenses recurring in ≥2 distinct months across Housing, Services, Entertainment, Insurance, Bank Charges, Health & Medical, Transportation; shows monthly average per item, total fixed cost, and % of avg income; hidden when no recurring patterns found
 
 ### Transactions tab
 - Full transaction list with category color badges, green credit / red debit amounts
@@ -91,6 +94,7 @@ Three-tab layout with shared year/month filter:
   - **Vault persistence** — every analysis auto-saved (last 5 entries); "Load" banner on next open restores the previous result without an API call; included in JSON backup export and restore
   - **PDF export** — print-ready HTML page opened in a new tab (no library dependency); includes health badge, summary, execution note, all suggestion cards, safety check, and disclaimer
   - Net worth card shows last-updated label (amber when >30 days)
+- **FIRE Number** — Financial independence target (25× annual expenses, 4% rule); progress bar showing current net worth vs target; stats grid (annual expenses, annual savings, years to FIRE); birth year input saved to vault → shows projected FIRE age and target calendar year; collapsible "What is FIRE?" explainer covering the 4% rule, Trinity Study, Indonesian investment context, and FIRE variants (Lean/Fat/Barista)
 - Assets included in JSON backup (v4); v1/v2/v3 backups remain compatible; rebalance history included from v4
 
 ## Manual Transactions
