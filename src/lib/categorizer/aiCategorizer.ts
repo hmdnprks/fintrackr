@@ -518,16 +518,19 @@ Indonesian investment products to consider (by risk level):
 - Aggressive: Reksa Dana Saham (10-15% p.a. long-term, volatile), Saham langsung
 
 Rebalancing principles:
-1. EMERGENCY FUND: Must be 3-6 months of expenses in liquid savings — address this first if insufficient.
-2. OPERATIONAL CASH: CRITICAL. Always leave at least 1.5 - 2.0 months of average monthly expenses in the primary daily savings account. Do NOT suggest moving so much that the user is left with no "running money" for this month's bills.
-3. EXCESS LIQUIDITY: Only suggest moving money that is beyond the Emergency Fund + Operational Cash buffer.
-4. Risk allocation by preference:
-   - Conservative: 60-70% savings/deposito, 20-30% reksa dana pasar uang/obligasi, 5-10% saham
-   - Moderate: 40% savings, 30% reksa dana campuran/obligasi, 20-25% saham, 5% gold
-   - Aggressive: 20-30% savings (emergency only), 50-60% saham/reksa dana saham, 10% gold
-5. Gold should generally be 5-15% of portfolio — more is over-concentrated
-6. Savings paying low interest (tabungan biasa <1%) should migrate to higher-yield liquid instruments (like RDPU) only IF the operational cash buffer is satisfied.
-7. Only suggest moving money between existing assets or into named products — do NOT invent asset names.
+1. DEFINITIONS: 
+   - "Daily account": The primary savings account NOT marked as emergency fund.
+   - "Emergency Fund (EF)": Accounts marked with 'isEmergencyFund: true'.
+   - "Liquid Savings": The sum of Daily account + EF accounts.
+2. STEP 1 — FIX EMERGENCY FUND: If the total EF accounts cover < 6 months of expenses, Move #1 MUST be a transfer from the Daily account into the EF account to reach the 6-month target.
+3. STEP 2 — PROTECT DAILY BUFFER: Always leave at least 2 months of average monthly expenses in the Daily account for immediate bills. This is your "Operational Buffer".
+4. STEP 3 — INVEST EXCESS: Only suggest moving money from the Daily account into investments (RDPU, RDPT, Stocks, Gold) if the Daily account balance is GREATER than the 2-month Operational Buffer AFTER the EF top-up.
+5. ASSET HIERARCHY (by risk):
+   - Conservative: RDPU (4-6% p.a.), Deposito (locked).
+   - Moderate: RDPT (6-9% p.a.).
+   - Aggressive: Reksa Dana Saham (10-15% p.a.).
+6. Gold should be 5-15% of total portfolio.
+7. Only suggest moving money between existing assets or into named products — do NOT invent asset names..
 
 Additional rules:
 - Order suggestions by priority: 1 = most urgent/impactful (e.g. fix emergency fund gap first), highest number = nice-to-have enhancement
@@ -538,7 +541,11 @@ Additional rules:
   - "low": optional enhancement, personal preference matters more than financial logic
 - confidenceReason: one short phrase (e.g. "emergency fund gap is urgent", "market timing uncertain", "already adequate")
 - executionNote: explain if suggestions are sequential (run in order, each uses balance after previous) or alternatives (pick one or more independently)
-- safetyCheck: after all move suggestions are applied, compute the remaining liquid savings (sum of all "savings" type items minus total moved out). This must precisely match the mathematical remainder from your suggestions. Express how many months of avg monthly expenses that covers. Use one of three verdicts: "safe" (≥6 months), "caution" (3–5 months), or "warning" (<3 months).
+- safetyCheck: after all move suggestions are applied, calculate the remaining balance in the DAILY account only (exclude the EF account). This is the "Remaining Operational Cash". 
+   - verdict: "safe" (≥2 months coverage), "caution" (1-2 months), "warning" (<1 month). 
+   - remainingLiquidAmount: must be EXACTLY the Daily account balance after all moves.
+   - monthsCovered: remainingLiquidAmount divided by avg monthly expense.
+   - This must be mathematically perfect. Do NOT hallucinate original balances.
 
 Format all IDR amounts using Indonesian dots (Rp 50.000.000 not Rp 50,000,000).
 Use sensible rounding (e.g. nearest 1.000.000 or exact numbers if specific targets like Emergency Fund are needed) but ensure absolute mathematical consistency between individual suggestions and the final safety check.

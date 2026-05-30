@@ -431,9 +431,9 @@ export default function RebalanceModal({
               {(() => {
                 const verdict = result.safetyCheck.verdict
                 const SAFETY_META = {
-                  safe:    { bg: 'bg-green-50 dark:bg-green-900/20',  border: 'border-green-200 dark:border-green-800',  icon: 'text-green-500',  title: 'text-green-700 dark:text-green-300',  body: 'text-green-600 dark:text-green-400',  label: 'Savings Safety: OK' },
-                  caution: { bg: 'bg-amber-50 dark:bg-amber-900/20',  border: 'border-amber-200 dark:border-amber-800',  icon: 'text-amber-500',  title: 'text-amber-700 dark:text-amber-300',  body: 'text-amber-600 dark:text-amber-400',  label: 'Savings Safety: Caution' },
-                  warning: { bg: 'bg-red-50 dark:bg-red-900/20',      border: 'border-red-200 dark:border-red-800',      icon: 'text-red-500',    title: 'text-red-700 dark:text-red-300',      body: 'text-red-600 dark:text-red-400',      label: 'Savings Safety: Warning' },
+                  safe:    { bg: 'bg-green-50 dark:bg-green-900/20',  border: 'border-green-200 dark:border-green-800',  icon: 'text-green-500',  title: 'text-green-700 dark:text-green-300',  body: 'text-green-600 dark:text-green-400',  label: 'Daily Cash Safety: OK' },
+                  caution: { bg: 'bg-amber-50 dark:bg-amber-900/20',  border: 'border-amber-200 dark:border-amber-800',  icon: 'text-amber-500',  title: 'text-amber-700 dark:text-amber-300',  body: 'text-amber-600 dark:text-amber-400',  label: 'Daily Cash Safety: Caution' },
+                  warning: { bg: 'bg-red-50 dark:bg-red-900/20',      border: 'border-red-200 dark:border-red-800',      icon: 'text-red-500',    title: 'text-red-700 dark:text-red-300',      body: 'text-red-600 dark:text-red-400',      label: 'Daily Cash Safety: Critical' },
                 }
                 const m = SAFETY_META[verdict]
                 const Icon = verdict === 'safe' ? ShieldCheckIcon : ExclamationTriangleIcon
@@ -443,7 +443,7 @@ export default function RebalanceModal({
                     <div>
                       <p className={`text-xs font-semibold ${m.title} mb-0.5`}>{m.label}</p>
                       <p className={`text-xs ${m.body} leading-relaxed`}>
-                        After rebalancing, remaining liquid savings will be <span className="font-bold">Rp {result.safetyCheck.remainingLiquidAmount.toLocaleString('id-ID')}</span> — covering <span className="font-bold">~{result.safetyCheck.monthsCovered.toFixed(1)} months</span> of expenses. {result.safetyCheck.analysis}
+                        After rebalancing, remaining daily operational cash will be <span className="font-bold">Rp {result.safetyCheck.remainingLiquidAmount.toLocaleString('id-ID')}</span> — covering <span className="font-bold">~{result.safetyCheck.monthsCovered.toFixed(1)} months</span> of expenses. {result.safetyCheck.analysis}
                       </p>
                     </div>
                   </div>
