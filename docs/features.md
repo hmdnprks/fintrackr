@@ -42,14 +42,17 @@ Five-tab layout with shared year/month filter:
 - Summary cards — total income, expense, net with month-over-month delta badges (↑/↓ % vs last month); net card turns red when negative
 - Income vs Expense — CSS progress bars showing income, expense, and net with savings rate badge (e.g. "Saved 25%")
 - Monthly trend line chart — respects the active year filter; IDR-abbreviated Y-axis, smooth curves, green/red dataset colors, filled area; 12-month sliding window with ← → navigation; guards for single or zero data points
-- **Spending Forecast** — projects next month's income, expenses, and net using 3-month rolling average; excludes Transfer, Loan, Bank Charges; confidence badge (high/medium/low) based on coefficient of variation
-- **Year-over-Year comparison** — adapts to active filter: specific month selected → same month vs same month last year; year selected → year totals vs prior year (same months only, for fair partial-year comparison); all time → most recent complete year vs the one before; % delta badges on income/expenses/net; top-5 expense categories with dual progress bars
+- **Spending Forecast / Cash Flow** — projects next month's income, expenses, and net (= expected balance change) using 3-month rolling average; excludes Transfer, Loan, Bank Charges; confidence badge (high/medium/low) with detailed explanation and actionable hint per tier
+- **Year-over-Year comparison** — adapts to active filter: specific month selected → same month vs same month last year; year selected → year totals vs prior year (same months only); all time → most recent complete year vs the one before; % delta badges on income/expenses/net; top-5 expense categories with dual progress bars
+- **Burn rate** — avg daily expense shown at the bottom of the Income vs Expense card; co-located with expense data; zero extra card space needed
+- **Monthly Trend chart** — now includes a dashed indigo savings rate (%) line on a secondary right Y-axis (0–100%); tooltip correctly shows % for the savings rate dataset
 - **Daily spending calendar** — heat map grid (Mon–Sun) when a specific month is selected; cells colored white→amber→red by daily spend; shows abbreviated amount per day; income dot, today indicator, click to expand full transaction list for that day
 - Month comparison section — per-category breakdown vs prior month; expense categories only; sorted by biggest % change; dual bars (prev/current); amber highlight for increases ≥30%
 
 ### Insights tab
 - **AI Insights** — persistent card with Generate/Regenerate/Clear; sends pre-aggregated category summary + period label (not raw rows) to DeepSeek; structured 4-bullet output: top spending, concern, positive, action
 - **Financial Health Score** — composite 0–100 score (grades A+/A/B/C/D) across 4 weighted dimensions: Savings Rate (30 pts), Emergency Fund (30 pts), Investment Rate (20 pts), Budget Adherence (20 pts); per-dimension progress bars coloured green/amber/red; motivating message per grade; reads emergency fund from Assets tab
+- **Income Stability Score** — coefficient of variation on last 6 months of income; three tiers (Stable/Variable/Highly Variable) with income range bar; emergency fund implication per tier (3–6mo / 6–9mo / 9+mo recommended)
 - **50/30/20 Spending Breakdown** — classifies debit transactions into Needs, Wants, and Surplus; each row shows actual %, IDR amount, a bar with the ideal threshold marked, and a status message; warns when a large portion is uncategorized
 - **Savings Rate Trend** — monthly bar chart for the selected year; bars colored green (≥20%), amber (10–19%), red (<10%); dashed reference line at 20% target; avg rate headline + insight line with best month
 - **Investment Rate** — keyword-based detection of investment platform transfers (Bibit, Stockbit, Ajaib, Bareksa, IPOT, Indopremier, Mandiri Sekuritas, Pluang) in the filtered period; progress bar with 15% min and 20% great markers; lists detected transactions

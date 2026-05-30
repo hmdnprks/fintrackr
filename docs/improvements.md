@@ -61,10 +61,10 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] Investment Rate — keyword-based detection of investment platform transfers (Bibit, Stockbit, Ajaib, etc.)
 - [x] **Financial Health Score** — composite 0–100 score (grades A+/A/B/C/D) across savings rate (30 pts), emergency fund (30 pts), investment rate (20 pts), budget adherence (20 pts); per-dimension progress bars; motivating message per grade; placed in Insights tab
 - [x] **FIRE Number** — 25× annual expenses; progress bar (net worth vs target); stats grid (annual expenses, savings, years to FIRE); birth year input saved to vault → shows projected FIRE age and target year; collapsible FIRE explainer (4% rule, Indonesian context, FIRE variants); placed in Assets tab
-- [ ] Cash Flow Forecast — based on avg income and spending, project next month's expected balance change
-- [ ] Income stability score — variance in monthly income; high variance → flag need for larger emergency fund
-- [ ] Burn rate — average daily spending; useful for travel planning and cash management
-- [ ] Savings rate trend shown as a chart line on the monthly trend chart (overlay)
+- [x] Cash Flow Forecast — covered by Spending Forecast (net projection = expected balance change)
+- [x] **Income stability score** — CV of last 6 months income; three tiers Stable/Variable/Highly Variable; shows income range (low/avg/high), variance %; emergency fund implication per tier (3–6mo / 6–9mo / 9+mo); placed in Insights tab between Health Score and 50/30/20
+- [x] **Burn rate** — avg daily expense = totalExpense / (months × 30); shown as compact row at bottom of Income vs Expense card in Overview; co-located with expense data, zero extra card space
+- [x] **Savings rate trend overlay** — dashed indigo line on right Y-axis (0–100%) added to Monthly Trend chart; secondary axis with purple % labels; tooltip correctly formats as % not IDR
 
 ---
 
