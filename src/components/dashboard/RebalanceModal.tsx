@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { Asset } from '@/lib/assetStorage'
 import { RebalanceResult, RebalanceContext, RebalanceSavedEntry } from '@/lib/categorizer/aiCategorizer'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
-import { ArrowRightIcon, CheckCircleIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon, MinusCircleIcon, ShieldCheckIcon, ExclamationTriangleIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
+import { ArrowRightIcon, CheckCircleIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon, MinusCircleIcon, ShieldCheckIcon, ExclamationTriangleIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline'
 
 type RiskPreference = 'conservative' | 'moderate' | 'aggressive'
 
@@ -459,20 +459,14 @@ export default function RebalanceModal({
               <p className="text-xs text-gray-400 dark:text-gray-500 italic leading-relaxed">{result.disclaimer}</p>
 
               {/* Footer actions */}
-              <div className="space-y-2.5">
-                {/* Save indicator + Export PDF */}
-                <div className="flex items-center justify-between">
-                  <span className={`text-xs transition-opacity duration-500 ${justSaved ? 'text-green-600 dark:text-green-400 opacity-100' : 'opacity-0'}`}>
-                    ✓ Saved to vault
-                  </span>
-                  <button
-                    onClick={exportToPDF}
-                    className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition"
-                  >
-                    <ArrowDownTrayIcon className="w-3.5 h-3.5" />
-                    Export PDF
-                  </button>
-                </div>
+              <div className="space-y-3">
+                <button
+                  onClick={exportToPDF}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 text-sm font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition"
+                >
+                  <DocumentArrowDownIcon className="w-5 h-5" />
+                  Export Analysis to PDF
+                </button>
 
                 <div className="flex gap-3">
                   <button
@@ -487,6 +481,12 @@ export default function RebalanceModal({
                   >
                     Done
                   </button>
+                </div>
+
+                <div className="text-center">
+                  <span className={`text-xs transition-opacity duration-500 ${justSaved ? 'text-green-600 dark:text-green-400 opacity-100' : 'opacity-0'}`}>
+                    ✓ Analysis saved to your secure vault
+                  </span>
                 </div>
               </div>
             </div>
