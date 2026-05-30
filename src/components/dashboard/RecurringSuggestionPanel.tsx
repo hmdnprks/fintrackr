@@ -7,7 +7,7 @@ const CATEGORIES = [
   'Income', 'Food & Dining', 'Groceries', 'Shopping',
   'Services', 'Transportation', 'Health & Medical',
   'Entertainment', 'Education', 'Housing', 'Insurance',
-  'Bank Charges', 'Transfer',
+  'Bank Charges', 'Transfer', 'Loan',
 ]
 
 interface Props {
@@ -15,6 +15,15 @@ interface Props {
   transactions: any[]
   formatIDR: (n: number) => string
   onCategorizeGroup: (indexes: number[], category: string) => void
+}
+
+function merchantLabel(detail: string): string {
+  const parts = detail.split('/')
+  if (parts.length >= 3) {
+    const mid = parts[2].trim()
+    if (mid && !/^\d+$/.test(mid) && mid.length > 1) return mid
+  }
+  return detail.length > 45 ? detail.slice(0, 45) + '…' : detail
 }
 
 function formatDate(tx: any): string {
@@ -79,7 +88,7 @@ export default function RecurringSuggestionPanel({ suggestions, transactions, fo
                   title="Click to see individual transactions"
                 >
                   <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{item.sampleDetail}</p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{merchantLabel(item.sampleDetail)}</p>
                     <svg
                       className={`w-3.5 h-3.5 text-gray-400 shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                       fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}

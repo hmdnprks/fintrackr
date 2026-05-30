@@ -9,7 +9,7 @@ import type { BudgetSuggestion } from '@/lib/categorizer/aiCategorizer'
 const BUDGET_CATEGORIES = [
   'Food & Dining', 'Groceries', 'Shopping', 'Services',
   'Transportation', 'Health & Medical', 'Entertainment',
-  'Education', 'Housing', 'Insurance', 'Bank Charges',
+  'Education', 'Housing', 'Insurance', 'Bank Charges', 'Loan',
 ]
 
 const SKIP_FOR_AVERAGES = new Set(['Transfer', 'Bank Charges', 'Uncategorized', 'Income'])

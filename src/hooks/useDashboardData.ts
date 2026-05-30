@@ -116,7 +116,7 @@ export function useDashboardData(statements: any[], selectedYear: string, select
    * Excludes Transfer so credit card payments don't inflate expenses.
    */
   const savingsRateTrend = useMemo(() => {
-    const EXCLUDE = new Set(['Transfer'])
+    const EXCLUDE = new Set(['Transfer', 'Loan'])
     const map: Record<string, { label: string; income: number; expense: number }> = {}
 
     yearFilteredStatements.forEach((s) => {
@@ -146,7 +146,7 @@ export function useDashboardData(statements: any[], selectedYear: string, select
    * Surplus: income not spent on needs or wants (available for savings/investments)
    */
   const spendingBreakdown = useMemo(() => {
-    const NEEDS = new Set(['Housing', 'Health & Medical', 'Groceries', 'Transportation', 'Insurance', 'Services', 'Education'])
+    const NEEDS = new Set(['Housing', 'Health & Medical', 'Groceries', 'Transportation', 'Insurance', 'Services', 'Education', 'Loan'])
     const WANTS = new Set(['Food & Dining', 'Shopping', 'Entertainment', 'Bank Charges', 'Uncategorized'])
     const EXCLUDE = new Set(['Transfer', 'Income'])
 
@@ -172,7 +172,7 @@ export function useDashboardData(statements: any[], selectedYear: string, select
   const recurringExpenses = useMemo(() => {
     const RECURRING_CATS = new Set([
       'Housing', 'Services', 'Entertainment', 'Insurance',
-      'Bank Charges', 'Health & Medical', 'Transportation',
+      'Bank Charges', 'Health & Medical', 'Transportation', 'Loan',
     ])
 
     const groups: Record<string, {

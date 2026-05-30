@@ -12,7 +12,7 @@ import {
 const SPEND_CATEGORIES = [
   'Food & Dining', 'Groceries', 'Shopping', 'Services',
   'Transportation', 'Health & Medical', 'Entertainment',
-  'Education', 'Housing', 'Insurance', 'Bank Charges',
+  'Education', 'Housing', 'Insurance', 'Bank Charges', 'Loan',
 ]
 
 const MONTHS = [

@@ -9,7 +9,7 @@ const DAY_HEADERS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const CATEGORIES = [
   'Income', 'Food & Dining', 'Groceries', 'Shopping', 'Services',
   'Transportation', 'Health & Medical', 'Entertainment', 'Education',
-  'Housing', 'Insurance', 'Bank Charges', 'Transfer', 'Uncategorized',
+  'Housing', 'Insurance', 'Bank Charges', 'Transfer', 'Loan', 'Uncategorized',
 ]
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -26,6 +26,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   'Insurance':        'bg-teal-100 text-teal-700',
   'Bank Charges':     'bg-gray-100 text-gray-600',
   'Transfer':         'bg-slate-100 text-slate-600',
+  'Loan':             'bg-rose-100 text-rose-700',
   'Uncategorized':    'bg-amber-50 text-amber-600',
 }
 

@@ -17,7 +17,7 @@ const CHAT_KEY = 'fintrackr_chat_api_key'
 const CATEGORIES: Category[] = [
   'Income', 'Food & Dining', 'Groceries', 'Shopping', 'Services',
   'Transportation', 'Health & Medical', 'Entertainment', 'Education',
-  'Housing', 'Insurance', 'Bank Charges', 'Transfer', 'Uncategorized',
+  'Housing', 'Insurance', 'Bank Charges', 'Transfer', 'Loan', 'Uncategorized',
 ]
 
 function EyeIcon({ open }: { open: boolean }) {

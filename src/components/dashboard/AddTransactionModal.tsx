@@ -7,7 +7,7 @@ const CATEGORIES = [
   'Food & Dining', 'Groceries', 'Shopping', 'Services',
   'Transportation', 'Health & Medical', 'Entertainment',
   'Education', 'Housing', 'Insurance', 'Bank Charges',
-  'Transfer', 'Income', 'Uncategorized',
+  'Transfer', 'Loan', 'Income', 'Uncategorized',
 ]
 
 interface Props {

@@ -15,6 +15,7 @@ export type Category =
   | 'Insurance'
   | 'Bank Charges'
   | 'Transfer'
+  | 'Loan'
   | 'Uncategorized'
 
 export type CategoryRule = {
@@ -125,6 +126,18 @@ export const defaultRules: CategoryRule[] = [
   { id: '9',   keyword: 'Biaya Adm',  category: 'Bank Charges' },
   { id: '110', keyword: 'Biaya Transfer', category: 'Bank Charges' },
   { id: '111', keyword: 'Denda',      category: 'Bank Charges' },
+
+  // Loan / Debt repayments (KKB, KPR, personal loans)
+  { id: '130', keyword: 'ANGSURAN',   category: 'Loan' },
+  { id: '131', keyword: 'Angsuran',   category: 'Loan' },
+  { id: '132', keyword: 'CICILAN',    category: 'Loan' },
+  { id: '133', keyword: 'Cicilan',    category: 'Loan' },
+  { id: '134', keyword: 'KKB',        category: 'Loan' },
+  { id: '135', keyword: 'KPR',        category: 'Loan' },
+  { id: '136', keyword: 'KREDIT PEMILIKAN', category: 'Loan' },
+  { id: '137', keyword: 'PINJAMAN',   category: 'Loan' },
+  { id: '138', keyword: 'Pinjaman',   category: 'Loan' },
+  { id: '139', keyword: 'PELUNASAN',  category: 'Loan' },
 ]
 
 export function getUserRules(): CategoryRule[] {

@@ -4,7 +4,7 @@ const CATEGORIES = [
   'Income', 'Food & Dining', 'Groceries', 'Shopping',
   'Services', 'Transportation', 'Health & Medical',
   'Entertainment', 'Education', 'Housing', 'Insurance',
-  'Bank Charges', 'Transfer', 'Uncategorized',
+  'Bank Charges', 'Transfer', 'Loan', 'Uncategorized',
 ] as const
 
 type DeepSeekMessage = {
@@ -31,6 +31,7 @@ Rules:
 - "Insurance": insurance premiums (Asuransi, Premi)
 - "Bank Charges": admin fees, ATM fees, penalties (Biaya Adm, Biaya Transfer, Denda)
 - "Transfer": transfers between accounts, e-wallets, and credit card bill payments (GoPay, OVO, DANA, ShopeePay, LinkAja, KARTU KREDIT, Bayar CC — credit card payments are NOT expenses, they settle a liability)
+- "Loan": vehicle and property loan installments, personal loan repayments (Angsuran, Cicilan, KKB, KPR, Pinjaman — these are debt repayments, not expenses)
 - "Uncategorized": only if truly unable to determine
 
 Indonesian context: descriptions mix Indonesian and English. QRIS is a QR payment method — use surrounding context to determine the category.
@@ -169,7 +170,7 @@ function formatIDRShort(amount: number): string {
 }
 
 // These are financial movements, not actual spending — exclude from spending analysis
-const EXCLUDE_FROM_SPENDING = new Set(['Transfer', 'Bank Charges'])
+const EXCLUDE_FROM_SPENDING = new Set(['Transfer', 'Bank Charges', 'Loan'])
 
 function aggregateTransactions(
   transactions: { detail: string; amount: number; type: string; category: string }[],

@@ -5,17 +5,30 @@ import { useMemo, useState, useRef, useEffect, Fragment } from 'react'
 import RecurringSuggestionPanel from './RecurringSuggestionPanel'
 import { formatIDR } from '@/lib/formatter'
 import { isSafeSimilarityMatch } from '@/lib/insights/recurring'
+
+// Extract a human-readable merchant label from a raw Mandiri transaction description.
+// Mandiri card format: -XXXXXXXX /XXXXXXXXXX/MERCHANT-NAME/SUFFIX
+// We grab the part between the 2nd and 3rd slash if it looks like a merchant name.
+function merchantLabel(detail: string): string {
+  const parts = detail.split('/')
+  if (parts.length >= 3) {
+    const mid = parts[2].trim()
+    if (mid && !/^\d+$/.test(mid) && mid.length > 1) return mid
+  }
+  return detail.length > 45 ? detail.slice(0, 45) + '…' : detail
+}
 import {
   BanknotesIcon, BuildingStorefrontIcon, ShoppingCartIcon, ShoppingBagIcon,
   WrenchScrewdriverIcon, TruckIcon, HeartIcon, FilmIcon, AcademicCapIcon,
   HomeIcon, ShieldCheckIcon, CreditCardIcon, ArrowsRightLeftIcon, QuestionMarkCircleIcon,
+  ReceiptPercentIcon,
 } from '@heroicons/react/24/outline'
 
 const CATEGORIES = [
   'Income', 'Food & Dining', 'Groceries', 'Shopping',
   'Services', 'Transportation', 'Health & Medical',
   'Entertainment', 'Education', 'Housing', 'Insurance',
-  'Bank Charges', 'Transfer', 'Uncategorized',
+  'Bank Charges', 'Transfer', 'Loan', 'Uncategorized',
 ]
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -32,6 +45,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   'Insurance':        'bg-teal-100 text-teal-700',
   'Bank Charges':     'bg-gray-100 text-gray-600',
   'Transfer':         'bg-slate-100 text-slate-600',
+  'Loan':             'bg-rose-100 text-rose-700',
   'Uncategorized':    'bg-amber-50 text-amber-600',
 }
 
@@ -50,6 +64,7 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<any>> = {
   'Insurance':        ShieldCheckIcon,
   'Bank Charges':     CreditCardIcon,
   'Transfer':         ArrowsRightLeftIcon,
+  'Loan':             ReceiptPercentIcon,
   'Uncategorized':    QuestionMarkCircleIcon,
 }
 
@@ -489,10 +504,16 @@ export default function TransactionSection({
                                   .map((t: any, i: number) => {
                                     const d = t.fullDate instanceof Date ? t.fullDate : new Date(t.transactionDate)
                                     const dateStr = isNaN(d.getTime()) ? t.transactionDate : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' })
+                                    const catColor = CATEGORY_COLORS[t.category] ?? CATEGORY_COLORS['Uncategorized']
                                     return (
                                       <div key={i} className="flex items-center gap-3 px-3 py-1.5 text-xs">
                                         <span className="text-blue-400 dark:text-blue-500 tabular-nums shrink-0 w-20">{dateStr}</span>
-                                        <span className="flex-1 text-blue-700 dark:text-blue-300 truncate">{t.detail}</span>
+                                        <span className="flex-1 text-blue-700 dark:text-blue-300 font-medium truncate">
+                                          {merchantLabel(t.detail)}
+                                        </span>
+                                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs shrink-0 ${catColor}`}>
+                                          {t.category ?? 'Uncategorized'}
+                                        </span>
                                         <span className={`tabular-nums font-medium shrink-0 ${t.type === 'credit' ? 'text-green-600' : 'text-red-500'}`}>
                                           {t.type === 'credit' ? '+' : '−'}{formatIDR(t.amount)}
                                         </span>
