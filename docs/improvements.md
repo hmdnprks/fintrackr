@@ -98,7 +98,7 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] **Rebalance safety check** — AI computes remaining liquid savings after all moves and states months of expense coverage; verdict badge (Safe green / Caution amber / Warning red) shown below suggestion cards
 - [x] **Rebalance UX improvements** — priority ordering (#1 most urgent), confidence badges (High priority / Consider / Optional) with reason phrases, running balance shown per suggestion card, insufficient-funds warning when accumulated withdrawals exceed source balance
 - [ ] **Vehicle / Property asset type** — depreciating assets (car, motorcycle, house, land); excluded from liquid coverage and emergency fund calculations; value depreciation model
-- [ ] **Stale asset indicator** — amber badge on cards and net worth summary when any asset value hasn't been updated in 30+ days; prompts user to refresh values
+- [x] **Stale asset indicator** — amber badge on cards and net worth summary when any asset value hasn't been updated in 30+ days; dismissable banner lists stale asset names; "Xd old" badge per card; amber timestamp with "update recommended"; ⚠ on net worth last-updated label
 - [ ] **Net worth trend chart** — line chart showing aggregate net worth over time using stored snapshots; visual growth story
 - [ ] **Per-asset mini sparkline** — small trend line on each card showing value history over last 6 months
 - [ ] **Investment allocation targets** — user sets desired % per asset type (e.g. 30% savings, 40% investments, 20% gold); shows actual vs target with gap

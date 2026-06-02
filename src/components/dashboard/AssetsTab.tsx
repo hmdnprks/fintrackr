@@ -43,6 +43,16 @@ const TYPE_META: Record<AssetType, { label: string; color: string; bg: string; I
 
 const TYPE_ORDER: AssetType[] = ['savings', 'gold', 'investment', 'pocket', 'other']
 
+const STALE_DAYS = 30
+
+function isStale(iso: string): boolean {
+  return (Date.now() - new Date(iso).getTime()) > STALE_DAYS * 24 * 60 * 60 * 1000
+}
+
+function daysSince(iso: string): number {
+  return Math.floor((Date.now() - new Date(iso).getTime()) / (24 * 60 * 60 * 1000))
+}
+
 function relativeDate(iso: string) {
   const d = new Date(iso)
   const dateStr = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -64,6 +74,10 @@ export default function AssetsTab({ statements }: Props) {
   const [householdType, setHouseholdType] = useState<HouseholdType>(
     () => (getVaultDataSync().settings?.householdType as HouseholdType) ?? 'single'
   )
+  const [staleBannerDismissed, setStaleBannerDismissed] = useState(false)
+
+  const staleAssets = useMemo(() => assets.filter(a => isStale(a.updatedAt)), [assets])
+  const hasStale = staleAssets.length > 0
 
   async function handleHouseholdChange(v: HouseholdType) {
     setHouseholdType(v)
@@ -241,6 +255,36 @@ export default function AssetsTab({ statements }: Props) {
         </div>
       </div>
 
+      {/* Stale assets banner */}
+      {hasStale && !staleBannerDismissed && (
+        <div className="flex items-start justify-between gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-2xl px-4 py-3">
+          <div className="flex items-start gap-2.5 min-w-0">
+            <svg className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                {staleAssets.length === 1
+                  ? `1 asset hasn't been updated in ${STALE_DAYS}+ days`
+                  : `${staleAssets.length} assets haven't been updated in ${STALE_DAYS}+ days`}
+              </p>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5 truncate">
+                {staleAssets.map(a => a.name).join(', ')} — tap the edit icon to refresh values
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setStaleBannerDismissed(true)}
+            className="shrink-0 text-amber-400 hover:text-amber-600 dark:text-amber-500 dark:hover:text-amber-300 transition"
+            aria-label="Dismiss"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Net worth summary */}
       {assets.length > 0 && (
         <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm p-6">
@@ -260,8 +304,13 @@ export default function AssetsTab({ statements }: Props) {
             <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 break-all">{formatIDRFull(totalNetWorth)}</p>
             {/* Last updated */}
             {lastUpdatedLabel && (
-              <p className="text-xs mt-0.5 text-gray-400 dark:text-gray-500">
-                {lastUpdatedLabel.label}
+              <p className={`text-xs mt-0.5 flex items-center gap-1 ${hasStale ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                {hasStale && (
+                  <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                  </svg>
+                )}
+                {lastUpdatedLabel.label}{hasStale ? ' — some values may be outdated' : ''}
               </p>
             )}
             {netWorthGrowth !== null && (
@@ -748,6 +797,9 @@ interface CardProps {
 }
 
 function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete }: CardProps) {
+  const stale = isStale(asset.updatedAt)
+  const staleDays = stale ? daysSince(asset.updatedAt) : 0
+
   // Find the most recent snapshot ≥25 days old for growth comparison
   const assetGrowth = useMemo(() => {
     if (snapshots.length < 2) return null
@@ -780,6 +832,14 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
             {asset.isEmergencyFund && (
               <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 border border-green-100 text-green-700">
                 Emergency Fund
+              </span>
+            )}
+            {stale && (
+              <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                {staleDays}d old
               </span>
             )}
           </div>
@@ -899,7 +959,10 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
         )}
       </div>
 
-      <p className="text-xs text-gray-300 dark:text-gray-600 mt-3">{relativeDate(asset.updatedAt)}</p>
+      <p className={`text-xs mt-3 ${stale ? 'text-amber-500 dark:text-amber-400' : 'text-gray-300 dark:text-gray-600'}`}>
+        {relativeDate(asset.updatedAt)}
+        {stale && ' · update recommended'}
+      </p>
     </div>
   )
 }
