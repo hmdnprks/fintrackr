@@ -372,6 +372,8 @@ export default function AssetsTab({ statements }: Props) {
               )
             })}
           </div>
+
+          <NetWorthTrendChart snapshots={snapshots} />
         </div>
       )}
 
@@ -800,6 +802,125 @@ function LiquidCoverageSection({
   )
 }
 
+// ── Net Worth Trend Chart ──────────────────────────────────────────────────────
+
+function NetWorthTrendChart({ snapshots }: { snapshots: NetWorthSnapshot[] }) {
+  const byMonth: Record<string, number> = {}
+  for (const s of snapshots) byMonth[s.date.slice(0, 7)] = s.value
+  const monthly = Object.entries(byMonth)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-12)
+  if (monthly.length < 2) return null
+
+  const W = 400, H = 80
+  const padL = 52, padR = 8, padT = 8, padB = 22
+  const cW = W - padL - padR
+  const cH = H - padT - padB
+
+  const vals = monthly.map(([, v]) => v)
+  const lo = Math.min(...vals)
+  const hi = Math.max(...vals)
+  const range = hi - lo || hi * 0.05 || 1
+
+  const xi = (i: number) => padL + (i / (monthly.length - 1)) * cW
+  const yi = (v: number) => padT + cH - ((v - lo) / range) * cH
+
+  const pts = monthly.map(([, v], i) => `${xi(i)},${yi(v)}`).join(' ')
+  const lastPt = { x: xi(monthly.length - 1), y: yi(vals[vals.length - 1]) }
+  const firstPt = { x: xi(0), y: yi(vals[0]) }
+  const areaD =
+    `M ${firstPt.x} ${firstPt.y} ` +
+    monthly.slice(1).map(([, v], i) => `L ${xi(i + 1)} ${yi(v)}`).join(' ') +
+    ` L ${lastPt.x} ${padT + cH} L ${firstPt.x} ${padT + cH} Z`
+
+  const fmtY = (n: number) =>
+    n >= 1_000_000_000 ? `${(n / 1_000_000_000).toFixed(1)}M` :
+    n >= 1_000_000     ? `${(n / 1_000_000).toFixed(0)}jt`    :
+    n >= 1_000         ? `${(n / 1_000).toFixed(0)}rb`        :
+    String(Math.round(n))
+
+  const labelIdxs =
+    monthly.length <= 3 ? monthly.map((_, i) => i) :
+    monthly.length <= 6 ? [0, Math.floor(monthly.length / 2), monthly.length - 1] :
+    [0, Math.floor(monthly.length / 3), Math.floor(2 * monthly.length / 3), monthly.length - 1]
+
+  return (
+    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Net Worth Trend</p>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 80 }} preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="nwAreaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="#6366f1" stopOpacity="0.01" />
+          </linearGradient>
+        </defs>
+        {[0, 0.5, 1].map((t, i) => (
+          <line key={i} x1={padL} y1={padT + cH * (1 - t)} x2={padL + cW} y2={padT + cH * (1 - t)}
+            stroke="#e5e7eb" strokeWidth="0.5" />
+        ))}
+        <path d={areaD} fill="url(#nwAreaGrad)" />
+        <polyline points={pts} fill="none" stroke="#6366f1" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        <circle cx={lastPt.x} cy={lastPt.y} r="3" fill="#6366f1" />
+        <text x={padL - 4} y={padT + 6} textAnchor="end" style={{ fontSize: 9, fill: '#9ca3af', fontFamily: 'system-ui' }}>
+          {fmtY(hi)}
+        </text>
+        <text x={padL - 4} y={padT + cH} textAnchor="end" style={{ fontSize: 9, fill: '#9ca3af', fontFamily: 'system-ui' }}>
+          {fmtY(lo)}
+        </text>
+        {labelIdxs.map(i => {
+          const [m] = monthly[i]
+          const d = new Date(m + '-01')
+          const label = d.toLocaleDateString('en-US', { month: 'short' }) + " '" + String(d.getFullYear()).slice(2)
+          const anchor = i === 0 ? 'start' : i === monthly.length - 1 ? 'end' : 'middle'
+          return (
+            <text key={i} x={xi(i)} y={H - 4} textAnchor={anchor} style={{ fontSize: 8, fill: '#9ca3af', fontFamily: 'system-ui' }}>
+              {label}
+            </text>
+          )
+        })}
+      </svg>
+    </div>
+  )
+}
+
+// ── Asset Sparkline ────────────────────────────────────────────────────────────
+
+function AssetSparkline({ snapshots }: { snapshots: AssetSnapshot[] }) {
+  const byMonth: Record<string, number> = {}
+  for (const s of snapshots) byMonth[s.date.slice(0, 7)] = s.value
+  const monthly = Object.entries(byMonth)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-6)
+  if (monthly.length < 2) return null
+
+  const W = 100, H = 28
+  const vals = monthly.map(([, v]) => v)
+  const lo = Math.min(...vals)
+  const hi = Math.max(...vals)
+  const range = hi - lo || hi * 0.05 || 1
+  const up = vals[vals.length - 1] >= vals[0]
+  const stroke = up ? '#22c55e' : '#ef4444'
+
+  const xi = (i: number) => (i / (monthly.length - 1)) * W
+  const yi = (v: number) => H - 2 - ((v - lo) / range) * (H - 6)
+
+  const points = monthly.map(([, v], i) => ({ x: xi(i), y: yi(v) }))
+  const pts = points.map(p => `${p.x},${p.y}`).join(' ')
+  const areaD =
+    `M ${points[0].x} ${points[0].y} ` +
+    points.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ') +
+    ` L ${points[points.length - 1].x} ${H} L 0 ${H} Z`
+  const last = points[points.length - 1]
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-7" preserveAspectRatio="none">
+      <path d={areaD} fill={stroke} fillOpacity="0.1" />
+      <polyline points={pts} fill="none" stroke={stroke} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+      <circle cx={last.x} cy={last.y} r="2" fill={stroke} />
+    </svg>
+  )
+}
+
 // ── Asset Card ─────────────────────────────────────────────────────────────────
 
 interface CardProps {
@@ -897,6 +1018,13 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
           </p>
         )}
       </div>
+
+      {/* Sparkline — last 6 months value history */}
+      {snapshots.length >= 2 && (
+        <div className="mt-2">
+          <AssetSparkline snapshots={snapshots} />
+        </div>
+      )}
 
       {/* Type-specific detail */}
       <div className="mt-2 space-y-1.5">
