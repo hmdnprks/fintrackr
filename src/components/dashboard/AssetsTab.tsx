@@ -28,6 +28,8 @@ import {
   ExclamationCircleIcon, ExclamationTriangleIcon, CheckCircleIcon, ShieldCheckIcon,
   CheckIcon, LockClosedIcon, BriefcaseIcon,
 } from '@heroicons/react/24/outline'
+import InfoTooltip from '@/components/ui/InfoTooltip'
+import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 
 type IconComponent = React.ComponentType<{ className?: string }>
 
@@ -48,6 +50,8 @@ function relativeDate(iso: string) {
   return `Updated: ${dateStr} ${timeStr}`
 }
 
+export type HouseholdType = 'single' | 'couple' | 'family' | 'family+'
+
 export default function AssetsTab({ statements }: Props) {
   const [assets, setAssets] = useState<Asset[]>(() => getAssets())
   const [snapshots, setSnapshots]         = useState<NetWorthSnapshot[]>(() => getNetWorthSnapshots())
@@ -57,6 +61,15 @@ export default function AssetsTab({ statements }: Props) {
   const [showRebalance, setShowRebalance] = useState(false)
   const [editingAsset, setEditingAsset]   = useState<Asset | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [householdType, setHouseholdType] = useState<HouseholdType>(
+    () => (getVaultDataSync().settings?.householdType as HouseholdType) ?? 'single'
+  )
+
+  async function handleHouseholdChange(v: HouseholdType) {
+    setHouseholdType(v)
+    const vault = getVaultDataSync()
+    await saveVaultData({ settings: { ...(vault.settings ?? {}), householdType: v } })
+  }
 
   function reload() {
     setAssets(getAssets())
@@ -306,6 +319,8 @@ export default function AssetsTab({ statements }: Props) {
               months={emergencyMonths}
               avgMonthlyExpense={avgMonthlyExpense}
               expenseBreakdown={expenseBreakdown}
+              householdType={householdType}
+              onHouseholdChange={handleHouseholdChange}
             />
           )}
           {liquidCoverageMonths !== null && (
@@ -437,23 +452,39 @@ const EF_ADVICE: Record<EFStatus, string> = {
   strong:   'Excellent cushion. This level is especially valuable for freelancers, entrepreneurs, or anyone with irregular income. Consider whether excess beyond 12 months could be working harder in higher-yield instruments (e.g., Reksa Dana Pasar Uang).',
 }
 
+const HOUSEHOLD_META: Record<HouseholdType, {
+  label: string; desc: string; target: number; minOk: number; strong: number
+}> = {
+  single:   { label: 'Single',               desc: 'No dependents',                    target: 6,  minOk: 3, strong: 9  },
+  couple:   { label: 'Couple (dual income)',  desc: 'Two incomes, no/few dependents',   target: 6,  minOk: 3, strong: 9  },
+  family:   { label: 'Sole breadwinner',      desc: 'One income, dependents rely on me', target: 9,  minOk: 6, strong: 12 },
+  'family+': { label: 'Family (many deps.)',  desc: 'Multiple dependents or irregular income', target: 12, minOk: 9, strong: 15 },
+}
+
 function EmergencyFundSection({
   months,
   avgMonthlyExpense,
   expenseBreakdown,
+  householdType,
+  onHouseholdChange,
 }: {
   months: number
   avgMonthlyExpense: number
   expenseBreakdown: { category: string; avg: number; amortised: boolean; topTxns: { detail: string; amount: number; monthKey: string }[] }[]
+  householdType: HouseholdType
+  onHouseholdChange: (v: HouseholdType) => void
 }) {
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [expandedCat, setExpandedCat]   = useState<string | null>(null)
-  const TARGET = 6
+
+  const hh = HOUSEHOLD_META[householdType]
+  const TARGET = hh.target
+
   const status: EFStatus =
-    months >= 9 ? 'strong' :
-    months >= 6 ? 'healthy' :
-    months >= 3 ? 'building' :
-    months >= 1 ? 'low' : 'critical'
+    months >= hh.strong  ? 'strong' :
+    months >= hh.target  ? 'healthy' :
+    months >= hh.minOk   ? 'building' :
+    months >= 1          ? 'low' : 'critical'
 
   const s = EF_STATUS[status]
   const pct = Math.min(100, (months / TARGET) * 100)
@@ -462,11 +493,27 @@ function EmergencyFundSection({
   return (
     <div className={`rounded-2xl border p-5 ${s.bg} ${s.border}`}>
       {/* Header row */}
-      <div className="flex items-start justify-between gap-4 mb-4">
+      <div className="flex items-start justify-between gap-4 mb-3">
         <div className="flex items-center gap-2.5">
           <s.Icon className={`w-5 h-5 ${s.color}`} />
           <div>
-            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Emergency Fund</p>
+            <div className="flex items-center gap-1">
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Emergency Fund</p>
+              <InfoTooltip align="left" content={
+                <div className="space-y-2">
+                  <p className="font-semibold text-gray-700 dark:text-gray-200">What is an Emergency Fund?</p>
+                  <p>Money set aside for unexpected events: job loss, medical emergency, appliance breakdown, urgent travel.</p>
+                  <p>Kept in liquid accounts (tabungan/savings) — <strong>not</strong> gold or investments that take time to sell.</p>
+                  <div className="pt-1 border-t border-gray-100 dark:border-gray-700 space-y-1">
+                    <p className="font-medium text-gray-600 dark:text-gray-300">Recommended by household type:</p>
+                    <p><span className="font-medium">Single / Couple</span> — 3–6 months</p>
+                    <p><span className="font-medium">Sole breadwinner</span> — 6–9 months</p>
+                    <p><span className="font-medium">Family + many dependents</span> — 9–12 months</p>
+                  </div>
+                  <p className="text-gray-400 dark:text-gray-500">Select your household type below to adjust the target.</p>
+                </div>
+              } />
+            </div>
             <p className={`text-xs font-semibold ${s.color}`}>{s.label}</p>
           </div>
         </div>
@@ -476,20 +523,47 @@ function EmergencyFundSection({
         </div>
       </div>
 
-      {/* Progress bar — 0 to 6 months, min marker at 3 */}
+      {/* Household type selector */}
+      <div className="mb-3">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">My household:</p>
+        <div className="flex flex-wrap gap-1.5">
+          {(Object.entries(HOUSEHOLD_META) as [HouseholdType, typeof HOUSEHOLD_META[HouseholdType]][]).map(([key, meta]) => (
+            <button
+              key={key}
+              onClick={() => onHouseholdChange(key)}
+              title={meta.desc}
+              className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors border ${
+                householdType === key
+                  ? `${s.color} bg-white/80 dark:bg-black/30 border-current`
+                  : 'text-gray-500 dark:text-gray-400 bg-white/50 dark:bg-black/20 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+              }`}
+            >
+              {meta.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+          Target: {hh.minOk}–{hh.target} months · {hh.desc}
+        </p>
+      </div>
+
+      {/* Progress bar — 0 to TARGET months, min marker at minOk */}
       <div className="mb-4">
         <div className="relative h-3 bg-white/70 dark:bg-black/20 rounded-full overflow-visible mb-1.5">
           <div
             className={`h-full rounded-full transition-all ${s.bar}`}
             style={{ width: `${pct}%` }}
           />
-          {/* 3-month minimum marker */}
-          <div className="absolute top-0 bottom-0 w-0.5 bg-gray-400/50 rounded" style={{ left: '50%' }} />
+          {/* minOk marker */}
+          <div
+            className="absolute top-0 bottom-0 w-0.5 bg-gray-400/50 rounded"
+            style={{ left: `${(hh.minOk / TARGET) * 100}%` }}
+          />
         </div>
         <div className="flex justify-between text-xs text-gray-400">
           <span>0</span>
-          <span>3 mo <span className="text-gray-300">(min)</span></span>
-          <span>6 mo <span className="text-gray-300">(ideal)</span></span>
+          <span>{hh.minOk} mo <span className="text-gray-300">(min)</span></span>
+          <span>{hh.target} mo <span className="text-gray-300">(target)</span></span>
         </div>
       </div>
 
@@ -502,7 +576,7 @@ function EmergencyFundSection({
       <div className="flex flex-wrap gap-3">
         {amountToTarget > 0 && (
           <div className="bg-white/60 dark:bg-black/20 rounded-lg px-3 py-2 text-xs">
-            <span className="text-gray-500 dark:text-gray-400">To reach 6 months: </span>
+            <span className="text-gray-500 dark:text-gray-400">To reach {hh.target} months: </span>
             <span className="font-semibold text-gray-800 dark:text-gray-200">{formatIDRFull(amountToTarget)}</span>
           </div>
         )}
@@ -602,7 +676,23 @@ function LiquidCoverageSection({
     <div className={`rounded-2xl border p-5 ${meta.bg} ${meta.border}`}>
       <div className="flex items-start justify-between gap-2 mb-3">
         <div>
-          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Liquid Coverage</p>
+          <div className="flex items-center gap-1">
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Liquid Coverage</p>
+            <InfoTooltip align="left" content={
+              <div className="space-y-2">
+                <p className="font-semibold text-gray-700 dark:text-gray-200">What is Liquid Coverage?</p>
+                <p>How many months your <strong>total savings</strong> (all accounts) could cover your expenses.</p>
+                <p>Broader than the Emergency Fund — it includes your Mandiri payroll account and every savings account, not just the ones you designated as emergency fund.</p>
+                <div className="pt-1 border-t border-gray-100 dark:border-gray-700 space-y-1">
+                  <p><span className="font-medium text-emerald-600">12+ months</span> — Excellent liquidity buffer</p>
+                  <p><span className="font-medium text-green-600">6–11 months</span> — Healthy overall position</p>
+                  <p><span className="font-medium text-amber-600">3–5 months</span> — Adequate but could be stronger</p>
+                  <p><span className="font-medium text-orange-600">{'<'}3 months</span> — Low — prioritize building liquid savings</p>
+                </div>
+                <p className="text-gray-400 dark:text-gray-500">Use both metrics together: Emergency Fund for dedicated buffer, Liquid Coverage for the full picture.</p>
+              </div>
+            } />
+          </div>
           <p className={`text-xs font-semibold ${meta.color}`}>{meta.label}</p>
         </div>
         <div className="text-right shrink-0">

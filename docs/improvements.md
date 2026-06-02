@@ -145,6 +145,20 @@ Checklist of shipped features and planned improvements. Items without a check ar
 
 ---
 
+## Financial Education & Hints
+
+- [x] **Info tooltips on all financial-term cards** — small ⓘ icon next to card titles (and per-dimension in Health Score); click to open a popover with plain-language explanation; closes on outside click; dark-mode aware
+  - Savings Rate: formula, Transfer exclusion, tier thresholds
+  - Investment Rate: what counts, why 15–20% target
+  - Income Stability: CV formula explained, tier thresholds
+  - 50/30/20 Breakdown: rule origin (Elizabeth Warren), what each bucket covers, Indonesian context note
+  - Financial Health Score: title tooltip (4 dimensions + grading); per-dimension tooltips with exact scoring thresholds
+  - Emergency Fund: what qualifies, why not gold/investments, recommended ranges by household
+  - Liquid Coverage: how it differs from emergency fund, 4-tier thresholds
+- [x] **Household-aware Emergency Fund target** — selector (Single / Couple / Sole breadwinner / Family with many dependents) on the Emergency Fund card; each type sets a different recommended month target (6 / 6 / 9 / 12), minimum marker, and "To reach X months" amount; selection persisted to vault `settings.householdType`
+
+---
+
 ## Mobile & UX
 
 - [x] Hamburger menu on mobile (auto-closes on navigation, Escape, or tap outside)

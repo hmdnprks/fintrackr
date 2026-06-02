@@ -15,9 +15,10 @@ Built with [Next.js](https://nextjs.org) (App Router), React 19, TypeScript, Tai
 - **Budget tracking** — Monthly spend limits per category with progress bars and warnings
 - **Financial goals** — Savings targets (amount + deadline) and spending habit goals (consecutive months under limit)
 - **Month comparison** — Delta badges on summary cards + per-category breakdown vs prior month
-- **Assets profile** — Track savings, gold, investments, and goal pockets; net worth growth tracking; per-asset value history (up to 365 days); emergency fund + liquid coverage ratio side-by-side; contributable flag excludes auto-managed funds (BPJS JHT) from suggestions
+- **Assets profile** — Track savings, gold, investments, and goal pockets; net worth growth tracking; per-asset value history (up to 365 days); emergency fund + liquid coverage ratio side-by-side; household-aware emergency fund target (Single / Couple / Sole breadwinner / Family); contributable flag excludes auto-managed funds (BPJS JHT) from suggestions
 - **Windfall allocation** — AI-powered plan for bonus/THR/freelance windfalls; allocates across emergency fund, goal pockets, investments, and a reward slice based on your real financial data
-- **Financial Health Score** — composite 0–100 (grades A+–D) across savings rate, emergency fund, investment rate, and budget adherence; per-dimension bars with motivating message
+- **Financial Health Score** — composite 0–100 (grades A+–D) across savings rate, emergency fund, investment rate, and budget adherence; per-dimension bars with motivating message; ⓘ tooltips on title and each dimension explaining scoring
+- **Financial term hints** — ⓘ info icon on every card that contains financial jargon (Savings Rate, Investment Rate, Income Stability, 50/30/20, Emergency Fund, Liquid Coverage); click for a plain-language explanation and benchmark context
 - **FIRE Number** — 25× annual expenses target; progress bar vs net worth; projected FIRE age and year from birth year (saved to vault); collapsible FIRE explainer
 - **Asset Reallocation Advisor** — AI restructures your existing portfolio (not new money); risk preference selector; priority-ordered suggestions with confidence levels, running balance, and savings safety check post-rebalance; result auto-saved to vault; exportable as PDF
 - **Data backup** — JSON export/import (v4); includes statements, assets, net worth snapshots, per-asset history, rebalance history; v1–v3 backups remain compatible; merge or replace modes

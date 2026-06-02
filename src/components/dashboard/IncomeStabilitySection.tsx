@@ -1,5 +1,7 @@
 'use client'
 
+import InfoTooltip from '@/components/ui/InfoTooltip'
+
 interface Props {
   savingsRateTrend: { income: number; expense: number; rate: number }[]
 }
@@ -68,7 +70,22 @@ export default function IncomeStabilitySection({ savingsRateTrend }: Props) {
     <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 p-6 rounded-2xl shadow-sm">
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Income Stability</h2>
+          <div className="flex items-center gap-1.5">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Income Stability</h2>
+            <InfoTooltip content={
+              <div className="space-y-2">
+                <p className="font-semibold text-gray-700 dark:text-gray-200">How is this measured?</p>
+                <p>Using the <strong>Coefficient of Variation (CV)</strong> — standard deviation ÷ average income — across your last 6 months of data.</p>
+                <p>A lower CV means more predictable income.</p>
+                <div className="pt-1 border-t border-gray-100 dark:border-gray-700 space-y-1">
+                  <p><span className="font-medium text-green-600">Stable (CV {'<'} 15%)</span> — consistent salary or fixed income</p>
+                  <p><span className="font-medium text-amber-500">Variable (15–40%)</span> — seasonal bonuses, overtime, mixed sources</p>
+                  <p><span className="font-medium text-red-500">Highly Variable ({'>'} 40%)</span> — freelance, commissions, irregular work</p>
+                </div>
+                <p className="text-gray-400 dark:text-gray-500 pt-1">Higher income variability = larger emergency fund recommended, since gaps between paychecks can be unpredictable.</p>
+              </div>
+            } />
+          </div>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
             Variance across last {incomes.length} months of income
           </p>

@@ -1,5 +1,7 @@
 'use client'
 
+import InfoTooltip from '@/components/ui/InfoTooltip'
+
 interface Props {
   rate: number
   total: number
@@ -36,7 +38,22 @@ export default function InvestmentRateSection({ rate, total, items, totalIncome 
     <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 p-6 rounded-2xl shadow-sm">
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Investment Rate</h2>
+          <div className="flex items-center gap-1.5">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Investment Rate</h2>
+            <InfoTooltip content={
+              <div className="space-y-2">
+                <p className="font-semibold text-gray-700 dark:text-gray-200">What is Investment Rate?</p>
+                <p>Investment Rate = Investment transfers ÷ Total income × 100.</p>
+                <p>It measures how much of your income is actively being put to work in growth assets (stocks, mutual funds, etc.).</p>
+                <div className="pt-1 border-t border-gray-100 dark:border-gray-700 space-y-1">
+                  <p><span className="font-medium text-green-600">≥20%</span> — strong wealth-building pace</p>
+                  <p><span className="font-medium text-amber-500">15–19%</span> — meets minimum target</p>
+                  <p><span className="font-medium text-red-500">{'<'}15%</span> — below recommended level</p>
+                </div>
+                <p className="text-gray-400 dark:text-gray-500 pt-1">General guideline: invest at least 15–20% of income for meaningful long-term wealth accumulation.</p>
+              </div>
+            } />
+          </div>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
             % of income directed to investment platforms this period
           </p>

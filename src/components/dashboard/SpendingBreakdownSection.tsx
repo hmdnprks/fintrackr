@@ -1,5 +1,7 @@
 'use client'
 
+import InfoTooltip from '@/components/ui/InfoTooltip'
+
 interface Props {
   data: {
     income: number
@@ -69,7 +71,21 @@ export default function SpendingBreakdownSection({ data }: Props) {
   return (
     <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 p-6 rounded-2xl shadow-sm">
       <div className="mb-5">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">50/30/20 Breakdown</h2>
+        <div className="flex items-center gap-1.5">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">50/30/20 Breakdown</h2>
+          <InfoTooltip content={
+            <div className="space-y-2">
+              <p className="font-semibold text-gray-700 dark:text-gray-200">The 50/30/20 Rule</p>
+              <p>A budgeting framework popularized by Elizabeth Warren. Split your after-tax income into:</p>
+              <div className="space-y-1 pt-1">
+                <p><span className="font-medium text-blue-600">50% Needs</span> — essentials you must pay (rent, groceries, utilities, transport, health)</p>
+                <p><span className="font-medium text-purple-600">30% Wants</span> — lifestyle spending (dining out, entertainment, shopping)</p>
+                <p><span className="font-medium text-green-600">20% Surplus</span> — savings, investments, debt repayment</p>
+              </div>
+              <p className="text-gray-400 dark:text-gray-500 pt-1 border-t border-gray-100 dark:border-gray-700">It&apos;s a guideline, not a law. High cost-of-living cities (Jakarta) often push needs above 50%. The key principle: always aim to save and invest at least 20%.</p>
+            </div>
+          } />
+        </div>
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
           How your income splits across needs, wants, and surplus — ideal: 50% needs · 30% wants · 20% savings
         </p>

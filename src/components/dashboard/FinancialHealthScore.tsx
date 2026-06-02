@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { getAssets, Asset } from '@/lib/assetStorage'
+import InfoTooltip from '@/components/ui/InfoTooltip'
 
 interface Props {
   savingsRateTrend: { income: number; expense: number; rate: number }[]
@@ -17,6 +18,31 @@ interface DimResult {
 }
 
 const DIMENSIONS = ['Savings Rate', 'Emergency Fund', 'Investment Rate', 'Budget Adherence']
+
+const DIM_HINTS = [
+  <div key="sr" className="space-y-1.5">
+    <p className="font-semibold text-gray-700 dark:text-gray-200">Savings Rate (30 pts)</p>
+    <p>Average savings rate across last 6 months. Scored: ≥20% → 30pts, ≥15% → 24pts, ≥10% → 17pts, ≥5% → 10pts.</p>
+    <p className="text-gray-400 dark:text-gray-500">Savings Rate = (Income − Expenses) ÷ Income.</p>
+  </div>,
+  <div key="ef" className="space-y-1.5">
+    <p className="font-semibold text-gray-700 dark:text-gray-200">Emergency Fund (30 pts)</p>
+    <p>Based on months covered by savings accounts you marked as emergency fund.</p>
+    <p>Scored: ≥6 months → 30pts, ≥3 months → 20pts, ≥1 month → 10pts.</p>
+    <p className="text-gray-400 dark:text-gray-500">Mark accounts in the Assets tab using the shield icon.</p>
+  </div>,
+  <div key="ir" className="space-y-1.5">
+    <p className="font-semibold text-gray-700 dark:text-gray-200">Investment Rate (20 pts)</p>
+    <p>% of income transferred to investment platforms (Bibit, Stockbit, Ajaib, etc.).</p>
+    <p>Scored: ≥20% → 20pts, ≥15% → 16pts, ≥10% → 11pts, ≥5% → 6pts.</p>
+  </div>,
+  <div key="ba" className="space-y-1.5">
+    <p className="font-semibold text-gray-700 dark:text-gray-200">Budget Adherence (20 pts)</p>
+    <p>Fraction of budget categories where current-month spending is within limit.</p>
+    <p>Scored proportionally. No budgets set → neutral 10pts.</p>
+    <p className="text-gray-400 dark:text-gray-500">Set monthly limits in the Budget tab.</p>
+  </div>,
+]
 
 function scoreSavings(trend: { rate: number }[]): DimResult {
   const recent = trend.slice(-6)
@@ -90,7 +116,25 @@ export default function FinancialHealthScore({
       {/* Header row */}
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Financial Health Score</h2>
+          <div className="flex items-center gap-1.5">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Financial Health Score</h2>
+            <InfoTooltip content={
+              <div className="space-y-2">
+                <p className="font-semibold text-gray-700 dark:text-gray-200">How is this calculated?</p>
+                <p>Composite score from 0–100 across 4 financial health dimensions:</p>
+                <div className="space-y-1 pt-1">
+                  <p>• <span className="font-medium">Savings Rate</span> — 30 pts</p>
+                  <p>• <span className="font-medium">Emergency Fund</span> — 30 pts</p>
+                  <p>• <span className="font-medium">Investment Rate</span> — 20 pts</p>
+                  <p>• <span className="font-medium">Budget Adherence</span> — 20 pts</p>
+                </div>
+                <div className="pt-1 border-t border-gray-100 dark:border-gray-700 space-y-0.5">
+                  <p><span className="font-medium text-emerald-600">A+ (90+)</span> · <span className="font-medium text-green-600">A (80+)</span> · <span className="font-medium text-blue-600">B (70+)</span> · <span className="font-medium text-amber-600">C (55+)</span> · <span className="font-medium text-red-600">D (below 55)</span></p>
+                </div>
+                <p className="text-gray-400 dark:text-gray-500">Click the ⓘ next to each dimension below for details on how it&apos;s scored.</p>
+              </div>
+            } />
+          </div>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
             Composite score across savings, emergency fund, investments, and budget
           </p>
@@ -125,7 +169,10 @@ export default function FinancialHealthScore({
               return (
                 <div key={i}>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{DIMENSIONS[i]}</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{DIMENSIONS[i]}</span>
+                      <InfoTooltip content={DIM_HINTS[i]} align="left" />
+                    </div>
                     <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
                       {dim.pts}<span className="font-normal text-gray-300 dark:text-gray-600">/{dim.max}</span>
                     </span>

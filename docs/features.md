@@ -51,11 +51,11 @@ Five-tab layout with shared year/month filter:
 
 ### Insights tab
 - **AI Insights** — persistent card with Generate/Regenerate/Clear; sends pre-aggregated category summary + period label (not raw rows) to DeepSeek; structured 4-bullet output: top spending, concern, positive, action
-- **Financial Health Score** — composite 0–100 score (grades A+/A/B/C/D) across 4 weighted dimensions: Savings Rate (30 pts), Emergency Fund (30 pts), Investment Rate (20 pts), Budget Adherence (20 pts); per-dimension progress bars coloured green/amber/red; motivating message per grade; reads emergency fund from Assets tab
-- **Income Stability Score** — coefficient of variation on last 6 months of income; three tiers (Stable/Variable/Highly Variable) with income range bar; emergency fund implication per tier (3–6mo / 6–9mo / 9+mo recommended)
-- **50/30/20 Spending Breakdown** — classifies debit transactions into Needs, Wants, and Surplus; each row shows actual %, IDR amount, a bar with the ideal threshold marked, and a status message; warns when a large portion is uncategorized
-- **Savings Rate Trend** — monthly bar chart for the selected year; bars colored green (≥20%), amber (10–19%), red (<10%); dashed reference line at 20% target; avg rate headline + insight line with best month
-- **Investment Rate** — keyword-based detection of investment platform transfers (Bibit, Stockbit, Ajaib, Bareksa, IPOT, Indopremier, Mandiri Sekuritas, Pluang) in the filtered period; progress bar with 15% min and 20% great markers; lists detected transactions
+- **Financial Health Score** — composite 0–100 score (grades A+/A/B/C/D) across 4 weighted dimensions: Savings Rate (30 pts), Emergency Fund (30 pts), Investment Rate (20 pts), Budget Adherence (20 pts); per-dimension progress bars coloured green/amber/red; motivating message per grade; reads emergency fund from Assets tab; ⓘ tooltip on title explains grading scale; each dimension row has its own ⓘ with exact scoring thresholds
+- **Income Stability Score** — coefficient of variation on last 6 months of income; three tiers (Stable/Variable/Highly Variable) with income range bar; emergency fund implication per tier (3–6mo / 6–9mo / 9+mo recommended); ⓘ tooltip explains CV formula and tier thresholds
+- **50/30/20 Spending Breakdown** — classifies debit transactions into Needs, Wants, and Surplus; each row shows actual %, IDR amount, a bar with the ideal threshold marked, and a status message; warns when a large portion is uncategorized; ⓘ tooltip explains the rule's origin and what each bucket covers
+- **Savings Rate Trend** — monthly bar chart for the selected year; bars colored green (≥20%), amber (10–19%), red (<10%); dashed reference line at 20% target; avg rate headline + insight line with best month; ⓘ tooltip explains the formula and Transfer exclusion
+- **Investment Rate** — keyword-based detection of investment platform transfers (Bibit, Stockbit, Ajaib, Bareksa, IPOT, Indopremier, Mandiri Sekuritas, Pluang) in the filtered period; progress bar with 15% min and 20% great markers; lists detected transactions; ⓘ tooltip explains what counts and why 15–20% is the target
 
 ### Budget tab
 - Monthly budget tracker — set spending limits per category, progress bars with green/amber/red thresholds (80% warning, 100% over)
@@ -84,8 +84,8 @@ Five-tab layout with shared year/month filter:
 - **Net worth summary card** — total value across all assets, allocation breakdown bars by type; shows month-over-month growth (↑/↓ amount and %) compared to the most recent snapshot ≥25 days old; hint shown until first snapshot exists
 - **Net worth & asset history** — snapshots recorded automatically whenever any asset value is saved or updated; stores both aggregate net worth (up to 365 daily entries) and per-asset value history (up to 365 daily entries per asset); each asset card shows ↑/↓ growth vs previous snapshot; history included in JSON backup
 - **Liquidity metrics** — displayed side-by-side on desktop, stacked on mobile:
-  - *Emergency fund* — five tiers Critical/Low/Building/Healthy/Strong; progress bar with 3-month and 6-month markers; contextual advice per tier (Indonesian context: PHK, BPJS, variable income); amount to reach 6-month target
-  - *Liquid coverage* — all savings accounts ÷ avg monthly expense (broader than emergency fund); four tiers Low/Adequate/Healthy/Excellent scaled to 12-month target; explains difference from emergency fund metric
+  - *Emergency fund* — five tiers Critical/Low/Building/Healthy/Strong; **household-aware target**: selector (Single / Couple / Sole breadwinner / Family + many deps.) adjusts the recommended months target (6 / 6 / 9 / 12), minimum marker, and "To reach X months" amount; selection saved to vault `settings.householdType`; contextual advice per tier (Indonesian context: PHK, BPJS, variable income); ⓘ tooltip explains what counts as emergency fund and recommended ranges by household type
+  - *Liquid coverage* — all savings accounts ÷ avg monthly expense (broader than emergency fund); four tiers Low/Adequate/Healthy/Excellent scaled to 12-month target; ⓘ tooltip explains how it differs from emergency fund; explains difference from emergency fund metric
 - **Asset cards** grouped by type with Heroicons, each showing current value, per-asset growth since last snapshot, institution, last-updated timestamp, and type-specific details:
   - Savings: interest rate (% p.a.), emergency fund badge, months of expenses covered
   - Gold: weight in grams, auto-computed price per gram

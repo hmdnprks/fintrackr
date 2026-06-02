@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useEffect } from 'react'
+import InfoTooltip from '@/components/ui/InfoTooltip'
 
 interface MonthData {
   label: string
@@ -41,7 +42,23 @@ export default function SavingsRateTrendSection({ data }: Props) {
     <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 p-6 rounded-2xl shadow-sm">
       <div className="flex items-start justify-between mb-1">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Savings Rate</h2>
+          <div className="flex items-center gap-1.5">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Savings Rate</h2>
+            <InfoTooltip content={
+              <div className="space-y-2">
+                <p className="font-semibold text-gray-700 dark:text-gray-200">What is Savings Rate?</p>
+                <p>Savings Rate = (Income − Expenses) ÷ Income × 100.</p>
+                <p>It shows how much of your income you actually keep. A rate ≥20% is considered healthy in personal finance.</p>
+                <p className="text-gray-400 dark:text-gray-500">Transfer transactions (cash moves between your own accounts) are excluded because they are not real expenses.</p>
+                <div className="pt-1 border-t border-gray-100 dark:border-gray-700 space-y-1">
+                  <p><span className="font-medium text-green-600">≥30%</span> — great, building wealth fast</p>
+                  <p><span className="font-medium text-green-500">20–29%</span> — on track</p>
+                  <p><span className="font-medium text-amber-500">10–19%</span> — low, room to improve</p>
+                  <p><span className="font-medium text-red-500">{'<'}10%</span> — critical, nearly all income spent</p>
+                </div>
+              </div>
+            } />
+          </div>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">% of income kept after categorized spending — Transfer excluded (see note below)</p>
         </div>
         <div className="text-right shrink-0 ml-4">
