@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Asset, AssetType, NewAsset, saveAsset, updateAsset } from '@/lib/assetStorage'
-import { BanknotesIcon, StarIcon, ArrowTrendingUpIcon, WalletIcon, ArchiveBoxIcon } from '@heroicons/react/24/outline'
+import { Asset, AssetType, PhysicalSubtype, NewAsset, saveAsset, updateAsset } from '@/lib/assetStorage'
+import { BanknotesIcon, StarIcon, ArrowTrendingUpIcon, WalletIcon, ArchiveBoxIcon, TruckIcon, HomeModernIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 
 interface Props {
   isOpen: boolean
@@ -18,8 +18,42 @@ const TYPE_OPTIONS: { id: AssetType; label: string; Icon: IconComponent }[] = [
   { id: 'gold',       label: 'Gold',       Icon: StarIcon           },
   { id: 'investment', label: 'Investment', Icon: ArrowTrendingUpIcon},
   { id: 'pocket',     label: 'Pocket',     Icon: WalletIcon         },
+  { id: 'vehicle',    label: 'Vehicle',    Icon: TruckIcon          },
+  { id: 'property',   label: 'Property',   Icon: HomeModernIcon     },
   { id: 'other',      label: 'Other',      Icon: ArchiveBoxIcon     },
 ]
+
+const VEHICLE_SUBTYPES: { id: PhysicalSubtype; label: string }[] = [
+  { id: 'car',        label: 'Car'        },
+  { id: 'motorcycle', label: 'Motorcycle' },
+  { id: 'other',      label: 'Other'      },
+]
+
+const PROPERTY_SUBTYPES: { id: PhysicalSubtype; label: string }[] = [
+  { id: 'house',     label: 'House'     },
+  { id: 'apartment', label: 'Apartment' },
+  { id: 'land',      label: 'Land'      },
+  { id: 'other',     label: 'Other'     },
+]
+
+const DEFAULT_RATES: Record<PhysicalSubtype, number> = {
+  car: -10, motorcycle: -15, house: 3, apartment: 2, land: 5, other: 0,
+}
+
+function computeEst(price: number, year: number, rate: number): number {
+  const years = new Date().getFullYear() - year
+  if (years <= 0) return price
+  return Math.max(0, price * Math.pow(1 + rate / 100, years))
+}
+
+const CURRENCIES = ['USD', 'EUR', 'SGD', 'GBP', 'AUD', 'JPY', 'MYR', 'CNY', 'SAR', 'HKD']
+
+async function fetchRate(from: string): Promise<number> {
+  const res = await fetch(`https://api.frankfurter.app/latest?from=${from}&to=IDR`)
+  if (!res.ok) throw new Error('Rate fetch failed')
+  const data = await res.json()
+  return data.rates?.IDR as number
+}
 
 function formatThousands(n: number): string {
   if (!n) return ''
@@ -64,6 +98,16 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
   const [goalTarget, setGoalTarget]   = useState('')
   const [goalDeadline, setGoalDeadline] = useState('')
   const [notes, setNotes]             = useState('')
+  const [physicalSubtype, setPhysicalSubtype] = useState<PhysicalSubtype>('car')
+  const [purchasePrice, setPurchasePrice]     = useState('')
+  const [purchaseYear, setPurchaseYear]       = useState('')
+  const [annualChangeRate, setAnnualChangeRate] = useState('')
+  const [currency, setCurrency]               = useState('IDR')
+  const [foreignAmount, setForeignAmount]     = useState('')
+  const [exchangeRate, setExchangeRate]       = useState('')
+  const [fetchingRate, setFetchingRate]       = useState(false)
+  const [rateError, setRateError]             = useState('')
+  const [rateCache, setRateCache]             = useState<Record<string, number>>({})
   const [errors, setErrors]           = useState<Record<string, string>>({})
   const [saving, setSaving]           = useState(false)
 
@@ -83,6 +127,16 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
       setGoalTarget(asset.goalTarget != null ? formatThousands(asset.goalTarget) : '')
       setGoalDeadline(asset.goalDeadline ?? '')
       setNotes(asset.notes ?? '')
+      setPhysicalSubtype(asset.physicalSubtype ?? 'car')
+      setPurchasePrice(asset.purchasePrice != null ? formatThousands(asset.purchasePrice) : '')
+      setPurchaseYear(asset.purchaseYear != null ? String(asset.purchaseYear) : '')
+      setAnnualChangeRate(asset.annualChangeRate != null ? String(asset.annualChangeRate) : '')
+      setCurrency(asset.currency ?? 'IDR')
+      setForeignAmount(asset.foreignAmount != null ? String(asset.foreignAmount) : '')
+      setExchangeRate(asset.exchangeRate != null ? String(asset.exchangeRate) : '')
+      if (asset.currency && asset.currency !== 'IDR' && asset.exchangeRate) {
+        setRateCache({ [asset.currency]: asset.exchangeRate })
+      }
     } else {
       setType('savings')
       setName('')
@@ -97,9 +151,84 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
       setGoalTarget('')
       setGoalDeadline('')
       setNotes('')
+      setPhysicalSubtype('car')
+      setPurchasePrice('')
+      setPurchaseYear('')
+      setAnnualChangeRate('')
+      setCurrency('IDR')
+      setForeignAmount('')
+      setExchangeRate('')
     }
+    setRateError('')
     setErrors({})
+    if (!asset) setRateCache({})
   }, [asset, isOpen])
+
+  async function doFetchRate(targetCurrency: string, fa?: string) {
+    setFetchingRate(true)
+    setRateError('')
+    try {
+      const rate = await fetchRate(targetCurrency)
+      setRateCache(prev => ({ ...prev, [targetCurrency]: rate }))
+      setExchangeRate(String(rate))
+      const amount = Number(fa ?? foreignAmount)
+      if (amount > 0) setValue(formatThousands(Math.round(amount * rate)))
+    } catch {
+      setRateError('Could not fetch rate. Check your connection and try again.')
+    } finally {
+      setFetchingRate(false)
+    }
+  }
+
+  function handleCurrencyChange(next: string) {
+    if (next === currency) return
+    setCurrency(next)
+    setRateError('')
+    if (next === 'IDR') {
+      setExchangeRate('')
+      if (foreignAmount && exchangeRate) setValue('')
+      return
+    }
+    const cached = rateCache[next]
+    if (cached) {
+      // Restore from cache instantly — no API call needed
+      setExchangeRate(String(cached))
+      const fa = Number(foreignAmount)
+      if (fa > 0) setValue(formatThousands(Math.round(fa * cached)))
+    } else {
+      // Nothing cached — clear stale rate and auto-fetch for the new currency
+      setExchangeRate('')
+      if (foreignAmount && exchangeRate) setValue('')
+      doFetchRate(next, foreignAmount)
+    }
+  }
+
+  function handleRefreshRate() {
+    if (currency === 'IDR') return
+    doFetchRate(currency)
+  }
+
+  const CURRENCY_TYPES: AssetType[] = ['savings', 'gold', 'investment']
+
+  // When switching to vehicle/property with no rate set, apply the default for the subtype
+  useEffect(() => {
+    if ((type === 'vehicle' || type === 'property') && annualChangeRate === '') {
+      setAnnualChangeRate(String(DEFAULT_RATES[physicalSubtype]))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type, physicalSubtype])
+
+  // Reset currency when switching to a type that doesn't support it
+  useEffect(() => {
+    if (!CURRENCY_TYPES.includes(type) && currency !== 'IDR') {
+      setCurrency('IDR')
+      setForeignAmount('')
+      setExchangeRate('')
+      setRateError('')
+      setValue('')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type])
 
   if (!isOpen) return null
 
@@ -140,6 +269,18 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
         goalName: goalName.trim() || undefined,
         goalTarget: goalTarget ? parseIDR(goalTarget) : undefined,
         goalDeadline: goalDeadline || undefined,
+      }),
+      ...((type === 'vehicle' || type === 'property') && {
+        physicalSubtype,
+        purchasePrice: purchasePrice ? parseIDR(purchasePrice) : undefined,
+        purchaseYear: purchaseYear ? Number(purchaseYear) : undefined,
+        annualChangeRate: annualChangeRate !== '' ? Number(annualChangeRate) : undefined,
+      }),
+      ...(currency !== 'IDR' && {
+        currency,
+        foreignAmount: foreignAmount ? Number(foreignAmount) : undefined,
+        exchangeRate: exchangeRate ? Number(exchangeRate) : undefined,
+        exchangeRateUpdatedAt: exchangeRate ? new Date().toISOString() : undefined,
       }),
       notes: notes.trim() || undefined,
     }
@@ -207,10 +348,12 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
             <input
               type="text"
               placeholder={
-                type === 'savings'    ? 'e.g. BCA Tahapan'        :
-                type === 'gold'       ? 'e.g. Antam Gold'         :
-                type === 'investment' ? 'e.g. Reksa Dana Campuran':
-                type === 'pocket'     ? 'e.g. Travel Japan'       :
+                type === 'savings'    ? 'e.g. BCA Tahapan'         :
+                type === 'gold'       ? 'e.g. Antam Gold'          :
+                type === 'investment' ? 'e.g. Reksa Dana Campuran' :
+                type === 'pocket'     ? 'e.g. Travel Japan'        :
+                type === 'vehicle'    ? 'e.g. Honda Civic 2021'    :
+                type === 'property'   ? 'e.g. Rumah Depok'         :
                 'e.g. Emergency Cash'
               }
               value={name}
@@ -228,8 +371,10 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
             <input
               type="text"
               placeholder={
-                type === 'investment' ? 'e.g. Bibit, Stockbit' :
-                type === 'gold'       ? 'e.g. Antam, Pegadaian' :
+                type === 'investment' ? 'e.g. Bibit, Stockbit'   :
+                type === 'gold'       ? 'e.g. Antam, Pegadaian'  :
+                type === 'vehicle'    ? 'e.g. Toyota, Honda'     :
+                type === 'property'   ? 'e.g. Perumahan, Mandiri' :
                 'e.g. BCA, Bank Jago'
               }
               value={institution}
@@ -243,25 +388,37 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
 
           {/* Current Value */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Current Value</label>
-            <div className={`flex items-center border rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 ${
-              errors.value ? 'border-red-300 bg-red-50 dark:bg-red-900/20' : 'border-gray-200 dark:border-gray-700'
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              {currency !== 'IDR' ? 'IDR Equivalent' : 'Current Value'}
+              {currency !== 'IDR' && (
+                <span className="ml-1.5 text-xs font-normal text-gray-400">auto-computed from {currency} amount × rate</span>
+              )}
+            </label>
+            <div className={`flex items-center border rounded-xl overflow-hidden ${
+              currency !== 'IDR'
+                ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 opacity-75'
+                : `focus-within:ring-2 focus-within:ring-blue-500 ${errors.value ? 'border-red-300 bg-red-50 dark:bg-red-900/20' : 'border-gray-200 dark:border-gray-700'}`
             }`}>
               <span className="px-3 py-2.5 text-sm text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 select-none">Rp</span>
               <input
                 type="text"
                 inputMode="numeric"
                 placeholder="0"
+                readOnly={currency !== 'IDR'}
                 value={value}
                 onChange={e => {
+                  if (currency !== 'IDR') return
                   const digits = e.target.value.replace(/[^0-9]/g, '')
                   setValue(digits ? formatThousands(Number(digits)) : '')
                   setErrors(p => ({ ...p, value: '' }))
                 }}
-                className="flex-1 px-3 py-2.5 text-sm focus:outline-none bg-transparent min-w-0 text-gray-900 dark:text-gray-100"
+                className={`flex-1 px-3 py-2.5 text-sm focus:outline-none bg-transparent min-w-0 text-gray-900 dark:text-gray-100 ${currency !== 'IDR' ? 'cursor-default select-none' : ''}`}
               />
             </div>
-            {errors.value && <p className="text-xs text-red-500 mt-1">{errors.value}</p>}
+            {currency !== 'IDR' && !value && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Enter the {currency} amount and exchange rate above to compute</p>
+            )}
+            {errors.value && currency === 'IDR' && <p className="text-xs text-red-500 mt-1">{errors.value}</p>}
           </div>
 
           {/* Savings-specific fields */}
@@ -396,6 +553,219 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
               </div>
             </div>
           )}
+
+          {/* Vehicle / Property fields */}
+          {(type === 'vehicle' || type === 'property') && (() => {
+            const subtypes = type === 'vehicle' ? VEHICLE_SUBTYPES : PROPERTY_SUBTYPES
+            const estPrice = parseIDR(purchasePrice)
+            const estYear  = Number(purchaseYear)
+            const estRate  = Number(annualChangeRate)
+            const showEst  = estPrice > 0 && estYear > 0 && annualChangeRate !== ''
+            const estValue = showEst ? computeEst(estPrice, estYear, estRate) : null
+
+            return (
+              <div className="space-y-3">
+                {/* Subtype */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    {type === 'vehicle' ? 'Vehicle Type' : 'Property Type'}
+                  </label>
+                  <div className="flex gap-2 flex-wrap">
+                    {subtypes.map(s => (
+                      <button
+                        key={s.id}
+                        onClick={() => {
+                          setPhysicalSubtype(s.id)
+                          if (annualChangeRate === '' || annualChangeRate === String(DEFAULT_RATES[physicalSubtype])) {
+                            setAnnualChangeRate(String(DEFAULT_RATES[s.id]))
+                          }
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
+                          physicalSubtype === s.id
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Purchase price + year */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Purchase Price</label>
+                    <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+                      <span className="px-2 py-2.5 text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 select-none">Rp</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="0"
+                        value={purchasePrice}
+                        onChange={e => {
+                          const d = e.target.value.replace(/[^0-9]/g, '')
+                          setPurchasePrice(d ? formatThousands(Number(d)) : '')
+                        }}
+                        className="flex-1 px-2 py-2.5 text-sm focus:outline-none bg-transparent min-w-0 text-gray-900 dark:text-gray-100"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Purchase Year</label>
+                    <input
+                      type="number"
+                      min="1980" max={new Date().getFullYear()}
+                      placeholder={String(new Date().getFullYear())}
+                      value={purchaseYear}
+                      onChange={e => setPurchaseYear(e.target.value)}
+                      className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Annual change rate */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    Annual Change Rate (%)
+                    <span className="ml-1.5 text-xs font-normal text-gray-400">negative = depreciates · positive = appreciates</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    placeholder="e.g. -10 for car, +5 for land"
+                    value={annualChangeRate}
+                    onChange={e => setAnnualChangeRate(e.target.value)}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* Estimated value hint */}
+                {estValue !== null && (
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-300">Estimated value today</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                        Rp {Math.round(estValue).toLocaleString('id-ID')}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {Math.abs(estRate)}%/yr × {new Date().getFullYear() - estYear} yr{new Date().getFullYear() - estYear !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setValue(formatThousands(Math.round(estValue)))}
+                      className="shrink-0 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-3 py-1.5 rounded-lg transition"
+                    >
+                      Use estimate
+                    </button>
+                  </div>
+                )}
+
+                <p className="text-xs text-gray-400 dark:text-gray-500 bg-amber-50 dark:bg-amber-900/20 rounded-xl px-3 py-2">
+                  Vehicle and property values are excluded from emergency fund and liquid coverage calculations — they are illiquid assets.
+                </p>
+              </div>
+            )
+          })()}
+
+          {/* Currency — only for savings, gold, investment */}
+          {CURRENCY_TYPES.includes(type) && <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Currency</label>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => handleCurrencyChange('IDR')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
+                    currency === 'IDR'
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  IDR (default)
+                </button>
+                {CURRENCIES.map(c => (
+                  <button
+                    key={c}
+                    onClick={() => handleCurrencyChange(c)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
+                      currency === c
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {currency !== 'IDR' && (
+              <div className="space-y-3">
+                {/* Foreign amount + rate side by side */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      Amount ({currency})
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="e.g. 1000"
+                      value={foreignAmount}
+                      onChange={e => {
+                        setForeignAmount(e.target.value)
+                        const fa = Number(e.target.value)
+                        const rate = Number(exchangeRate)
+                        if (fa > 0 && rate > 0) setValue(formatThousands(Math.round(fa * rate)))
+                      }}
+                      className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                      Rate (IDR/1 {currency})
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="e.g. 16200"
+                      value={exchangeRate}
+                      onChange={e => {
+                        setExchangeRate(e.target.value)
+                        const rate = Number(e.target.value)
+                        const fa = Number(foreignAmount)
+                        if (fa > 0 && rate > 0) setValue(formatThousands(Math.round(fa * rate)))
+                      }}
+                      className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Refresh rate button */}
+                <button
+                  onClick={handleRefreshRate}
+                  disabled={fetchingRate}
+                  className="flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 px-3 py-2 rounded-xl transition"
+                >
+                  <ArrowPathIcon className={`w-3.5 h-3.5 ${fetchingRate ? 'animate-spin' : ''}`} />
+                  {fetchingRate ? `Fetching ${currency}/IDR rate…` : `Fetch latest ${currency}/IDR rate`}
+                </button>
+                {rateError && <p className="text-xs text-red-500">{rateError}</p>}
+
+                {/* IDR equivalent preview */}
+                {Number(foreignAmount) > 0 && Number(exchangeRate) > 0 && (
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-xs">
+                    <span className="text-gray-500 dark:text-gray-400">{foreignAmount} {currency} × Rp {Number(exchangeRate).toLocaleString('id-ID')} = </span>
+                    <span className="font-bold text-gray-900 dark:text-gray-100">
+                      Rp {Math.round(Number(foreignAmount) * Number(exchangeRate)).toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>}
 
           {/* Notes */}
           <div>

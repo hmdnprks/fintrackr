@@ -26,7 +26,7 @@ function formatIDRFull(n: number) {
 import {
   BanknotesIcon, StarIcon, ArrowTrendingUpIcon, WalletIcon, ArchiveBoxIcon,
   ExclamationCircleIcon, ExclamationTriangleIcon, CheckCircleIcon, ShieldCheckIcon,
-  CheckIcon, LockClosedIcon, BriefcaseIcon,
+  CheckIcon, LockClosedIcon, BriefcaseIcon, TruckIcon, HomeModernIcon,
 } from '@heroicons/react/24/outline'
 import InfoTooltip from '@/components/ui/InfoTooltip'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
@@ -34,16 +34,29 @@ import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 type IconComponent = React.ComponentType<{ className?: string }>
 
 const TYPE_META: Record<AssetType, { label: string; color: string; bg: string; Icon: IconComponent }> = {
-  savings:    { label: 'Savings',    color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-100',    Icon: BanknotesIcon       },
-  gold:       { label: 'Gold',       color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-100', Icon: StarIcon             },
-  investment: { label: 'Investment', color: 'text-green-700',  bg: 'bg-green-50 border-green-100',   Icon: ArrowTrendingUpIcon  },
-  pocket:     { label: 'Pocket',     color: 'text-purple-700', bg: 'bg-purple-50 border-purple-100', Icon: WalletIcon           },
-  other:      { label: 'Other',      color: 'text-gray-700',   bg: 'bg-gray-50 border-gray-200',     Icon: ArchiveBoxIcon       },
+  savings:    { label: 'Savings',          color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-100',     Icon: BanknotesIcon      },
+  gold:       { label: 'Gold',             color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-100',  Icon: StarIcon            },
+  investment: { label: 'Investment',       color: 'text-green-700',  bg: 'bg-green-50 border-green-100',    Icon: ArrowTrendingUpIcon },
+  pocket:     { label: 'Pocket',           color: 'text-purple-700', bg: 'bg-purple-50 border-purple-100',  Icon: WalletIcon          },
+  vehicle:    { label: 'Vehicle',          color: 'text-orange-700', bg: 'bg-orange-50 border-orange-100',  Icon: TruckIcon           },
+  property:   { label: 'Property',         color: 'text-teal-700',   bg: 'bg-teal-50 border-teal-100',      Icon: HomeModernIcon      },
+  other:      { label: 'Other',            color: 'text-gray-700',   bg: 'bg-gray-50 border-gray-200',      Icon: ArchiveBoxIcon      },
 }
 
-const TYPE_ORDER: AssetType[] = ['savings', 'gold', 'investment', 'pocket', 'other']
+const TYPE_ORDER: AssetType[] = ['savings', 'gold', 'investment', 'pocket', 'vehicle', 'property', 'other']
 
 const STALE_DAYS = 30
+
+function computeEstimatedValue(purchasePrice: number, purchaseYear: number, annualRate: number): number {
+  const years = new Date().getFullYear() - purchaseYear
+  if (years <= 0) return purchasePrice
+  return Math.max(0, purchasePrice * Math.pow(1 + annualRate / 100, years))
+}
+
+const SUBTYPE_LABELS: Record<string, string> = {
+  car: 'Car', motorcycle: 'Motorcycle', house: 'House',
+  apartment: 'Apartment', land: 'Land', other: 'Other',
+}
 
 function isStale(iso: string): boolean {
   return (Date.now() - new Date(iso).getTime()) > STALE_DAYS * 24 * 60 * 60 * 1000
@@ -348,6 +361,8 @@ export default function AssetsTab({ statements }: Props) {
                         t === 'gold'       ? 'bg-yellow-400' :
                         t === 'investment' ? 'bg-green-400'  :
                         t === 'pocket'     ? 'bg-purple-400' :
+                        t === 'vehicle'    ? 'bg-orange-400' :
+                        t === 'property'   ? 'bg-teal-400'   :
                         'bg-gray-400'
                       }`}
                       style={{ width: `${pct}%` }}
@@ -779,7 +794,7 @@ function LiquidCoverageSection({
 
       <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 leading-relaxed">
         Includes <strong>all</strong> savings accounts — unlike the emergency fund which counts only designated accounts.
-        Both metrics together give the full liquidity picture.
+        Vehicle and property assets are excluded as they are illiquid (cannot be quickly sold in an emergency).
       </p>
     </div>
   )
@@ -797,6 +812,8 @@ interface CardProps {
 }
 
 function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete }: CardProps) {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const nowMs = useMemo(() => Date.now(), [])
   const stale = isStale(asset.updatedAt)
   const staleDays = stale ? daysSince(asset.updatedAt) : 0
 
@@ -951,6 +968,68 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
                 style={{ width: `${pocketProgress}%` }}
               />
             </div>
+          </div>
+        )}
+
+        {/* Foreign currency details */}
+        {asset.currency && asset.currency !== 'IDR' && asset.foreignAmount && (
+          <div className="mt-1 space-y-0.5">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="font-medium">{asset.foreignAmount.toLocaleString()} {asset.currency}</span>
+              {asset.exchangeRate && (
+                <span className="text-gray-400 dark:text-gray-500 ml-1">
+                  @ Rp {Math.round(asset.exchangeRate).toLocaleString('id-ID')}/{asset.currency}
+                </span>
+              )}
+            </p>
+            {asset.exchangeRateUpdatedAt && (() => {
+              const days = Math.floor((nowMs - new Date(asset.exchangeRateUpdatedAt!).getTime()) / 86400000)
+              const staleRate = days > 7
+              return (
+                <p className={`text-xs ${staleRate ? 'text-amber-500 dark:text-amber-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                  Rate {staleRate ? `${days}d old — tap edit to refresh` : `updated ${days === 0 ? 'today' : `${days}d ago`}`}
+                </p>
+              )
+            })()}
+          </div>
+        )}
+
+        {/* Vehicle / Property details */}
+        {(asset.type === 'vehicle' || asset.type === 'property') && asset.purchasePrice && asset.purchaseYear && (
+          <div className="mt-1 space-y-1">
+            {asset.physicalSubtype && (
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Type: <span className="font-medium">{SUBTYPE_LABELS[asset.physicalSubtype] ?? asset.physicalSubtype}</span>
+              </p>
+            )}
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Purchased: <span className="font-medium">{asset.purchaseYear}</span>
+              <span className="text-gray-400 dark:text-gray-500 ml-1">for {formatIDR(asset.purchasePrice)}</span>
+            </p>
+            {asset.annualChangeRate != null && (
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Annual rate:{' '}
+                <span className={`font-medium ${asset.annualChangeRate < 0 ? 'text-red-500' : 'text-green-600'}`}>
+                  {asset.annualChangeRate > 0 ? '+' : ''}{asset.annualChangeRate}%/yr
+                </span>
+              </p>
+            )}
+            {asset.annualChangeRate != null && (() => {
+              const est = computeEstimatedValue(asset.purchasePrice!, asset.purchaseYear!, asset.annualChangeRate!)
+              const diff = asset.currentValue - est
+              const absDiff = Math.abs(diff)
+              return (
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  Est. today:{' '}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">{formatIDR(est)}</span>
+                  {absDiff > 0 && (
+                    <span className={`ml-1 ${diff > 0 ? 'text-green-600' : 'text-amber-500'}`}>
+                      ({diff > 0 ? '+' : '-'}{formatIDR(absDiff)} vs estimate)
+                    </span>
+                  )}
+                </p>
+              )
+            })()}
           </div>
         )}
 

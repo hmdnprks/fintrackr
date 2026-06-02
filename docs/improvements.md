@@ -97,13 +97,14 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] **Rebalance PDF export** — Export PDF button opens a print-ready HTML page (no library dependency) with health badge, summary, execution note, suggestion cards, safety check, and disclaimer
 - [x] **Rebalance safety check** — AI computes remaining liquid savings after all moves and states months of expense coverage; verdict badge (Safe green / Caution amber / Warning red) shown below suggestion cards
 - [x] **Rebalance UX improvements** — priority ordering (#1 most urgent), confidence badges (High priority / Consider / Optional) with reason phrases, running balance shown per suggestion card, insufficient-funds warning when accumulated withdrawals exceed source balance
-- [ ] **Vehicle / Property asset type** — depreciating assets (car, motorcycle, house, land); excluded from liquid coverage and emergency fund calculations; value depreciation model
+- [x] **Vehicle / Property asset type** — depreciating assets (car, motorcycle) and appreciating assets (house, apartment, land); excluded from liquid coverage and emergency fund; depreciation model `purchasePrice × (1 + rate/100)^years`; default rates per subtype; "Use estimate" button; amber illiquid note in modal
 - [x] **Stale asset indicator** — amber badge on cards and net worth summary when any asset value hasn't been updated in 30+ days; dismissable banner lists stale asset names; "Xd old" badge per card; amber timestamp with "update recommended"; ⚠ on net worth last-updated label
 - [ ] **Net worth trend chart** — line chart showing aggregate net worth over time using stored snapshots; visual growth story
 - [ ] **Per-asset mini sparkline** — small trend line on each card showing value history over last 6 months
 - [ ] **Investment allocation targets** — user sets desired % per asset type (e.g. 30% savings, 40% investments, 20% gold); shows actual vs target with gap
 - [ ] **BPJS JHT claim reminder** — if a JHT asset is marked as "from previous employer", surface a note that it is withdrawable now
 - [ ] Manual portfolio import — paste Bibit/Stockbit portfolio value from app screenshot or CSV
+- [x] **Multi-currency assets** — foreign currency support on savings, gold, and investment assets (USD, EUR, SGD, GBP, AUD, JPY, MYR, CNY, SAR, HKD); foreign amount + exchange rate stored; IDR auto-computed; "Fetch latest rate" hits **frankfurter.app** (free, no API key, ECB-backed); live IDR preview in modal; rate age on card turns amber after 7 days; currency field hidden for pocket, vehicle, property, and other types
 
 ---
 

@@ -1,6 +1,8 @@
 import { getVaultDataSync, saveVaultData } from './storage/secureStorage'
 
-export type AssetType = 'savings' | 'gold' | 'investment' | 'pocket' | 'other'
+export type AssetType = 'savings' | 'gold' | 'investment' | 'pocket' | 'vehicle' | 'property' | 'other'
+
+export type PhysicalSubtype = 'car' | 'motorcycle' | 'house' | 'apartment' | 'land' | 'other'
 
 export interface Asset {
   id: string
@@ -16,6 +18,16 @@ export interface Asset {
   goalName?: string        // pocket: what is this for
   goalTarget?: number      // pocket: target IDR
   goalDeadline?: string    // pocket: YYYY-MM
+  // vehicle / property fields
+  physicalSubtype?: PhysicalSubtype
+  purchasePrice?: number   // original purchase price in IDR
+  purchaseYear?: number    // year of purchase e.g. 2020
+  annualChangeRate?: number // signed % per year; negative = depreciation, positive = appreciation
+  // multi-currency fields
+  currency?: string        // ISO code e.g. 'USD', 'EUR'; omit or 'IDR' = no conversion
+  foreignAmount?: number   // amount in the foreign currency
+  exchangeRate?: number    // IDR per 1 unit of foreign currency at last refresh
+  exchangeRateUpdatedAt?: string // ISO date of last rate refresh
   notes?: string
   updatedAt: string        // ISO — when was the value last updated
   createdAt: string
