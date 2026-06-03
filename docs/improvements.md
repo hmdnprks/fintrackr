@@ -4,6 +4,25 @@ Checklist of shipped features and planned improvements. Items without a check ar
 
 ---
 
+## Priority Roadmap
+
+Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on statement samples).
+
+| # | Feature | Section | Why |
+|---|---------|---------|-----|
+| 1 | **Generic CSV import** | Import & Parsing | Unblocks all banks (BCA, BRI, BNI, Jago, GoPay, OVO all export CSV); one column-mapper UI supports every bank without writing a parser |
+| 2 | **Google Drive auto-backup** | Data & Backup | localStorage can be wiped by the browser; one accidental "Clear site data" = all data gone; this is the biggest trust gap for serious long-term use |
+| 3 | **Debt payoff optimizer** | Assets Tab | Avalanche vs snowball comparison with total interest saved; the data (balance, rate, installment) is already stored — just needs the math and UI |
+| 4 | **Gold price auto-fetch** | Assets Tab | Antam/LM publishes a public price; auto-multiply by weight = zero manual input for the most common Indonesian non-bank asset |
+| 5 | **In-app notification center** | Mobile & UX | Budget overrun, goal deadline, stale assets, backup overdue — currently all silent; a bell icon with a list makes the app proactive |
+| 6 | **Investment return tracking** | Assets Tab | Add "initial invested amount" field; compute actual return % vs current value; the one number investors care about most |
+| 7 | **Budget rollover** | Budget Tab | Unspent budget carries to next month; widely expected by users |
+| 8 | **Vault inactivity timeout** | Security & Vault | Auto-lock after X minutes of inactivity; basic security hygiene |
+| 9 | **Subscription manager** | Nice to Have | Detect recurring charges from fixed commitments; show total monthly and annual cost; surface cancel links |
+| 10 | **SPT / tax summary** | Nice to Have | Annual income summary for Indonesian tax filing (PPh 21 context) |
+
+---
+
 ## Import & Parsing
 
 - [x] Multi-file batch import — drop multiple PDFs at once; sequential processing with live per-file progress list (pending / processing / saved / duplicate / error)
@@ -15,6 +34,8 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [ ] Bank Jago statement parser (JSON export)
 - [ ] BRI / BNI / CIMB parser
 - [ ] Auto-detect bank from PDF so users don't need to choose
+- [ ] **Generic CSV import** ⭐ — column-mapper UI (user assigns which column is date / description / debit / credit); supports any bank or e-wallet that exports CSV without writing a dedicated parser; unlocks BCA, BRI, BNI, GoPay, OVO, Dana, Shopee Pay in one shot
+- [ ] **GoPay / OVO / Dana e-wallet import** — e-wallet transaction history covers most daily spending in Indonesia; CSV or in-app export; without this, a large slice of real spending is invisible to the app
 
 ---
 
@@ -76,7 +97,7 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] Financial goals — savings goals (name + target amount + deadline) and spending habit goals (consecutive months under limit); goal name shown as card title; falls back to "Save Rp X" for unnamed goals
 - [x] **Savings goal progress tracking modes** — pencil button opens "Track Progress" modal; three modes: Auto (net savings from statements), Manual (user-entered amount), Linked (reads balance from a savings/pocket/investment/gold asset); mode badge shown on card
 - [x] Category breakdown — donut chart + ranked list; Expenses/Income toggle
-- [ ] Budget rollover — unspent budget carries forward to next month
+- [ ] **Budget rollover** ⭐ — unspent budget carries forward to next month; widely expected by users; show rollover amount as a separate line in the budget card
 - [ ] Goal notifications — in-app alert when a goal deadline is approaching
 - [ ] Shared budget mode — split expenses between people (future)
 - [x] **AI Goal Instrument Advisor** — indigo "AI Plan" button on each active savings goal card; goal name auto-filled from the saved goal name (no re-entry needed); optional override input; context summary shows target, deadline, months left, monthly surplus (avg last 6 months), required/month, and achievability badge (green ✓ / amber ⚠ / red ✗); time-horizon tiers: <3mo → Tabungan/Deposito, 3–12mo → Deposito/RDPU, 12–36mo → RDPT/ORI/Sukuk/SBR, 36mo+ → RDPU buffer + RD Campuran + RD Saham; AI returns instrument cards (name, allocation %, expected return range, rationale + allocation bar), required monthly contribution, risk level badge, risk note, and summary; last 3 plans per goal persisted in vault and reloadable without re-running AI; button hidden on completed or overdue goals; max_tokens 2048 to prevent JSON truncation
@@ -107,6 +128,9 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [ ] **Investment allocation targets** — user sets desired % per asset type (e.g. 30% savings, 40% investments, 20% gold); shows actual vs target with gap
 - [ ] **BPJS JHT claim reminder** — if a JHT asset is marked as "from previous employer", surface a note that it is withdrawable now
 - [ ] Manual portfolio import — paste Bibit/Stockbit portfolio value from app screenshot or CSV
+- [ ] **Debt payoff optimizer** ⭐ — given multiple liabilities, show avalanche (highest rate first) vs snowball (smallest balance first) strategies side by side; display total interest saved per strategy and projected payoff date; all required data (balance, rate, installment) is already stored
+- [ ] **Gold price auto-fetch** ⭐ — Antam/LM publishes daily buy/sell prices; store weight (gram) on gold assets; fetch price automatically and compute IDR value; rate age badge turns amber after 1 day; eliminates the most common manual update for Indonesian investors
+- [ ] **Investment return tracking** ⭐ — add "initial invested amount" field to investment assets; compute actual return % = (current − initial) / initial × 100; show absolute gain/loss and annualised return if purchase date is stored; this is the number investors care about most
 - [x] **Multi-currency assets** — foreign currency support on savings, gold, and investment assets (USD, EUR, SGD, GBP, AUD, JPY, MYR, CNY, SAR, HKD); foreign amount + exchange rate stored; IDR auto-computed; "Fetch latest rate" hits **frankfurter.app** (free, no API key, ECB-backed); live IDR preview in modal; rate age on card turns amber after 7 days; currency field hidden for pocket, vehicle, property, and other types
 
 ---
@@ -117,8 +141,8 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] Backwards-compatible restore — v1/v2/v3 backups load cleanly
 - [x] Merge restore — deduplicates by ID; backup wins on same-day snapshots
 - [x] CSV export — filtered transaction list
-- [ ] **Google Drive backup** — OAuth2 PKCE flow; auto-save encrypted backup to Drive appdata folder; requires Google Cloud project + OAuth client ID
-- [ ] Scheduled auto-backup reminder — prompt user to export backup every 30 days
+- [ ] **Google Drive auto-backup** ⭐ — OAuth2 PKCE flow; auto-save encrypted backup to Drive appdata folder on every vault save; requires Google Cloud project + OAuth client ID; critical because localStorage can be wiped by the browser (Clear site data, storage pressure) with no recovery
+- [ ] Scheduled auto-backup reminder — prompt user to export manual backup every 30 days if Google Drive is not connected
 - [ ] Backup encryption option — encrypt the JSON file itself before download (separate from vault encryption) so it's safe to store in cloud
 
 ---
@@ -176,6 +200,7 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] Fixed commitments: card layout with full-width description
 - [x] Import page: secondary button with Squares2X2Icon for dashboard link
 - [ ] **Pull-to-refresh** on dashboard (mobile)
+- [ ] **In-app notification center** ⭐ — bell icon in nav with unread badge; surfaced events: budget category exceeded, goal deadline within 30 days, asset value stale >30 days, backup not exported in >30 days; notifications stored in vault; mark-as-read; makes the app proactive instead of passive
 - [x] **Bottom navigation bar** on mobile — fixed bottom bar with Import/Dashboard/Settings icons, iOS safe-area inset, replaces hamburger entirely
 - [x] Dark mode support — OS preference detection, localStorage persistence, full component coverage, Sun/Moon toggle in nav
 - [x] **Dark mode contrast audit** — all colored status cards (Emergency Fund, Liquid Coverage), category badges, delta pills, tier badges, and tooltip threshold labels now carry matching `dark:bg-*/dark:border-*/dark:text-*` variants; 18 files updated so no text goes invisible against a light-colored card background in dark mode
@@ -191,15 +216,15 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] Change master password (re-encrypts all data)
 - [x] Session restored from sessionStorage on page refresh
 - [x] Biometric unlock (Face ID / Touch ID via WebAuthn) on supported devices — platform authenticator via `navigator.credentials`; credential + vault password stored in IndexedDB; enable/disable in Settings; auto-revoked on master password change; graceful fallback to password on unsupported devices
-- [ ] Vault inactivity timeout — auto-lock after X minutes
+- [ ] **Vault inactivity timeout** ⭐ — auto-lock after X minutes of inactivity (configurable in Settings); re-prompts password or biometric; essential for shared-device scenarios
 
 ---
 
 ## Nice to Have / Long Term
 
 - [x] **Debt tracking** — see Liabilities section in Assets Tab above
-- [ ] **Subscription manager** — list all detected recurring subscriptions with cancel links and total monthly cost
-- [ ] **Tax summary** — annual income summary for SPT filing (Indonesian context)
+- [ ] **Subscription manager** ⭐ — detect recurring charges from fixed commitments (Netflix, Spotify, iCloud, etc.); show monthly and annual total; surface cancel/manage links per service; highlight subscriptions that increased in price
+- [ ] **Tax summary** ⭐ — annual gross income summary for SPT Tahunan filing; breakdown by month; Zakat nisab check (if income > nisab threshold, surface the obligated amount); Indonesian PPh 21 context
 - [ ] **Multi-currency** — gold in USD/gram, investments in USD; display in IDR equivalent
 - [ ] **Shared / household mode** — combine two users' finances into one dashboard
 - [ ] Public release checklist — multi-bank support, custom parser SDK, privacy policy, App Store / Play Store listing
