@@ -30,7 +30,7 @@ Be concise, helpful, and specific to their data. If asked about something outsid
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'deepseek-chat',
+          model: 'deepseek-v4-pro',
           messages: [
             { role: 'system', content: systemPrompt },
             ...messages,

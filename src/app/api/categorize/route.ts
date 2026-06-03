@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (type === 'insights') {
-      const insights = await generateInsights(transactions, apiKey, 'deepseek-chat', period)
+      const insights = await generateInsights(transactions, apiKey, 'deepseek-v4-pro', period)
       return NextResponse.json({ success: true, insights })
     }
 
