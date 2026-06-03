@@ -603,7 +603,7 @@ export async function generateRebalancingSuggestions(
   const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens: 1500 }),
+    body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens: 3000 }),
   })
 
   if (!res.ok) {
@@ -615,7 +615,12 @@ export async function generateRebalancingSuggestions(
   let content: string = json.choices?.[0]?.message?.content || ''
   content = content.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```\s*$/g, '').trim()
 
-  const parsed = JSON.parse(content)
+  let parsed: any
+  try {
+    parsed = JSON.parse(content)
+  } catch {
+    throw new Error(`Failed to parse rebalance response: ${content.slice(0, 300)}`)
+  }
   if (!parsed.suggestions || !Array.isArray(parsed.suggestions)) {
     throw new Error('Unexpected response format from AI')
   }
