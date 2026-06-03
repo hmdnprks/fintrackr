@@ -60,7 +60,7 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] Fixed Monthly Commitments — auto-detects recurring expenses across ≥2 months; card layout with full description visible
 - [x] Investment Rate — keyword-based detection of investment platform transfers (Bibit, Stockbit, Ajaib, etc.)
 - [x] **Financial Health Score** — composite 0–100 score (grades A+/A/B/C/D) across savings rate (30 pts), emergency fund (30 pts), investment rate (20 pts), budget adherence (20 pts); per-dimension progress bars; motivating message per grade; placed in Insights tab
-- [x] **FIRE Number** — 25× annual expenses; progress bar (net worth vs target); stats grid (annual expenses, savings, years to FIRE); birth year input saved to vault → shows projected FIRE age and target year; collapsible FIRE explainer (4% rule, Indonesian context, FIRE variants); placed in Assets tab
+- [x] **FIRE Number** — 25× annual expenses; progress bar (net worth vs target); stats grid (annual expenses, savings, years to FIRE); birth year input saved to vault → shows projected FIRE age and target year; collapsible FIRE explainer (4% rule, Indonesian context, FIRE variants); net worth = assets − liabilities (reads fresh data on every render, not stale mount-time snapshot); placed in Assets tab
 - [x] Cash Flow Forecast — covered by Spending Forecast (net projection = expected balance change)
 - [x] **Income stability score** — CV of last 6 months income; three tiers Stable/Variable/Highly Variable; shows income range (low/avg/high), variance %; emergency fund implication per tier (3–6mo / 6–9mo / 9+mo); placed in Insights tab between Health Score and 50/30/20
 - [x] **Burn rate** — avg daily expense = totalExpense / (months × 30); shown as compact row at bottom of Income vs Expense card in Overview; co-located with expense data, zero extra card space
@@ -177,6 +177,7 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [ ] **Pull-to-refresh** on dashboard (mobile)
 - [x] **Bottom navigation bar** on mobile — fixed bottom bar with Import/Dashboard/Settings icons, iOS safe-area inset, replaces hamburger entirely
 - [x] Dark mode support — OS preference detection, localStorage persistence, full component coverage, Sun/Moon toggle in nav
+- [x] **Dark mode contrast audit** — all colored status cards (Emergency Fund, Liquid Coverage), category badges, delta pills, tier badges, and tooltip threshold labels now carry matching `dark:bg-*/dark:border-*/dark:text-*` variants; 18 files updated so no text goes invisible against a light-colored card background in dark mode
 - [x] PWA / installable — manifest.json, service worker (offline shell cache), ServiceWorkerRegister, Apple meta tags
 
 ---
