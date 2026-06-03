@@ -96,7 +96,7 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] All icons via @heroicons/react
 - [x] **Asset Reallocation Advisor** — AI CTA in the net worth card to analyse current asset distribution and suggest rebalancing; risk preference selector (Conservative / Moderate / Aggressive); AI considers emergency fund adequacy, excess low-yield savings, investment under-allocation, and Indonesian products (Reksa Dana Pasar Uang, Reksa Dana Saham, Deposito); returns structured suggestions with from/to/amount/reason; net worth card also shows last-updated timestamp
 - [x] **Rebalance result persistence** — auto-saves every analysis to vault (last 5 entries); "Load" banner on next open restores the previous result without re-running AI; included in JSON backup export and restore
-- [x] **Rebalance PDF export** — Export PDF button opens a print-ready HTML page (no library dependency) with health badge, summary, execution note, suggestion cards, safety check, and disclaimer
+- [x] **Rebalance PDF export** — Export PDF button generates and downloads a `.pdf` file directly via jsPDF (no print dialog, no new tab); includes health badge, summary, execution note, suggestion cards, safety check, and disclaimer
 - [x] **Rebalance safety check** — AI computes remaining liquid savings after all moves and states months of expense coverage; verdict badge (Safe green / Caution amber / Warning red) shown below suggestion cards
 - [x] **Rebalance UX improvements** — priority ordering (#1 most urgent), confidence badges (High priority / Consider / Optional) with reason phrases, running balance shown per suggestion card, insufficient-funds warning when accumulated withdrawals exceed source balance
 - [x] **Vehicle / Property asset type** — depreciating assets (car, motorcycle) and appreciating assets (house, apartment, land); excluded from liquid coverage and emergency fund; depreciation model `purchasePrice × (1 + rate/100)^years`; default rates per subtype; current value auto-fills from model as user types purchase fields; "Reset to estimate" link when manually overridden; amber illiquid note in modal
@@ -132,6 +132,7 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] AI Rebalance Advisor — priority-ordered suggestions, confidence levels, running balance per step, savings safety check post-rebalance; auto-saved to vault; exportable as PDF
 - [x] User-provided DeepSeek API key stored in vault
 - [x] Server-side `DEEPSEEK_API_KEY` env var override
+- [x] All AI features use `deepseek-chat` (DeepSeek V3) — fast, non-reasoning model; avoids token-budget exhaustion from chain-of-thought that caused empty responses on `deepseek-v4-pro`
 - [ ] **Switch AI provider** — allow user to choose DeepSeek / OpenAI / Claude via settings
 - [ ] **AI financial health check** — monthly summary: what improved, what needs attention, one action item
 - [ ] AI-assisted goal planning — given a savings target, suggest how to reach it based on current income/expense patterns
