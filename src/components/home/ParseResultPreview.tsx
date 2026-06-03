@@ -114,12 +114,12 @@ export default function ParseResultPreview({
           </Link>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-sm px-5 py-4 flex items-center justify-between gap-4">
+        <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm px-5 py-4 flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-gray-900">
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
               {parsedPeriod ?? 'Statement parsed'}
             </p>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
               {result.transactions.length} transactions · review below before saving
             </p>
           </div>
@@ -167,8 +167,8 @@ export default function ParseResultPreview({
       )}
 
       {/* Account summary */}
-      <div className="bg-white rounded-2xl shadow-sm px-6 py-5">
-        <h2 className="text-base font-semibold text-gray-900 mb-4">Account Summary</h2>
+      <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm px-6 py-5">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">Account Summary</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           {[
             { label: 'Account', value: result.accountSummary.accountNumber },
@@ -177,31 +177,31 @@ export default function ParseResultPreview({
             { label: 'Balance', value: formatIDR(result.accountSummary.balance), highlight: true },
           ].map(({ label, value, highlight }) => (
             <div key={label}>
-              <p className="text-xs text-gray-400 mb-0.5">{label}</p>
-              <p className={`font-medium ${highlight ? 'text-blue-600' : 'text-gray-800'}`}>{value}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">{label}</p>
+              <p className={`font-medium ${highlight ? 'text-blue-600 dark:text-blue-400' : 'text-gray-800 dark:text-gray-200'}`}>{value}</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* Income vs Expense */}
-      <div className="bg-white rounded-2xl shadow-sm px-6 py-5">
+      <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm px-6 py-5">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-base font-semibold text-gray-900">Income vs Expense</h2>
-          <span className={`text-sm font-semibold px-3 py-1 rounded-full ${net >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Income vs Expense</h2>
+          <span className={`text-sm font-semibold px-3 py-1 rounded-full ${net >= 0 ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
             }`}>
             {net >= 0 ? `Saved ${savingsRate}%` : `Over by ${Math.abs(savingsRate)}%`}
           </span>
         </div>
         <div className="space-y-3">
           {[
-            { label: 'Income', value: totalIncome, color: 'bg-green-500', textColor: 'text-gray-800' },
-            { label: 'Expense', value: totalExpense, color: 'bg-red-400', textColor: 'text-gray-800' },
-            { label: 'Net', value: Math.abs(net), color: net >= 0 ? 'bg-blue-400' : 'bg-red-500', textColor: net >= 0 ? 'text-gray-800' : 'text-red-500' },
+            { label: 'Income', value: totalIncome, color: 'bg-green-500', textColor: 'text-gray-800 dark:text-gray-200' },
+            { label: 'Expense', value: totalExpense, color: 'bg-red-400', textColor: 'text-gray-800 dark:text-gray-200' },
+            { label: 'Net', value: Math.abs(net), color: net >= 0 ? 'bg-blue-400' : 'bg-red-500', textColor: net >= 0 ? 'text-gray-800 dark:text-gray-200' : 'text-red-500 dark:text-red-400' },
           ].map(({ label, value, color, textColor }) => (
             <div key={label} className="flex items-center gap-3">
-              <span className="text-xs text-gray-500 w-14 shrink-0">{label}</span>
-              <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
+              <span className="text-xs text-gray-500 dark:text-gray-400 w-14 shrink-0">{label}</span>
+              <div className="flex-1 h-3 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                 <div className={`h-full ${color} rounded-full transition-all duration-500`}
                   style={{ width: `${(value / max) * 100}%` }} />
               </div>
@@ -215,25 +215,25 @@ export default function ParseResultPreview({
 
       {/* Category breakdown */}
       {categoryEntries.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100">
-            <h2 className="text-base font-semibold text-gray-900">Spending by Category</h2>
+        <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Spending by Category</h2>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-gray-50 dark:divide-gray-800">
             {categoryEntries.map(({ cat, amt, pct }, i) => {
               const color = CATEGORY_COLOR[cat] ?? '#94a3b8'
               return (
                 <div key={cat} className="flex items-center gap-3 px-6 py-3">
-                  <span className="text-xs text-gray-300 w-4 text-right shrink-0 tabular-nums">{i + 1}</span>
+                  <span className="text-xs text-gray-300 dark:text-gray-600 w-4 text-right shrink-0 tabular-nums">{i + 1}</span>
                   <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                  <span className="text-sm text-gray-700 w-36 shrink-0 truncate">{cat}</span>
-                  <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <span className="text-sm text-gray-700 dark:text-gray-300 w-36 shrink-0 truncate">{cat}</span>
+                  <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                     <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
                   </div>
-                  <span className="text-sm font-medium text-gray-800 w-28 text-right shrink-0 tabular-nums">
+                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200 w-28 text-right shrink-0 tabular-nums">
                     {formatIDR(amt)}
                   </span>
-                  <span className="text-xs text-gray-400 w-10 text-right shrink-0 tabular-nums">
+                  <span className="text-xs text-gray-400 dark:text-gray-500 w-10 text-right shrink-0 tabular-nums">
                     {pct.toFixed(1)}%
                   </span>
                 </div>
@@ -244,35 +244,35 @@ export default function ParseResultPreview({
       )}
 
       {/* Transactions */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-900">
+      <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
             Transactions
-            <span className="text-sm font-normal text-gray-400 ml-2">
+            <span className="text-sm font-normal text-gray-400 dark:text-gray-500 ml-2">
               {result.transactions.length}
             </span>
           </h2>
         </div>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-100">
-              <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wide px-6 py-3 w-20">Date</th>
-              <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wide px-6 py-3">Description</th>
-              <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wide px-6 py-3 w-36">Category</th>
-              <th className="text-right text-xs font-medium text-gray-400 uppercase tracking-wide px-6 py-3 w-32">Amount</th>
+            <tr className="border-b border-gray-100 dark:border-gray-800">
+              <th className="text-left text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide px-6 py-3 w-20">Date</th>
+              <th className="text-left text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide px-6 py-3">Description</th>
+              <th className="text-left text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide px-6 py-3 w-36">Category</th>
+              <th className="text-right text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide px-6 py-3 w-32">Amount</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
             {result.transactions.map((tx: any, i: number) => (
-              <tr key={i} className="hover:bg-gray-50 transition">
-                <td className="px-6 py-3 text-xs text-gray-400 whitespace-nowrap tabular-nums">
+              <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                <td className="px-6 py-3 text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap tabular-nums">
                   {tx.transactionDate}
                 </td>
-                <td className="px-6 py-3 text-gray-700 max-w-xs">
+                <td className="px-6 py-3 text-gray-700 dark:text-gray-300 max-w-xs">
                   <span className="line-clamp-1">{tx.detail}</span>
                 </td>
                 <td className="px-6 py-3">
-                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
                     {tx.category ?? 'Uncategorized'}
                   </span>
                 </td>

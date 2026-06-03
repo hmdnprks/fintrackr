@@ -19,7 +19,7 @@ function StatusIcon({ status }: { status: BatchItemStatus }) {
   switch (status) {
     case 'pending':
       return (
-        <div className="w-6 h-6 rounded-full border-2 border-gray-200 shrink-0" />
+        <div className="w-6 h-6 rounded-full border-2 border-gray-200 dark:border-gray-600 shrink-0" />
       )
     case 'processing':
       return (
@@ -64,12 +64,12 @@ export default function BatchProgress({ items, isRunning }: Props) {
   const processed = items.filter((i) => !['pending', 'processing'].includes(i.status)).length
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
 
       {/* Header */}
-      <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+      <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
             {isDone ? 'Import complete' : `Importing… ${processed} of ${items.length}`}
           </h2>
           {isRunning && (
@@ -100,7 +100,7 @@ export default function BatchProgress({ items, isRunning }: Props) {
 
       {/* Progress bar */}
       {!isDone && (
-        <div className="h-1 bg-gray-100">
+        <div className="h-1 bg-gray-100 dark:bg-gray-800">
           <div
             className="h-full bg-blue-500 transition-all duration-500"
             style={{ width: `${items.length > 0 ? (processed / items.length) * 100 : 0}%` }}
@@ -109,13 +109,13 @@ export default function BatchProgress({ items, isRunning }: Props) {
       )}
 
       {/* File list */}
-      <div className="divide-y divide-gray-50">
+      <div className="divide-y divide-gray-50 dark:divide-gray-800">
         {items.map((item, i) => (
           <div key={i} className="flex items-center gap-4 px-6 py-3.5">
             <StatusIcon status={item.status} />
 
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-800 truncate">{item.file.name}</p>
+              <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{item.file.name}</p>
               <p className="text-xs mt-0.5">
                 {item.status === 'pending' && (
                   <span className="text-gray-400">Waiting…</span>
@@ -141,11 +141,11 @@ export default function BatchProgress({ items, isRunning }: Props) {
             </div>
 
             <span className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${
-              item.status === 'saved'      ? 'bg-green-50 text-green-700' :
-              item.status === 'duplicate' ? 'bg-amber-50 text-amber-600' :
-              item.status === 'error'     ? 'bg-red-50 text-red-500'     :
-              item.status === 'processing'? 'bg-blue-50 text-blue-500'   :
-              'bg-gray-100 text-gray-400'
+              item.status === 'saved'      ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400' :
+              item.status === 'duplicate' ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400' :
+              item.status === 'error'     ? 'bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400'         :
+              item.status === 'processing'? 'bg-blue-50 dark:bg-blue-900/20 text-blue-500 dark:text-blue-400'     :
+              'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
             }`}>
               {item.status === 'saved'       ? 'Saved'       :
                item.status === 'duplicate'  ? 'Duplicate'  :

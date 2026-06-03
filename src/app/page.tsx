@@ -170,11 +170,11 @@ export default function Home() {
           <StatementGuide />
 
           {/* Privacy notice */}
-          <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4">
-            <ShieldCheckIcon className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 rounded-2xl px-5 py-4">
+            <ShieldCheckIcon className="w-5 h-5 text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-semibold text-blue-800">Your data never leaves your device</p>
-              <p className="text-sm text-blue-600 mt-0.5">
+              <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">Your data never leaves your device</p>
+              <p className="text-sm text-blue-600 dark:text-blue-400 mt-0.5">
                 Fintrackr stores everything locally in your browser — no server, no database, no cloud.
               </p>
             </div>

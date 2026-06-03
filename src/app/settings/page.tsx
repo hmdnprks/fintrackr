@@ -122,6 +122,23 @@ export default function SettingsPage() {
     }
   }
 
+  // ── auto-lock ─────────────────────────────────────────────────────────────
+  const [autoLockMinutes, setAutoLockMinutes] = useState(() =>
+    typeof window !== 'undefined'
+      ? Number(getVaultDataSync().settings?.autoLockMinutes ?? 0)
+      : 0
+  )
+  const [autoLockSaved, setAutoLockSaved] = useState(false)
+
+  async function handleAutoLockChange(minutes: number) {
+    setAutoLockMinutes(minutes)
+    const currentSettings = getVaultDataSync().settings || {}
+    await saveVaultData({ settings: { ...currentSettings, autoLockMinutes: String(minutes) } })
+    window.dispatchEvent(new Event('fintrackr-autolock-changed'))
+    setAutoLockSaved(true)
+    setTimeout(() => setAutoLockSaved(false), 2000)
+  }
+
   // ── biometric ──────────────────────────────────────────────────────────────
   const [biometricAvailable, setBiometricAvailable] = useState(false)
   const [biometricEnrolled, setBiometricEnrolled]   = useState(false)
@@ -493,7 +510,46 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* ── 5. Data ───────────────────────────────────────────────────── */}
+        {/* ── 5. Auto-lock ─────────────────────────────────────────────── */}
+        <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Auto-lock</h2>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">
+              Lock the vault automatically after a period of inactivity.
+            </p>
+          </div>
+          <div className="px-6 py-5 space-y-3">
+            <div className="flex items-center gap-3">
+              <select
+                value={autoLockMinutes}
+                onChange={(e) => handleAutoLockChange(Number(e.target.value))}
+                className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value={0}>Off</option>
+                <option value={1}>1 minute</option>
+                <option value={5}>5 minutes</option>
+                <option value={15}>15 minutes</option>
+                <option value={30}>30 minutes</option>
+                <option value={60}>1 hour</option>
+              </select>
+              {autoLockSaved && (
+                <span className="flex items-center gap-1.5 text-xs font-medium text-green-700 dark:text-green-400">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  Saved
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+              {autoLockMinutes > 0
+                ? `Vault locks after ${autoLockMinutes} minute${autoLockMinutes > 1 ? 's' : ''} of inactivity. Any mouse, keyboard, or touch activity resets the timer.`
+                : 'Auto-lock is off — the vault stays open until you manually lock it or close the tab.'}
+            </p>
+          </div>
+        </div>
+
+        {/* ── 6. Data ───────────────────────────────────────────────────── */}
         <BackupSection />
 
       </div>

@@ -17,7 +17,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 | 5 | **In-app notification center** | Mobile & UX | Budget overrun, goal deadline, stale assets, backup overdue — currently all silent; a bell icon with a list makes the app proactive |
 | 6 | **Investment return tracking** | Assets Tab | Add "initial invested amount" field; compute actual return % vs current value; the one number investors care about most |
 | 7 | **Budget rollover** | Budget Tab | Unspent budget carries to next month; widely expected by users |
-| 8 | **Vault inactivity timeout** | Security & Vault | Auto-lock after X minutes of inactivity; basic security hygiene |
+| 8 | ~~**Vault inactivity timeout**~~ ✓ | Security & Vault | ~~Auto-lock after X minutes of inactivity; basic security hygiene~~ Shipped |
 | 9 | **Subscription manager** | Nice to Have | Detect recurring charges from fixed commitments; show total monthly and annual cost; surface cancel links |
 | 10 | **SPT / tax summary** | Nice to Have | Annual income summary for Indonesian tax filing (PPh 21 context) |
 
@@ -204,6 +204,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 - [x] **Bottom navigation bar** on mobile — fixed bottom bar with Import/Dashboard/Settings icons, iOS safe-area inset, replaces hamburger entirely
 - [x] Dark mode support — OS preference detection, localStorage persistence, full component coverage, Sun/Moon toggle in nav
 - [x] **Dark mode contrast audit** — all colored status cards (Emergency Fund, Liquid Coverage), category badges, delta pills, tier badges, and tooltip threshold labels now carry matching `dark:bg-*/dark:border-*/dark:text-*` variants; 18 files updated so no text goes invisible against a light-colored card background in dark mode
+- [x] **Import page dark mode** — all cards on the import page were plain `bg-white` with no dark variant; fixed across 5 files: privacy notice banner, FileUploadZone (card, drop zone states, file icon, password input), StatementGuide (card, amber tip box, step text), BatchProgress (card, progress bar, file list, status badges), ParseResultPreview (all 4 result cards, savings rate badge, bar backgrounds, table rows)
 - [x] PWA / installable — manifest.json, service worker (offline shell cache), ServiceWorkerRegister, Apple meta tags
 
 ---
@@ -216,7 +217,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 - [x] Change master password (re-encrypts all data)
 - [x] Session restored from sessionStorage on page refresh
 - [x] Biometric unlock (Face ID / Touch ID via WebAuthn) on supported devices — platform authenticator via `navigator.credentials`; credential + vault password stored in IndexedDB; enable/disable in Settings; auto-revoked on master password change; graceful fallback to password on unsupported devices
-- [ ] **Vault inactivity timeout** ⭐ — auto-lock after X minutes of inactivity (configurable in Settings); re-prompts password or biometric; essential for shared-device scenarios
+- [x] **Vault inactivity timeout** — auto-lock after configurable inactivity period (Off / 1 / 5 / 15 / 30 / 60 min); activity events (mouse, keyboard, touch, scroll) reset the timer; setting saved to vault, takes effect immediately without re-locking; added as Auto-lock card in Settings between Biometric and Data sections
 
 ---
 
