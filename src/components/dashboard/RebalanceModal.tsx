@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import { jsPDF } from 'jspdf'
 import { Asset } from '@/lib/assetStorage'
 import { getLiabilities } from '@/lib/liabilityStorage'
 import { RebalanceResult, RebalanceContext, RebalanceSavedEntry } from '@/lib/categorizer/aiCategorizer'
@@ -66,80 +67,212 @@ function timeAgo(iso: string): string {
   return `${dateStr} ${timeStr}`
 }
 
-function buildPrintHTML(r: RebalanceResult, riskPref: string): string {
-  const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
-  const verdict = r.safetyCheck.verdict
+function exportRebalancePDF(r: RebalanceResult, riskPref: string) {
+  const doc = new jsPDF('p', 'mm', 'a4')
+  const pageW   = doc.internal.pageSize.getWidth()
+  const pageH   = doc.internal.pageSize.getHeight()
+  const margin  = 14
+  const usable  = pageW - margin * 2
+  let y = margin
 
-  const suggestionsHTML = r.suggestions.map(s => {
-    const conf = CONFIDENCE_META[s.confidence] ?? CONFIDENCE_META.medium
-    return `
-      <div style="border:1px solid #e5e7eb;border-radius:6px;padding:10px;margin-bottom:8px;page-break-inside:avoid;">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:10px;">
-          <span style="font-weight:700;color:#6b7280;">#${s.priority}</span>
-          <span style="background:#dbeafe;color:#1d4ed8;padding:1px 6px;border-radius:3px;font-weight:700;text-transform:uppercase;">${s.action}</span>
-          <span style="padding:1px 6px;border-radius:3px;font-weight:600;background:${s.confidence === 'high' ? '#dcfce7' : s.confidence === 'medium' ? '#fef3c7' : '#f3f4f6'};color:${s.confidence === 'high' ? '#15803d' : s.confidence === 'medium' ? '#b45309' : '#6b7280'}; text-transform:uppercase; font-size:9px;">${conf.label}</span>
-        </div>
-        ${s.from || s.to ? `<div style="font-size:12px;font-weight:700;margin-bottom:2px;color:#111827;">${s.from ?? ''}${s.from && s.to ? ' → ' : ''}${s.to ?? ''}${s.amount ? ` · Rp ${s.amount.toLocaleString('id-ID')}` : ''}</div>` : ''}
-        <div style="font-size:11px;color:#4b5563;line-height:1.4;">${s.reason}</div>
-      </div>`
-  }).join('')
-
-  const safetyHTML = `
-    <div style="margin-top:12px;padding:10px;border-radius:6px;font-size:11px;line-height:1.4;
-      background:${verdict === 'safe' ? '#dcfce7' : verdict === 'caution' ? '#fef3c7' : '#fee2e2'};
-      color:${verdict === 'safe' ? '#15803d' : verdict === 'caution' ? '#b45309' : '#b91c1c'};
-      border-left:3px solid ${verdict === 'safe' ? '#4ade80' : verdict === 'caution' ? '#fbbf24' : '#f87171'};">
-      <strong style="text-transform:uppercase; font-size:10px; display:block; margin-bottom:2px;">Daily Cash Safety (${verdict})</strong> 
-      After rebalancing, remaining daily operational cash will be Rp ${r.safetyCheck.remainingLiquidAmount.toLocaleString('id-ID')} — covering ~${r.safetyCheck.monthsCovered.toFixed(1)} months of expenses. ${r.safetyCheck.analysis}
-    </div>`
-
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Rebalance Report — Fintrackr</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #111; font-size: 11px; line-height: 1.4; }
-    h1 { font-size: 18px; margin: 0 0 4px 0; color: #111827; font-weight: 800; }
-    h2 { font-size: 13px; margin: 16px 0 8px 0; color: #374151; font-weight: 700; text-transform: uppercase; letter-spacing: 0.025em; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
-    .meta { color: #6b7280; font-size: 10px; margin-bottom: 16px; }
-    .health-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
-    @media print { 
-      body { padding: 0; margin: 0; } 
-      @page { margin: 15mm; size: A4; } 
+  function ensureSpace(needed: number) {
+    if (y + needed > pageH - margin) {
+      doc.addPage()
+      y = margin
     }
-  </style>
-</head>
-<body>
-  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
-    <div>
-      <h1>Portfolio Rebalance</h1>
-      <div class="meta">Fintrackr Analysis · ${dateStr} · Risk: ${riskPref.charAt(0).toUpperCase() + riskPref.slice(1)}</div>
-    </div>
-    <div class="health-badge" style="
-      background:${r.overallHealth === 'poor' ? '#fee2e2' : r.overallHealth === 'fair' ? '#fef3c7' : r.overallHealth === 'good' ? '#dcfce7' : '#d1fae5'};
-      color:${r.overallHealth === 'poor' ? '#b91c1c' : r.overallHealth === 'fair' ? '#b45309' : r.overallHealth === 'good' ? '#15803d' : '#065f46'};">
-      Portfolio Health: ${r.overallHealth.toUpperCase()}
-    </div>
-  </div>
+  }
 
-  <div style="background:#f9fafb; padding:12px; border-radius:6px; border:1px solid #f3f4f6; margin-bottom:12px;">
-    <div style="font-weight:700; font-size:10px; text-transform:uppercase; color:#6b7280; margin-bottom:4px;">Assessment</div>
-    <div style="font-size:12px; color:#1f2937;">${r.summary}</div>
-  </div>
+  function txt(
+    text: string,
+    size: number,
+    rgb: [number, number, number],
+    bold = false,
+    x = margin,
+    wrap = usable,
+  ): number {
+    doc.setFontSize(size)
+    doc.setTextColor(rgb[0], rgb[1], rgb[2])
+    doc.setFont('helvetica', bold ? 'bold' : 'normal')
+    const lines = doc.splitTextToSize(text, wrap)
+    doc.text(lines, x, y)
+    const added = (lines.length * size * 0.3527) + 1.5
+    y += added
+    return added
+  }
 
-  ${r.executionNote ? `<div style="font-size:11px; background:#eff6ff; color:#1d4ed8; padding:10px; border-radius:6px; border-left:3px solid #3b82f6; margin-bottom:12px;"><strong>Execution:</strong> ${r.executionNote}</div>` : ''}
-  
-  <h2>Strategic Suggestions</h2>
-  ${suggestionsHTML}
-  
-  ${safetyHTML}
+  function filledBox(
+    bx: number, bw: number, bh: number,
+    fillRgb: [number, number, number],
+    strokeRgb?: [number, number, number],
+  ) {
+    doc.setFillColor(fillRgb[0], fillRgb[1], fillRgb[2])
+    if (strokeRgb) {
+      doc.setDrawColor(strokeRgb[0], strokeRgb[1], strokeRgb[2])
+      doc.setLineWidth(0.3)
+      doc.roundedRect(bx, y, bw, bh, 1.5, 1.5, 'FD')
+    } else {
+      doc.roundedRect(bx, y, bw, bh, 1.5, 1.5, 'F')
+    }
+  }
 
-  <div style="margin-top:20px; padding-top:12px; border-top:1px dashed #e5e7eb; font-size:9px; color:#9ca3af; text-align:center;">
-    ${r.disclaimer} · Personal Finance Tracker locally stored in browser
-  </div>
-</body>
-</html>`
+  const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+
+  // ── Title ─────────────────────────────────────────────────────────────────
+  txt('Portfolio Rebalance Report', 16, [17, 24, 39], true)
+  txt(`Fintrackr Analysis  ·  ${dateStr}  ·  Risk: ${riskPref.charAt(0).toUpperCase() + riskPref.slice(1)}`, 8, [107, 114, 128])
+  y += 2
+
+  // ── Health badge ──────────────────────────────────────────────────────────
+  const healthRgb: [number, number, number] =
+    r.overallHealth === 'poor'      ? [185, 28, 28] :
+    r.overallHealth === 'fair'      ? [180, 83,  9] :
+    r.overallHealth === 'good'      ? [21, 128, 61] : [6, 95, 70]
+  txt(`Portfolio Health: ${r.overallHealth.toUpperCase()}`, 9, healthRgb, true)
+  y += 3
+
+  // ── Assessment box ────────────────────────────────────────────────────────
+  const summaryLines = doc.splitTextToSize(r.summary, usable - 6)
+  const summaryH = summaryLines.length * (9 * 0.3527) + 10
+  ensureSpace(summaryH)
+  filledBox(margin, usable, summaryH, [249, 250, 251], [229, 231, 235])
+  const savedY = y
+  y += 4
+  txt('ASSESSMENT', 7, [107, 114, 128], true, margin + 3, usable - 6)
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(31, 41, 55)
+  doc.text(summaryLines, margin + 3, y)
+  y = savedY + summaryH + 3
+
+  // ── Execution note ────────────────────────────────────────────────────────
+  if (r.executionNote) {
+    const noteLines = doc.splitTextToSize(r.executionNote, usable - 6)
+    const noteH = noteLines.length * (8 * 0.3527) + 10
+    ensureSpace(noteH)
+    filledBox(margin, usable, noteH, [239, 246, 255])
+    doc.setDrawColor(59, 130, 246)
+    doc.setLineWidth(0.8)
+    doc.line(margin, y, margin, y + noteH)
+    const noteY = y
+    y += 4
+    txt('EXECUTION', 7, [29, 78, 216], true, margin + 4, usable - 8)
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(29, 78, 216)
+    doc.text(noteLines, margin + 4, y)
+    y = noteY + noteH + 3
+  }
+
+  // ── Section header: Suggestions ───────────────────────────────────────────
+  ensureSpace(10)
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(55, 65, 81)
+  doc.text('STRATEGIC SUGGESTIONS', margin, y)
+  doc.setDrawColor(229, 231, 235)
+  doc.setLineWidth(0.3)
+  doc.line(margin, y + 1.5, margin + usable, y + 1.5)
+  y += 6
+
+  // ── Suggestion cards ──────────────────────────────────────────────────────
+  for (const s of r.suggestions) {
+    const reasonLines = doc.splitTextToSize(s.reason, usable - 6)
+    const hasFromTo   = !!(s.from || s.to)
+    const cardH = 7 + (hasFromTo ? 5.5 : 0) + reasonLines.length * (8 * 0.3527) + 4
+    ensureSpace(cardH)
+
+    filledBox(margin, usable, cardH, [249, 250, 251], [229, 231, 235])
+    const cardTop = y
+    y += 4
+
+    // Priority
+    doc.setFontSize(7.5)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(107, 114, 128)
+    doc.text(`#${s.priority}`, margin + 3, y)
+
+    // Action badge
+    const actionRgb: [number, number, number] =
+      s.action === 'increase' ? [21, 128, 61] :
+      s.action === 'reduce'   ? [180, 83, 9]  :
+      s.action === 'move'     ? [29, 78, 216] : [107, 114, 128]
+    doc.setTextColor(actionRgb[0], actionRgb[1], actionRgb[2])
+    doc.text(s.action.toUpperCase(), margin + 13, y)
+
+    // Confidence badge
+    const confRgb: [number, number, number] =
+      s.confidence === 'high'   ? [21, 128, 61] :
+      s.confidence === 'medium' ? [180, 83, 9]  : [107, 114, 128]
+    const confLabel =
+      s.confidence === 'high'   ? 'HIGH PRIORITY' :
+      s.confidence === 'medium' ? 'CONSIDER'       : 'OPTIONAL'
+    doc.setTextColor(confRgb[0], confRgb[1], confRgb[2])
+    doc.text(confLabel, margin + 38, y)
+    y += 4.5
+
+    // From → To · Amount
+    if (hasFromTo) {
+      const fromTo = `${s.from ?? ''}${s.from && s.to ? ' → ' : ''}${s.to ?? ''}${s.amount ? `  ·  Rp ${s.amount.toLocaleString('id-ID')}` : ''}`
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(17, 24, 39)
+      doc.text(doc.splitTextToSize(fromTo, usable - 6), margin + 3, y)
+      y += 5.5
+    }
+
+    // Reason
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(75, 85, 99)
+    doc.text(reasonLines, margin + 3, y)
+    y = cardTop + cardH + 3
+  }
+
+  // ── Safety check ──────────────────────────────────────────────────────────
+  const verdict    = r.safetyCheck.verdict
+  const safetyText = `After rebalancing, remaining daily operational cash will be Rp ${r.safetyCheck.remainingLiquidAmount.toLocaleString('id-ID')} — covering ~${r.safetyCheck.monthsCovered.toFixed(1)} months of expenses. ${r.safetyCheck.analysis}`
+  const safetyLines = doc.splitTextToSize(safetyText, usable - 6)
+  const safetyH     = safetyLines.length * (8 * 0.3527) + 11
+  ensureSpace(safetyH)
+
+  const safetyFill: [number, number, number] =
+    verdict === 'safe'    ? [220, 252, 231] :
+    verdict === 'caution' ? [254, 243, 199] : [254, 226, 226]
+  const safetyRgb: [number, number, number] =
+    verdict === 'safe'    ? [21, 128, 61]   :
+    verdict === 'caution' ? [180, 83, 9]    : [185, 28, 28]
+
+  filledBox(margin, usable, safetyH, safetyFill)
+  doc.setDrawColor(safetyRgb[0], safetyRgb[1], safetyRgb[2])
+  doc.setLineWidth(0.8)
+  doc.line(margin, y, margin, y + safetyH)
+  const safetyTop = y
+  y += 4
+  txt(`DAILY CASH SAFETY (${verdict.toUpperCase()})`, 7.5, safetyRgb, true, margin + 4, usable - 8)
+  doc.setFontSize(8)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(safetyRgb[0], safetyRgb[1], safetyRgb[2])
+  doc.text(safetyLines, margin + 4, y)
+  y = safetyTop + safetyH + 5
+
+  // ── Disclaimer ────────────────────────────────────────────────────────────
+  ensureSpace(8)
+  doc.setDrawColor(229, 231, 235)
+  doc.setLineWidth(0.3)
+  doc.setLineDashPattern([1.5, 1.5], 0)
+  doc.line(margin, y, margin + usable, y)
+  doc.setLineDashPattern([], 0)
+  y += 3
+  doc.setFontSize(7)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(156, 163, 175)
+  doc.text(
+    doc.splitTextToSize(`${r.disclaimer} · Personal Finance Tracker locally stored in browser`, usable),
+    margin, y,
+  )
+
+  const filename = `rebalance-report-${new Date().toISOString().slice(0, 10)}.pdf`
+  doc.save(filename)
 }
 
 export default function RebalanceModal({
@@ -252,12 +385,7 @@ export default function RebalanceModal({
 
   function exportToPDF() {
     if (!result) return
-    const html = buildPrintHTML(result, risk)
-    const win = window.open('', '_blank')
-    if (!win) return
-    win.document.write(html)
-    win.document.close()
-    win.print()
+    exportRebalancePDF(result, risk)
   }
 
   function handleClose() {

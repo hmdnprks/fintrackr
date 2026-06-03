@@ -142,7 +142,7 @@ async function categorizeBatchWithRetry(
 export async function categorizeWithAI(
   transactions: { detail: string; amount: number; type: string }[],
   apiKey: string,
-  model = 'deepseek-v4-pro'
+  model = 'deepseek-chat'
 ): Promise<AICategory[]> {
   const batches = chunkArray(transactions, BATCH_SIZE)
   const results: AICategory[][] = []
@@ -251,7 +251,7 @@ Rules:
 export async function generateInsights(
   transactions: { detail: string; amount: number; type: string; category: string }[],
   apiKey: string,
-  model = 'deepseek-v4-pro',
+  model = 'deepseek-chat',
   period = 'this period'
 ): Promise<string> {
   const summary = aggregateTransactions(transactions, period)
@@ -368,7 +368,7 @@ function fixIDRFormat(text: string): string {
 export async function generateWindfallAllocation(
   context: WindfallContext,
   apiKey: string,
-  model = 'deepseek-v4-pro'
+  model = 'deepseek-chat'
 ): Promise<WindfallResult> {
   const messages: DeepSeekMessage[] = [
     { role: 'system', content: WINDFALL_PROMPT },
@@ -439,7 +439,7 @@ Respond with ONLY a JSON array — no markdown, no explanation:
 export async function generateBudgetSuggestions(
   averages: { category: string; average: number; months: number }[],
   apiKey: string,
-  model = 'deepseek-v4-pro'
+  model = 'deepseek-chat'
 ): Promise<BudgetSuggestion[]> {
   const messages: DeepSeekMessage[] = [
     { role: 'system', content: BUDGET_PROMPT },
@@ -593,7 +593,7 @@ Respond with ONLY valid JSON, no markdown:
 export async function generateRebalancingSuggestions(
   context: RebalanceContext,
   apiKey: string,
-  model = 'deepseek-v4-pro'
+  model = 'deepseek-chat'
 ): Promise<RebalanceResult> {
   const messages: DeepSeekMessage[] = [
     { role: 'system', content: REBALANCE_PROMPT },
@@ -737,7 +737,7 @@ Respond with ONLY valid JSON (no markdown):
 export async function generateGoalAdvice(
   context: GoalAdvisorContext,
   apiKey: string,
-  model = 'deepseek-v4-pro'
+  model = 'deepseek-chat'
 ): Promise<GoalAdvisorResult> {
   const messages: DeepSeekMessage[] = [
     { role: 'system', content: GOAL_ADVISOR_PROMPT },
