@@ -3,9 +3,11 @@
 
 import { useState, useMemo } from 'react'
 import { Asset, AssetType, getAssets, deleteAsset, getNetWorthSnapshots, getAssetSnapshots, NetWorthSnapshot, AssetSnapshot } from '@/lib/assetStorage'
+import { getLiabilities, deleteLiability, type Liability, type LiabilityType } from '@/lib/liabilityStorage'
 import AssetModal from './AssetModal'
 import WindfallModal from './WindfallModal'
 import RebalanceModal from './RebalanceModal'
+import LiabilityModal from './LiabilityModal'
 
 interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -77,13 +79,17 @@ export type HouseholdType = 'single' | 'couple' | 'family' | 'family+'
 
 export default function AssetsTab({ statements }: Props) {
   const [assets, setAssets] = useState<Asset[]>(() => getAssets())
+  const [liabilities, setLiabilities] = useState<Liability[]>(() => getLiabilities())
   const [snapshots, setSnapshots]         = useState<NetWorthSnapshot[]>(() => getNetWorthSnapshots())
   const [assetSnapshots, setAssetSnapshots] = useState<AssetSnapshot[]>(() => getAssetSnapshots())
   const [showModal, setShowModal]         = useState(false)
   const [showWindfall, setShowWindfall]   = useState(false)
   const [showRebalance, setShowRebalance] = useState(false)
+  const [showLiabilityModal, setShowLiabilityModal] = useState(false)
   const [editingAsset, setEditingAsset]   = useState<Asset | null>(null)
+  const [editingLiability, setEditingLiability] = useState<Liability | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [confirmDeleteLiability, setConfirmDeleteLiability] = useState<string | null>(null)
   const [householdType, setHouseholdType] = useState<HouseholdType>(
     () => (getVaultDataSync().settings?.householdType as HouseholdType) ?? 'single'
   )
@@ -100,8 +106,15 @@ export default function AssetsTab({ statements }: Props) {
 
   function reload() {
     setAssets(getAssets())
+    setLiabilities(getLiabilities())
     setSnapshots(getNetWorthSnapshots())
     setAssetSnapshots(getAssetSnapshots())
+  }
+
+  async function handleDeleteLiability(id: string) {
+    await deleteLiability(id)
+    setLiabilities(getLiabilities())
+    setConfirmDeleteLiability(null)
   }
 
   // Average real monthly expense from the 6 most recent months.
@@ -176,7 +189,9 @@ export default function AssetsTab({ statements }: Props) {
     return map
   }, [assets])
 
-  const totalNetWorth = Object.values(totalByType).reduce((s, v) => s + v, 0)
+  const totalAssets = Object.values(totalByType).reduce((s, v) => s + v, 0)
+  const totalLiabilities = liabilities.reduce((s, l) => s + l.remainingBalance, 0)
+  const totalNetWorth = totalAssets - totalLiabilities
 
   const lastUpdatedLabel = useMemo(() => {
     if (!assets.length) return null
@@ -343,11 +358,31 @@ export default function AssetsTab({ statements }: Props) {
             )}
           </div>
 
+          {/* Assets / Liabilities summary row */}
+          {totalLiabilities > 0 && (
+            <div className="flex items-center justify-between text-sm mb-4 bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3">
+              <div>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Total Assets</p>
+                <p className="font-semibold text-gray-800 dark:text-gray-200">{formatIDRFull(totalAssets)}</p>
+              </div>
+              <div className="text-gray-300 dark:text-gray-600 text-lg">−</div>
+              <div>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Total Liabilities</p>
+                <p className="font-semibold text-red-500">{formatIDRFull(totalLiabilities)}</p>
+              </div>
+              <div className="text-gray-300 dark:text-gray-600 text-lg">=</div>
+              <div>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Net Worth</p>
+                <p className={`font-semibold ${totalNetWorth >= 0 ? 'text-gray-800 dark:text-gray-200' : 'text-red-500'}`}>{formatIDRFull(totalNetWorth)}</p>
+              </div>
+            </div>
+          )}
+
           {/* Breakdown bars */}
           <div className="space-y-2.5">
             {TYPE_ORDER.filter(t => totalByType[t] > 0).map(t => {
               const meta = TYPE_META[t]
-              const pct = totalNetWorth > 0 ? (totalByType[t] / totalNetWorth) * 100 : 0
+              const pct = totalAssets > 0 ? (totalByType[t] / totalAssets) * 100 : 0
               return (
                 <div key={t}>
                   <div className="flex items-center justify-between text-xs mb-1">
@@ -441,6 +476,71 @@ export default function AssetsTab({ statements }: Props) {
         })
       )}
 
+      {/* Liabilities section */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75" />
+            </svg>
+            Liabilities
+          </h3>
+          <button
+            onClick={() => { setEditingLiability(null); setShowLiabilityModal(true) }}
+            className="flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 px-2.5 py-1.5 rounded-lg transition"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Add Liability
+          </button>
+        </div>
+
+        {liabilities.length === 0 ? (
+          <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm px-6 py-8 text-center">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No liabilities tracked</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Add KPR, KKB, KTA, or credit card debt to see your true net worth.</p>
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {liabilities.map(l => (
+              <LiabilityCard
+                key={l.id}
+                liability={l}
+                linkedAsset={assets.find(a => a.id === l.linkedAssetId)}
+                onEdit={() => { setEditingLiability(l); setShowLiabilityModal(true) }}
+                onDelete={() => setConfirmDeleteLiability(l.id)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Delete liability confirm */}
+      {confirmDeleteLiability && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmDeleteLiability(null)} />
+          <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 w-full max-w-sm z-10">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Delete liability?</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">This action cannot be undone.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDeleteLiability(null)}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteLiability(confirmDeleteLiability)}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Delete confirm */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -492,6 +592,110 @@ export default function AssetsTab({ statements }: Props) {
         emergencyMonths={emergencyMonths}
         emergencyFundTotal={emergencyFundTotal}
       />
+
+      <LiabilityModal
+        isOpen={showLiabilityModal}
+        liability={editingLiability}
+        onClose={() => setShowLiabilityModal(false)}
+        onSaved={() => setLiabilities(getLiabilities())}
+      />
+    </div>
+  )
+}
+
+// ── Liability Card ────────────────────────────────────────────────────────────
+
+const LIABILITY_TYPE_META: Record<LiabilityType, { label: string; color: string; bg: string }> = {
+  mortgage:      { label: 'KPR',          color: 'text-teal-700 dark:text-teal-400',   bg: 'bg-teal-50 dark:bg-teal-900/20'   },
+  vehicle_loan:  { label: 'KKB',          color: 'text-orange-700 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/20' },
+  personal_loan: { label: 'KTA',          color: 'text-purple-700 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+  credit_card:   { label: 'Credit Card',  color: 'text-red-700 dark:text-red-400',     bg: 'bg-red-50 dark:bg-red-900/20'     },
+  other:         { label: 'Debt',         color: 'text-gray-700 dark:text-gray-400',   bg: 'bg-gray-50 dark:bg-gray-900/20'   },
+}
+
+function LiabilityCard({ liability: l, linkedAsset, onEdit, onDelete }: {
+  liability: Liability
+  linkedAsset?: Asset
+  onEdit: () => void
+  onDelete: () => void
+}) {
+  const meta = LIABILITY_TYPE_META[l.type]
+  const paidOff = l.originalAmount > 0
+    ? Math.min(100, ((l.originalAmount - l.remainingBalance) / l.originalAmount) * 100)
+    : 0
+
+  const now = new Date()
+  let monthsLeft: number | null = null
+  if (l.endDate) {
+    const [y, m] = l.endDate.split('-').map(Number)
+    monthsLeft = (y - now.getFullYear()) * 12 + (m - (now.getMonth() + 1))
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+      <div className="px-4 pt-4 pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+              <span className={`inline-flex text-xs font-semibold px-2 py-0.5 rounded-full ${meta.bg} ${meta.color}`}>
+                {meta.label}
+              </span>
+              {linkedAsset && (
+                <span className="text-xs text-gray-400 dark:text-gray-500 truncate">🔗 {linkedAsset.name}</span>
+              )}
+            </div>
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{l.name}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">{l.institution}</p>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <button onClick={onEdit} className="text-gray-300 hover:text-blue-400 transition p-0.5">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+              </svg>
+            </button>
+            <button onClick={onDelete} className="text-gray-300 hover:text-red-400 transition p-0.5">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-3">
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Remaining balance</p>
+          <p className="text-lg font-bold text-red-500">−{formatIDRFull(l.remainingBalance)}</p>
+        </div>
+
+        {/* Progress bar */}
+        <div className="mt-3">
+          <div className="flex justify-between text-xs text-gray-400 mb-1">
+            <span>{paidOff.toFixed(1)}% paid off</span>
+            <span>of {formatIDR(l.originalAmount)}</span>
+          </div>
+          <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-full bg-green-400 rounded-full" style={{ width: `${paidOff}%` }} />
+          </div>
+        </div>
+      </div>
+
+      {/* Footer details */}
+      <div className="px-4 pb-3 flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500 flex-wrap">
+        {l.monthlyInstallment && (
+          <span>{formatIDR(l.monthlyInstallment)}/mo</span>
+        )}
+        {l.interestRate != null && (
+          <span>{l.interestRate}% p.a.</span>
+        )}
+        {monthsLeft !== null && monthsLeft >= 0 && (
+          <span>{monthsLeft} mo left</span>
+        )}
+        {monthsLeft !== null && monthsLeft < 0 && (
+          <span className="text-red-400">Matured</span>
+        )}
+        {l.endDate && !monthsLeft && monthsLeft !== 0 && (
+          <span>ends {l.endDate}</span>
+        )}
+      </div>
     </div>
   )
 }

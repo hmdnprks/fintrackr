@@ -21,6 +21,7 @@ export type BackupData = {
     transactionLabels: Record<string, string>
     settings: Record<string, string>              // excludes chatApiKey
     goalAdvisorHistory: Record<string, any[]>     // goalId → last 3 AI plans
+    liabilities: any[]
   }
 }
 
@@ -57,6 +58,7 @@ export async function exportBackup(): Promise<BackupData> {
         Object.entries(vault.settings ?? {}).filter(([k]) => k !== 'chatApiKey')
       ),
       goalAdvisorHistory: vault.goalAdvisorHistory ?? {},
+      liabilities:        vault.liabilities ?? [],
     },
   }
 }
@@ -110,6 +112,7 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
   const transactionLabels  = backup.data.transactionLabels  ?? {}
   const backupSettings     = backup.data.settings           ?? {}
   const goalAdvisorHistory = backup.data.goalAdvisorHistory ?? {}
+  const liabilities        = backup.data.liabilities        ?? []
 
   if (mode === 'replace') {
     const existingVault = await getVaultData()
@@ -132,6 +135,7 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       transactionLabels,
       settings: restoredSettings,
       goalAdvisorHistory,
+      liabilities,
     })
     return
   }
@@ -214,6 +218,13 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       ...(existingVault.goalAdvisorHistory ?? {}),
       ...goalAdvisorHistory,
     },
+    // Merge liabilities by id — backup wins on same id
+    liabilities: [
+      ...(existingVault.liabilities ?? []).filter(
+        (l: any) => !liabilities.find((b: any) => b.id === l.id)
+      ),
+      ...liabilities,
+    ],
   }
 
   await saveVaultData(newVaultState)

@@ -108,6 +108,7 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
   const [fetchingRate, setFetchingRate]       = useState(false)
   const [rateError, setRateError]             = useState('')
   const [rateCache, setRateCache]             = useState<Record<string, number>>({})
+  const [isManualValue, setIsManualValue] = useState(false)
   const [errors, setErrors]           = useState<Record<string, string>>({})
   const [saving, setSaving]           = useState(false)
 
@@ -159,6 +160,7 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
       setForeignAmount('')
       setExchangeRate('')
     }
+    setIsManualValue(!!asset) // editing existing = treat stored value as manual
     setRateError('')
     setErrors({})
     if (!asset) setRateCache({})
@@ -229,6 +231,19 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type])
+
+  // Auto-fill current value from depreciation model for vehicle/property (new assets only)
+  useEffect(() => {
+    if (isManualValue) return
+    if (type !== 'vehicle' && type !== 'property') return
+    const price = parseIDR(purchasePrice)
+    const year  = Number(purchaseYear)
+    const rate  = Number(annualChangeRate)
+    if (price > 0 && year > 0 && annualChangeRate !== '') {
+      setValue(formatThousands(Math.round(computeEst(price, year, rate))))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [purchasePrice, purchaseYear, annualChangeRate, type, isManualValue])
 
   if (!isOpen) return null
 
@@ -386,14 +401,17 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
             {errors.institution && <p className="text-xs text-red-500 mt-1">{errors.institution}</p>}
           </div>
 
-          {/* Current Value */}
+          {/* Current Value — hidden here for vehicle/property; rendered inside that section instead */}
+          {type !== 'vehicle' && type !== 'property' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              {currency !== 'IDR' ? 'IDR Equivalent' : 'Current Value'}
-              {currency !== 'IDR' && (
-                <span className="ml-1.5 text-xs font-normal text-gray-400">auto-computed from {currency} amount × rate</span>
-              )}
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {currency !== 'IDR' ? 'IDR Equivalent' : 'Current Value'}
+                {currency !== 'IDR' && (
+                  <span className="ml-1.5 text-xs font-normal text-gray-400">auto-computed from {currency} amount × rate</span>
+                )}
+              </label>
+            </div>
             <div className={`flex items-center border rounded-xl overflow-hidden ${
               currency !== 'IDR'
                 ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 opacity-75'
@@ -420,6 +438,7 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
             )}
             {errors.value && currency === 'IDR' && <p className="text-xs text-red-500 mt-1">{errors.value}</p>}
           </div>
+          )}
 
           {/* Savings-specific fields */}
           {type === 'savings' && (
@@ -640,26 +659,44 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
                   />
                 </div>
 
-                {/* Estimated value hint */}
-                {estValue !== null && (
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-medium text-gray-600 dark:text-gray-300">Estimated value today</p>
-                      <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                        Rp {Math.round(estValue).toLocaleString('id-ID')}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {Math.abs(estRate)}%/yr × {new Date().getFullYear() - estYear} yr{new Date().getFullYear() - estYear !== 1 ? 's' : ''}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setValue(formatThousands(Math.round(estValue)))}
-                      className="shrink-0 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-3 py-1.5 rounded-lg transition"
-                    >
-                      Use estimate
-                    </button>
+                {/* Current Value — placed here for vehicle/property, below purchase fields */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Current Value
+                      {!isManualValue && (
+                        <span className="ml-1.5 text-xs font-normal text-blue-500 dark:text-blue-400">auto-estimated</span>
+                      )}
+                    </label>
+                    {isManualValue && estValue !== null && (
+                      <button
+                        onClick={() => { setValue(formatThousands(Math.round(estValue))); setIsManualValue(false) }}
+                        className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                      >
+                        Reset to estimate ({new Intl.NumberFormat('id-ID').format(Math.round(estValue))})
+                      </button>
+                    )}
                   </div>
-                )}
+                  <div className={`flex items-center border rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 ${
+                    errors.value ? 'border-red-300 bg-red-50 dark:bg-red-900/20' : 'border-gray-200 dark:border-gray-700'
+                  }`}>
+                    <span className="px-3 py-2.5 text-sm text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 select-none">Rp</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="0"
+                      value={value}
+                      onChange={e => {
+                        const digits = e.target.value.replace(/[^0-9]/g, '')
+                        setValue(digits ? formatThousands(Number(digits)) : '')
+                        setErrors(p => ({ ...p, value: '' }))
+                        setIsManualValue(true)
+                      }}
+                      className="flex-1 px-3 py-2.5 text-sm focus:outline-none bg-transparent min-w-0 text-gray-900 dark:text-gray-100"
+                    />
+                  </div>
+                  {errors.value && <p className="text-xs text-red-500 mt-1">{errors.value}</p>}
+                </div>
 
                 <p className="text-xs text-gray-400 dark:text-gray-500 bg-amber-50 dark:bg-amber-900/20 rounded-xl px-3 py-2">
                   Vehicle and property values are excluded from emergency fund and liquid coverage calculations — they are illiquid assets.

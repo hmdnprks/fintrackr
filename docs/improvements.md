@@ -99,7 +99,8 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] **Rebalance PDF export** — Export PDF button opens a print-ready HTML page (no library dependency) with health badge, summary, execution note, suggestion cards, safety check, and disclaimer
 - [x] **Rebalance safety check** — AI computes remaining liquid savings after all moves and states months of expense coverage; verdict badge (Safe green / Caution amber / Warning red) shown below suggestion cards
 - [x] **Rebalance UX improvements** — priority ordering (#1 most urgent), confidence badges (High priority / Consider / Optional) with reason phrases, running balance shown per suggestion card, insufficient-funds warning when accumulated withdrawals exceed source balance
-- [x] **Vehicle / Property asset type** — depreciating assets (car, motorcycle) and appreciating assets (house, apartment, land); excluded from liquid coverage and emergency fund; depreciation model `purchasePrice × (1 + rate/100)^years`; default rates per subtype; "Use estimate" button; amber illiquid note in modal
+- [x] **Vehicle / Property asset type** — depreciating assets (car, motorcycle) and appreciating assets (house, apartment, land); excluded from liquid coverage and emergency fund; depreciation model `purchasePrice × (1 + rate/100)^years`; default rates per subtype; current value auto-fills from model as user types purchase fields; "Reset to estimate" link when manually overridden; amber illiquid note in modal
+- [x] **Liabilities section** — separate section in Assets tab for debt tracking; types: KPR, KKB, KTA, Credit Card, Other; each liability stores original amount, remaining balance, monthly installment, interest rate, start/maturity dates, optional link to a vehicle/property asset; card shows type badge, remaining balance in red, paid-off progress bar (% paid), monthly installment + rate + months left; net worth card shows Assets − Liabilities = Net Worth row when liabilities exist; asset allocation bars use total assets as base; included in backup
 - [x] **Stale asset indicator** — amber badge on cards and net worth summary when any asset value hasn't been updated in 30+ days; dismissable banner lists stale asset names; "Xd old" badge per card; amber timestamp with "update recommended"; ⚠ on net worth last-updated label
 - [x] **Net worth trend chart** — inline SVG area chart inside the net worth summary card; groups NetWorthSnapshots by month; up to 12 months; indigo fill + line; y-axis labels (rb/jt/M); x-axis month labels; shown when ≥2 months of data exist
 - [x] **Per-asset mini sparkline** — compact SVG line on each asset card (between value and type details); groups AssetSnapshots by month; last 6 months; green when value ↑, red when ↓; shown when ≥2 months of data exist for that asset
@@ -194,7 +195,7 @@ Checklist of shipped features and planned improvements. Items without a check ar
 
 ## Nice to Have / Long Term
 
-- [ ] **Debt tracking** — car loan (KPR), credit card balance, personal loan; net worth = assets − liabilities
+- [x] **Debt tracking** — see Liabilities section in Assets Tab above
 - [ ] **Subscription manager** — list all detected recurring subscriptions with cancel links and total monthly cost
 - [ ] **Tax summary** — annual income summary for SPT filing (Indonesian context)
 - [ ] **Multi-currency** — gold in USD/gram, investments in USD; display in IDR equivalent
