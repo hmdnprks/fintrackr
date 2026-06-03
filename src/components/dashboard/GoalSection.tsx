@@ -100,6 +100,7 @@ function AddGoalModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
   const [goalType, setGoalType] = useState<'savings' | 'spending'>('savings')
 
   // savings fields
+  const [goalName, setGoalName]           = useState('')
   const [targetAmount, setTargetAmount] = useState('')
   const [deadlineMonth, setDeadlineMonth] = useState(String(new Date().getMonth() + 1))
   const [deadlineYear, setDeadlineYear]   = useState(String(new Date().getFullYear() + 1))
@@ -123,7 +124,7 @@ function AddGoalModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
     if (goalType === 'savings') {
       if (!rawTarget || rawTarget <= 0) { setError('Enter a target amount'); return }
       if (deadlineKey <= currentYYYYMM)  { setError('Deadline must be in the future'); return }
-      addGoal({ type: 'savings', targetAmount: rawTarget, deadline: deadlineKey, startMonth })
+      addGoal({ type: 'savings', name: goalName.trim() || undefined, targetAmount: rawTarget, deadline: deadlineKey, startMonth })
     } else {
       if (!rawLimit || rawLimit <= 0)         { setError('Enter a monthly limit'); return }
       const months = Number(targetMonths)
@@ -174,6 +175,17 @@ function AddGoalModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
           {goalType === 'savings' ? (
             <>
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Goal Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Tabungan Haji 2027, Wedding, New Laptop"
+                  value={goalName}
+                  onChange={(e) => setGoalName(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  autoFocus
+                />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Target Amount</label>
                 <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
                   <span className="px-3 py-2.5 text-sm text-gray-400 bg-gray-50 border-r border-gray-200 select-none">Rp</span>
@@ -187,7 +199,6 @@ function AddGoalModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
                       setTargetAmount(d ? formatThousands(Number(d)) : '')
                     }}
                     className="flex-1 px-3 py-2.5 text-sm focus:outline-none"
-                    autoFocus
                   />
                 </div>
               </div>
@@ -324,8 +335,11 @@ function SavingsGoalCard({ goal, statements, onDelete, onAdvise }: {
           <div>
             <span className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Savings Goal</span>
             <p className="text-base font-semibold text-gray-900 dark:text-gray-100 mt-0.5">
-              Save {formatIDR(goal.targetAmount)}
+              {goal.name || `Save ${formatIDR(goal.targetAmount)}`}
             </p>
+            {goal.name && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Target: {formatIDR(goal.targetAmount)}</p>
+            )}
             <p className={`text-xs mt-0.5 ${isOverdue ? 'text-red-500' : 'text-gray-400'}`}>
               {isComplete
                 ? '🎉 Goal achieved!'

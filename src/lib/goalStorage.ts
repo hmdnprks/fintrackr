@@ -3,6 +3,7 @@ import { getVaultDataSync, saveVaultData } from './storage/secureStorage'
 export type SavingsGoal = {
   id: string
   type: 'savings'
+  name?: string      // user-given label e.g. "Tabungan Haji 2027"
   targetAmount: number
   deadline: string   // "YYYY-MM"
   startMonth: string // "YYYY-MM"

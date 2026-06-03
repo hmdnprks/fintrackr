@@ -92,23 +92,21 @@ export default function GoalAdvisorModal({ isOpen, goal, onClose, statements }: 
     return Object.entries(byType).map(([type, totalValueIDR]) => ({ type, totalValueIDR }))
   }, [])
 
-  // Check for saved history on open
+  // Check for saved history on open; pre-fill label from goal.name or prior history
   useEffect(() => {
     if (!isOpen) return
     setResult(null)
     setError(null)
     setLoadedFrom(null)
+    // goal.name takes priority; fall back to last saved label
     const hist = getVaultDataSync().goalAdvisorHistory?.[goal.id] ?? []
-    if (hist.length > 0) {
-      setShowLoadBanner(true)
-    } else {
-      setShowLoadBanner(false)
-    }
-    // Pre-fill label if previously saved
-    if (hist.length > 0 && hist[hist.length - 1].label) {
+    setShowLoadBanner(hist.length > 0)
+    if (goal.name) {
+      setLabel(goal.name)
+    } else if (hist.length > 0 && hist[hist.length - 1].label) {
       setLabel(hist[hist.length - 1].label)
     }
-  }, [isOpen, goal.id])
+  }, [isOpen, goal.id, goal.name])
 
   function loadPrevious() {
     const hist = getVaultDataSync().goalAdvisorHistory?.[goal.id] ?? []
