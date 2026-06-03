@@ -8,6 +8,7 @@ import {
   getGoals, addGoal, deleteGoal,
   type Goal, type SavingsGoal, type SpendingGoal,
 } from '@/lib/goalStorage'
+import GoalAdvisorModal from './GoalAdvisorModal'
 
 const SPEND_CATEGORIES = [
   'Food & Dining', 'Groceries', 'Shopping', 'Services',
@@ -303,8 +304,8 @@ function AddGoalModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
 
 // ─── goal cards ───────────────────────────────────────────────────────────────
 
-function SavingsGoalCard({ goal, statements, onDelete }: {
-  goal: SavingsGoal; statements: any[]; onDelete: () => void
+function SavingsGoalCard({ goal, statements, onDelete, onAdvise }: {
+  goal: SavingsGoal; statements: any[]; onDelete: () => void; onAdvise: () => void
 }) {
   const { saved, pct, remaining } = useMemo(
     () => computeSavingsProgress(goal, statements),
@@ -333,11 +334,24 @@ function SavingsGoalCard({ goal, statements, onDelete }: {
                 : `By ${monthLabel(goal.deadline)} · ${months} month${months !== 1 ? 's' : ''} left`}
             </p>
           </div>
-          <button onClick={onDelete} className="text-gray-300 hover:text-red-400 transition mt-0.5">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {!isOverdue && !isComplete && (
+              <button
+                onClick={onAdvise}
+                className="flex items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 px-2.5 py-1 rounded-lg transition"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                </svg>
+                AI Plan
+              </button>
+            )}
+            <button onClick={onDelete} className="text-gray-300 hover:text-red-400 transition">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -463,6 +477,7 @@ interface Props {
 export default function GoalSection({ statements }: Props) {
   const [goals, setGoals] = useState<Goal[]>(() => getGoals())
   const [showModal, setShowModal] = useState(false)
+  const [advisingGoal, setAdvisingGoal] = useState<SavingsGoal | null>(null)
 
   function handleDelete(id: string) {
     deleteGoal(id)
@@ -471,6 +486,15 @@ export default function GoalSection({ statements }: Props) {
 
   return (
     <>
+      {advisingGoal && (
+        <GoalAdvisorModal
+          isOpen={!!advisingGoal}
+          goal={advisingGoal}
+          statements={statements}
+          onClose={() => setAdvisingGoal(null)}
+        />
+      )}
+
       {showModal && (
         <AddGoalModal
           onClose={() => setShowModal(false)}
@@ -524,6 +548,7 @@ export default function GoalSection({ statements }: Props) {
                   goal={goal}
                   statements={statements}
                   onDelete={() => handleDelete(goal.id)}
+                  onAdvise={() => setAdvisingGoal(goal)}
                 />
               ) : (
                 <SpendingGoalCard

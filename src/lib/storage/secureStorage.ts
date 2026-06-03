@@ -23,6 +23,7 @@ export type VaultData = {
   rebalanceHistory: any[]          // last 5 RebalanceSavedEntry objects
   learnedRules: any[]              // { normalizedDesc, category, source, updatedAt }
   transactionLabels: Record<string, string>  // labelKey → human alias e.g. 'UBPFFFFFF' → 'Shopee'
+  goalAdvisorHistory: Record<string, { savedAt: string; label: string; result: any }[]>  // goalId → last 3
 }
 
 const defaultVaultData: VaultData = {
@@ -38,6 +39,7 @@ const defaultVaultData: VaultData = {
   rebalanceHistory: [],
   learnedRules: [],
   transactionLabels: {},
+  goalAdvisorHistory: {},
 }
 
 // ============================

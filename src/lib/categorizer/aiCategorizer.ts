@@ -641,3 +641,111 @@ export async function generateRebalancingSuggestions(
     disclaimer:    fixIDRFormat(parsed.disclaimer    || ''),
   }
 }
+
+// ─── Goal Instrument Advisor ──────────────────────────────────────────────────
+
+export type GoalInstrument = {
+  name: string
+  allocationPct: number
+  expectedReturnRange: string
+  rationale: string
+}
+
+export type GoalAdvisorResult = {
+  horizonTier: string
+  instruments: GoalInstrument[]
+  monthlyContribution: number
+  canAchieve: boolean
+  riskLevel: 'low' | 'moderate' | 'high'
+  riskNote: string
+  summary: string
+}
+
+export type GoalAdvisorContext = {
+  goalLabel: string
+  targetAmount: number
+  monthsRemaining: number
+  deadline: string
+  avgMonthlyIncome: number
+  avgMonthlyExpense: number
+  monthlySupplus: number
+  currentAssetAllocation: { type: string; totalValueIDR: number }[]
+}
+
+const GOAL_ADVISOR_PROMPT = `You are a personal finance advisor for an Indonesian user (currency: IDR).
+
+The user has a savings goal. Recommend the best financial instruments to accumulate the target amount based on their time horizon and monthly surplus.
+
+Indonesian instrument reference:
+- Tabungan biasa: 3–5% p.a., fully liquid, no lock-in. Only suitable for < 3 months.
+- Deposito: 5–7% p.a., 1–24 month lock-in (pick tenor matching horizon). LPS-guaranteed up to Rp 2M. Good for 3–24 months.
+- Reksa Dana Pasar Uang (RDPU): 5–7% p.a., T+1–2 redemption, very low risk. Good for 3–12 months.
+- SBR (Savings Bond Ritel): 6.5–8% p.a., 2-year tenor, government-backed, can be sold after 3 months. Good for 12–24 months.
+- ORI / Sukuk Ritel: 6–8% p.a., 3-year maturity, government-backed. Suitable for 2–3 years.
+- Reksa Dana Pendapatan Tetap (RDPT): 6–9% p.a., low-moderate risk. Suitable for 1–3 years.
+- Reksa Dana Campuran: 8–13% p.a. target, moderate risk. Suitable for 2–5 years.
+- Reksa Dana Saham: 12–18% p.a. long-term, high volatility. ONLY for 3+ year horizons.
+
+Time-horizon rules (strict):
+- < 3 months → ONLY Tabungan or Deposito (capital preservation critical)
+- 3–12 months → Deposito + RDPU mix
+- 12–36 months → RDPT + ORI/Sukuk/SBR mix
+- 36+ months → 20–30% RDPU buffer + RD Campuran + RD Saham
+
+monthlyContribution = Math.round(targetAmount / monthsRemaining)
+canAchieve = monthlyContribution <= monthlySupplus * 0.7
+
+Respond with ONLY valid JSON (no markdown):
+{
+  "horizonTier": "3–12 months",
+  "instruments": [
+    { "name": "Deposito", "allocationPct": 60, "expectedReturnRange": "5–7% p.a.", "rationale": "..." },
+    { "name": "Reksa Dana Pasar Uang", "allocationPct": 40, "expectedReturnRange": "5–7% p.a.", "rationale": "..." }
+  ],
+  "monthlyContribution": 1500000,
+  "canAchieve": true,
+  "riskLevel": "low",
+  "riskNote": "...",
+  "summary": "..."
+}`
+
+export async function generateGoalAdvice(
+  context: GoalAdvisorContext,
+  apiKey: string,
+  model = 'deepseek-v4-pro'
+): Promise<GoalAdvisorResult> {
+  const messages: DeepSeekMessage[] = [
+    { role: 'system', content: GOAL_ADVISOR_PROMPT },
+    { role: 'user',   content: JSON.stringify(context) },
+  ]
+
+  const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens: 1024 }),
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`DeepSeek API error: ${res.status} - ${err}`)
+  }
+
+  const json = await res.json()
+  let content: string = json.choices?.[0]?.message?.content || ''
+  content = content.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```\s*$/g, '').trim()
+
+  const parsed = JSON.parse(content)
+  if (!parsed.instruments || !Array.isArray(parsed.instruments)) {
+    throw new Error('Unexpected response format from AI')
+  }
+
+  return {
+    horizonTier:         parsed.horizonTier          || '',
+    instruments:         parsed.instruments,
+    monthlyContribution: Number(parsed.monthlyContribution) || 0,
+    canAchieve:          !!parsed.canAchieve,
+    riskLevel:           parsed.riskLevel             || 'low',
+    riskNote:            fixIDRFormat(parsed.riskNote  || ''),
+    summary:             fixIDRFormat(parsed.summary   || ''),
+  }
+}

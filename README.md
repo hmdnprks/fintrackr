@@ -13,7 +13,7 @@ Built with [Next.js](https://nextjs.org) (App Router), React 19, TypeScript, Tai
 - **Daily calendar** — Heat map calendar showing spending intensity per day; click any day to see its transactions
 - **Manual transactions** — Add expenses/income manually without a PDF
 - **Budget tracking** — Monthly spend limits per category with progress bars and warnings
-- **Financial goals** — Savings targets (amount + deadline) and spending habit goals (consecutive months under limit)
+- **Financial goals** — Savings targets (amount + deadline) and spending habit goals (consecutive months under limit); **AI Goal Instrument Advisor** recommends Indonesian financial instruments (Deposito, RDPU, ORI/Sukuk, RD Saham, etc.) based on time horizon and monthly surplus; plans saved per-goal in vault
 - **Month comparison** — Delta badges on summary cards + per-category breakdown vs prior month
 - **Assets profile** — Track savings, gold, investments, goal pockets, vehicles, and property; net worth trend chart (12-month SVG area chart); per-asset mini sparklines (6-month, green/red); emergency fund + liquid coverage ratio side-by-side; household-aware emergency fund target; stale asset indicator (amber badge + dismissable banner); contributable flag excludes auto-managed funds (BPJS JHT) from suggestions
 - **Vehicle & Property assets** — depreciation/appreciation model with default rates per subtype; "Use estimate" button fills current value; excluded from liquid calculations

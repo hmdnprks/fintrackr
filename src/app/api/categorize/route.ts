@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
-import { categorizeWithAI, generateInsights, generateBudgetSuggestions, generateWindfallAllocation, generateRebalancingSuggestions } from '@/lib/categorizer/aiCategorizer'
+import { categorizeWithAI, generateInsights, generateBudgetSuggestions, generateWindfallAllocation, generateRebalancingSuggestions, generateGoalAdvice } from '@/lib/categorizer/aiCategorizer'
 
 export async function POST(req: NextRequest) {
   try {
-    const { transactions, type, period, averages, context, rebalanceContext, apiKey: clientKey } = await req.json()
+    const { transactions, type, period, averages, context, rebalanceContext, goalAdvisorContext, apiKey: clientKey } = await req.json()
 
     // Env var takes priority (server operator); client-provided key is fallback (production users)
     const apiKey = process.env.DEEPSEEK_API_KEY || clientKey
@@ -28,6 +28,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, error: 'No financial context provided.' }, { status: 400 })
       }
       const result = await generateWindfallAllocation(context, apiKey)
+      return NextResponse.json({ success: true, result })
+    }
+
+    if (type === 'goal-advisor') {
+      if (!goalAdvisorContext) {
+        return NextResponse.json({ success: false, error: 'No goal context provided.' }, { status: 400 })
+      }
+      const result = await generateGoalAdvice(goalAdvisorContext, apiKey)
       return NextResponse.json({ success: true, result })
     }
 

@@ -78,6 +78,7 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [ ] Budget rollover — unspent budget carries forward to next month
 - [ ] Goal notifications — in-app alert when a goal deadline is approaching
 - [ ] Shared budget mode — split expenses between people (future)
+- [x] **AI Goal Instrument Advisor** — indigo "AI Plan" button on each active savings goal card; optional goal label input (e.g. "Tabungan Haji", "Wedding") for richer AI context; context summary shows target, deadline, months left, monthly surplus, required/month, and achievability badge (green ✓ / amber ⚠ / red ✗); time-horizon tiers: <3mo → Tabungan/Deposito, 3–12mo → Deposito/RDPU, 12–36mo → RDPT/ORI/Sukuk/SBR, 36mo+ → RDPU buffer + RD Campuran + RD Saham; AI returns instrument cards (name, allocation %, expected return range, rationale + allocation bar), required monthly contribution, risk level badge, risk note, and summary; last 3 plans per goal persisted in vault and reloadable without re-running AI; button hidden on completed or overdue goals
 
 ---
 

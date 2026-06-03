@@ -135,6 +135,13 @@ Two goal types displayed as cards in the Budget tab:
 - Progress: cumulative net (income − expense) across imported months in the range
 - Shows: progress bar, amount saved, amount remaining, months left
 - States: in-progress / achieved (green) / overdue (red)
+- **AI Goal Instrument Advisor** — indigo "AI Plan" button on active (non-complete, non-overdue) cards; opens a modal with:
+  - Optional goal label input (e.g. "Tabungan Haji", "Wedding") for richer AI context
+  - Context summary: target, deadline, months left, monthly surplus, required/month, achievability badge (green ✓ / amber ⚠ / red ✗)
+  - Time-horizon instrument tiers: <3mo → Tabungan/Deposito · 3–12mo → Deposito/RDPU · 12–36mo → RDPT/ORI/Sukuk/SBR · 36mo+ → RDPU + RD Campuran + RD Saham
+  - AI returns instrument cards with allocation %, expected return range, allocation bar, and rationale
+  - Monthly contribution chip, risk level badge (low/moderate/high), risk note, and summary
+  - Last 3 plans per goal saved to vault; reloadable without re-running AI
 
 ### Spending Goal
 - Set a category, monthly limit, and target consecutive months
