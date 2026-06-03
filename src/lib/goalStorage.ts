@@ -1,5 +1,7 @@
 import { getVaultDataSync, saveVaultData } from './storage/secureStorage'
 
+export type SavingsGoalProgressMode = 'auto' | 'manual' | 'linked'
+
 export type SavingsGoal = {
   id: string
   type: 'savings'
@@ -8,6 +10,9 @@ export type SavingsGoal = {
   deadline: string   // "YYYY-MM"
   startMonth: string // "YYYY-MM"
   createdAt: string
+  progressMode?: SavingsGoalProgressMode
+  savedAmount?: number    // used when progressMode === 'manual'
+  linkedAssetId?: string  // used when progressMode === 'linked'
 }
 
 export type SpendingGoal = {
@@ -31,6 +36,10 @@ export async function addGoal(goal: NewGoal): Promise<Goal> {
   const entry = { ...goal, id: crypto.randomUUID(), createdAt: new Date().toISOString() } as Goal
   await saveVaultData({ goals: [...getGoals(), entry] })
   return entry
+}
+
+export async function updateGoal(id: string, updates: Partial<SavingsGoal | SpendingGoal>) {
+  await saveVaultData({ goals: getGoals().map((g) => (g.id === id ? { ...g, ...updates } : g)) })
 }
 
 export async function deleteGoal(id: string) {

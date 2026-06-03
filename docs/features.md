@@ -132,12 +132,16 @@ Two goal types displayed as cards in the Budget tab:
 ### Savings Goal
 - Set a **name** (e.g. "Tabungan Haji 2027", "Wedding"), target amount, and deadline (month + year); name shown as card title; falls back to "Save Rp X" if unnamed; target shown as subtitle when name is present
 - Set start month for counting
-- Progress: cumulative net (income − expense) across imported months in the range
+- **Progress tracking** — pencil button on each card opens "Track Progress" modal with three modes:
+  - **Auto** (default) — cumulative net (income − expense) from imported statements between start and deadline
+  - **Manual** — enter the saved amount yourself; update any time
+  - **Linked to asset** — reads the current balance from a saved savings/pocket/investment/gold asset; updates automatically when you update the asset
+  - Mode badge shown on card: blue "Manual" or indigo "🔗 Asset Name" when not in auto mode
 - Shows: progress bar, amount saved, amount remaining, months left
 - States: in-progress / achieved (green) / overdue (red)
 - **AI Goal Instrument Advisor** — indigo "AI Plan" button on active (non-complete, non-overdue) cards; opens a modal with:
   - Goal name auto-filled from the saved name; editable override for AI context
-  - Context summary: target, deadline, months left, monthly surplus, required/month, achievability badge (green ✓ / amber ⚠ / red ✗)
+  - Context summary: target, deadline, months left, monthly surplus (avg last 6 months income − expense), required/month, achievability badge (green ✓ / amber ⚠ / red ✗)
   - Time-horizon instrument tiers: <3mo → Tabungan/Deposito · 3–12mo → Deposito/RDPU · 12–36mo → RDPT/ORI/Sukuk/SBR · 36mo+ → RDPU + RD Campuran + RD Saham
   - AI returns instrument cards with allocation %, expected return range, allocation bar, and rationale
   - Monthly contribution chip, risk level badge (low/moderate/high), risk note, and summary

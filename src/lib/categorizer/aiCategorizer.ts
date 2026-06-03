@@ -668,7 +668,7 @@ export type GoalAdvisorContext = {
   deadline: string
   avgMonthlyIncome: number
   avgMonthlyExpense: number
-  monthlySupplus: number
+  monthlySurplus: number
   currentAssetAllocation: { type: string; totalValueIDR: number }[]
 }
 
@@ -693,7 +693,7 @@ Time-horizon rules (strict):
 - 36+ months → 20–30% RDPU buffer + RD Campuran + RD Saham
 
 monthlyContribution = Math.round(targetAmount / monthsRemaining)
-canAchieve = monthlyContribution <= monthlySupplus * 0.7
+canAchieve = monthlyContribution <= monthlySurplus * 0.7
 
 Respond with ONLY valid JSON (no markdown):
 {
@@ -722,7 +722,7 @@ export async function generateGoalAdvice(
   const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens: 1024 }),
+    body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens: 2048 }),
   })
 
   if (!res.ok) {
@@ -734,7 +734,12 @@ export async function generateGoalAdvice(
   let content: string = json.choices?.[0]?.message?.content || ''
   content = content.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```\s*$/g, '').trim()
 
-  const parsed = JSON.parse(content)
+  let parsed: any
+  try {
+    parsed = JSON.parse(content)
+  } catch (e) {
+    throw new Error(`AI response could not be parsed as JSON. Raw (first 300 chars): ${content.slice(0, 300)}`)
+  }
   if (!parsed.instruments || !Array.isArray(parsed.instruments)) {
     throw new Error('Unexpected response format from AI')
   }

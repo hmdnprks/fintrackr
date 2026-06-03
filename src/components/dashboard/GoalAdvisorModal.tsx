@@ -54,7 +54,7 @@ export default function GoalAdvisorModal({ isOpen, goal, onClose, statements }: 
   const months = monthsRemaining(goal.deadline)
 
   // Compute monthly income + expense from statements (last 6 months)
-  const { avgMonthlyIncome, avgMonthlyExpense, monthlySupplus } = useMemo(() => {
+  const { avgMonthlyIncome, avgMonthlyExpense, monthlySurplus } = useMemo(() => {
     const incomeByMonth: Record<string, number> = {}
     const expenseByMonth: Record<string, number> = {}
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -80,7 +80,7 @@ export default function GoalAdvisorModal({ isOpen, goal, onClose, statements }: 
     return {
       avgMonthlyIncome:  avgIncome,
       avgMonthlyExpense: avgExpense,
-      monthlySupplus:    Math.max(0, avgIncome - avgExpense),
+      monthlySurplus:    Math.max(0, avgIncome - avgExpense),
     }
   }, [statements])
 
@@ -135,7 +135,7 @@ export default function GoalAdvisorModal({ isOpen, goal, onClose, statements }: 
       deadline:               goal.deadline,
       avgMonthlyIncome:       Math.round(avgMonthlyIncome),
       avgMonthlyExpense:      Math.round(avgMonthlyExpense),
-      monthlySupplus:         Math.round(monthlySupplus),
+      monthlySurplus:         Math.round(monthlySurplus),
       currentAssetAllocation,
     }
 
@@ -166,8 +166,8 @@ export default function GoalAdvisorModal({ isOpen, goal, onClose, statements }: 
   if (!isOpen) return null
 
   const requiredMonthly = months > 0 ? Math.round(goal.targetAmount / months) : goal.targetAmount
-  const isAchievable    = monthlySupplus > 0 && requiredMonthly <= monthlySupplus * 0.7
-  const isTight         = monthlySupplus > 0 && !isAchievable && requiredMonthly <= monthlySupplus
+  const isAchievable    = monthlySurplus > 0 && requiredMonthly <= monthlySurplus * 0.7
+  const isTight         = monthlySurplus > 0 && !isAchievable && requiredMonthly <= monthlySurplus
   const isOverdue       = months <= 0
 
   return (
@@ -217,10 +217,10 @@ export default function GoalAdvisorModal({ isOpen, goal, onClose, statements }: 
                 {!isOverdue && <span className="text-gray-400 dark:text-gray-500 ml-1">({months} mo left)</span>}
               </span>
             </div>
-            {monthlySupplus > 0 && (
+            {monthlySurplus > 0 && (
               <div className="flex justify-between">
                 <span className="text-gray-500 dark:text-gray-400">Monthly surplus</span>
-                <span className="font-medium text-gray-700 dark:text-gray-300">{formatIDRShort(monthlySupplus)}</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">{formatIDRShort(monthlySurplus)}</span>
               </div>
             )}
             <div className="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700">
@@ -229,7 +229,7 @@ export default function GoalAdvisorModal({ isOpen, goal, onClose, statements }: 
                 {formatIDRShort(requiredMonthly)}
               </span>
             </div>
-            {!isOverdue && monthlySupplus > 0 && (
+            {!isOverdue && monthlySurplus > 0 && (
               <div className={`flex items-center gap-1.5 text-xs font-medium rounded-lg px-2 py-1.5 ${
                 isAchievable ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
                 isTight      ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' :

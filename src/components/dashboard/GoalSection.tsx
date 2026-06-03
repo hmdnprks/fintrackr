@@ -5,9 +5,10 @@ import { useState, useMemo } from 'react'
 import { formatIDR } from '@/lib/formatter'
 import { categorizeTransaction } from '@/lib/categorizer/mandiri/transactionCategorizer'
 import {
-  getGoals, addGoal, deleteGoal,
-  type Goal, type SavingsGoal, type SpendingGoal,
+  getGoals, addGoal, updateGoal, deleteGoal,
+  type Goal, type SavingsGoal, type SpendingGoal, type SavingsGoalProgressMode,
 } from '@/lib/goalStorage'
+import { getAssets, type Asset } from '@/lib/assetStorage'
 import GoalAdvisorModal from './GoalAdvisorModal'
 
 const SPEND_CATEGORIES = [
@@ -38,19 +39,31 @@ function monthsRemaining(deadline: string): number {
 
 // ─── progress computers ──────────────────────────────────────────────────────
 
-function computeSavingsProgress(goal: SavingsGoal, statements: any[]) {
-  let income = 0, expense = 0
-  for (const s of statements) {
-    if (!s.monthKey) continue
-    if (s.monthKey < goal.startMonth || s.monthKey > goal.deadline) continue
-    for (const tx of s.transactions || []) {
-      if (tx.type === 'credit') income += tx.amount || 0
-      else expense += tx.amount || 0
+function computeSavingsProgress(goal: SavingsGoal, statements: any[], assets: Asset[]) {
+  let saved = 0
+  const mode = goal.progressMode ?? 'auto'
+
+  if (mode === 'linked' && goal.linkedAssetId) {
+    const asset = assets.find((a) => a.id === goal.linkedAssetId)
+    saved = asset ? asset.currentValue : 0
+  } else if (mode === 'manual' && goal.savedAmount !== undefined) {
+    saved = goal.savedAmount
+  } else {
+    // auto: net savings from statements between startMonth and deadline
+    let income = 0, expense = 0
+    for (const s of statements) {
+      if (!s.monthKey) continue
+      if (s.monthKey < goal.startMonth || s.monthKey > goal.deadline) continue
+      for (const tx of s.transactions || []) {
+        if (tx.type === 'credit') income += tx.amount || 0
+        else expense += tx.amount || 0
+      }
     }
+    saved = Math.max(0, income - expense)
   }
-  const saved = Math.max(0, income - expense)
-  const pct   = Math.min((saved / goal.targetAmount) * 100, 100)
-  return { saved, pct, remaining: Math.max(0, goal.targetAmount - saved) }
+
+  const pct = Math.min((saved / goal.targetAmount) * 100, 100)
+  return { saved, pct, remaining: Math.max(0, goal.targetAmount - saved), mode }
 }
 
 function computeSpendingProgress(goal: SpendingGoal, statements: any[]) {
@@ -313,15 +326,192 @@ function AddGoalModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
   )
 }
 
+// ─── update progress modal ────────────────────────────────────────────────────
+
+const LINKABLE_TYPES: Asset['type'][] = ['savings', 'gold', 'investment', 'pocket']
+
+function UpdateProgressModal({
+  goal, assets, onClose, onSaved,
+}: {
+  goal: SavingsGoal
+  assets: Asset[]
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const [mode, setMode] = useState<SavingsGoalProgressMode>(goal.progressMode ?? 'auto')
+  const [manualRaw, setManualRaw] = useState(
+    goal.savedAmount !== undefined ? formatThousands(goal.savedAmount) : ''
+  )
+  const [linkedId, setLinkedId] = useState(goal.linkedAssetId ?? '')
+  const [saving, setSaving] = useState(false)
+
+  const linkableAssets = assets.filter((a) => LINKABLE_TYPES.includes(a.type))
+
+  async function handleSave() {
+    setSaving(true)
+    const updates: Partial<SavingsGoal> = { progressMode: mode }
+    if (mode === 'manual') {
+      updates.savedAmount = Number(manualRaw.replace(/[^0-9]/g, '')) || 0
+      updates.linkedAssetId = undefined
+    } else if (mode === 'linked') {
+      updates.linkedAssetId = linkedId || undefined
+      updates.savedAmount = undefined
+    } else {
+      updates.savedAmount = undefined
+      updates.linkedAssetId = undefined
+    }
+    await updateGoal(goal.id, updates)
+    onSaved()
+    onClose()
+    setSaving(false)
+  }
+
+  const linkedAsset = linkableAssets.find((a) => a.id === linkedId)
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4">
+          <div>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Track Progress</h3>
+            <p className="text-xs text-gray-400 mt-0.5 truncate max-w-[220px]">
+              {goal.name || `Save ${formatIDR(goal.targetAmount)}`}
+            </p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="h-px bg-gray-100 dark:bg-gray-800" />
+
+        <div className="px-6 py-5 space-y-4">
+          {/* Mode selector */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">How is progress tracked?</label>
+            {(
+              [
+                { value: 'auto',   label: 'Auto (from statements)', desc: 'Net savings from imported bank data' },
+                { value: 'manual', label: 'Manual amount',           desc: 'You enter the saved amount yourself' },
+                { value: 'linked', label: 'Link to asset / pocket',  desc: 'Reads balance from a saved asset' },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setMode(opt.value)}
+                className={`w-full flex items-start gap-3 px-4 py-3 rounded-xl border text-left transition ${
+                  mode === opt.value
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+              >
+                <span className={`w-4 h-4 mt-0.5 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
+                  mode === opt.value ? 'border-blue-500' : 'border-gray-300 dark:border-gray-600'
+                }`}>
+                  {mode === opt.value && <span className="w-2 h-2 rounded-full bg-blue-500" />}
+                </span>
+                <div>
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{opt.label}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{opt.desc}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Manual input */}
+          {mode === 'manual' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Current amount saved
+              </label>
+              <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+                <span className="px-3 py-2.5 text-sm text-gray-400 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 select-none">Rp</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoFocus
+                  placeholder="0"
+                  value={manualRaw}
+                  onChange={(e) => {
+                    const d = e.target.value.replace(/[^0-9]/g, '')
+                    setManualRaw(d ? formatThousands(Number(d)) : '')
+                  }}
+                  className="flex-1 px-3 py-2.5 text-sm focus:outline-none bg-transparent dark:text-gray-100"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Linked asset picker */}
+          {mode === 'linked' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Select asset or pocket
+              </label>
+              {linkableAssets.length === 0 ? (
+                <p className="text-xs text-gray-400 dark:text-gray-500 py-2">
+                  No linkable assets found. Add a savings or pocket asset first.
+                </p>
+              ) : (
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {linkableAssets.map((a) => (
+                    <button
+                      key={a.id}
+                      onClick={() => setLinkedId(a.id)}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-left transition ${
+                        linkedId === a.id
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{a.name}</p>
+                        <p className="text-xs text-gray-400 capitalize">{a.type} · {a.institution || '—'}</p>
+                      </div>
+                      <span className="text-sm font-semibold text-gray-600 dark:text-gray-300 ml-2 shrink-0">
+                        {formatIDR(a.currentValue)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {linkedAsset && (
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                  Progress will reflect {linkedAsset.name}&apos;s current balance ({formatIDR(linkedAsset.currentValue)}).
+                </p>
+              )}
+            </div>
+          )}
+
+          <button
+            onClick={handleSave}
+            disabled={saving || (mode === 'linked' && !linkedId)}
+            className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold transition"
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── goal cards ───────────────────────────────────────────────────────────────
 
-function SavingsGoalCard({ goal, statements, onDelete, onAdvise }: {
-  goal: SavingsGoal; statements: any[]; onDelete: () => void; onAdvise: () => void
+function SavingsGoalCard({ goal, statements, assets, onDelete, onAdvise, onUpdateProgress }: {
+  goal: SavingsGoal; statements: any[]; assets: Asset[]
+  onDelete: () => void; onAdvise: () => void; onUpdateProgress: () => void
 }) {
-  const { saved, pct, remaining } = useMemo(
-    () => computeSavingsProgress(goal, statements),
-    [goal, statements]
+  const { saved, pct, remaining, mode } = useMemo(
+    () => computeSavingsProgress(goal, statements, assets),
+    [goal, statements, assets]
   )
+  const linkedAsset = mode === 'linked' ? assets.find((a) => a.id === goal.linkedAssetId) : undefined
   const months = monthsRemaining(goal.deadline)
   const isComplete  = pct >= 100
   const isOverdue   = months < 0 && !isComplete
@@ -360,6 +550,15 @@ function SavingsGoalCard({ goal, statements, onDelete, onAdvise }: {
                 AI Plan
               </button>
             )}
+            <button
+              onClick={onUpdateProgress}
+              title="Update progress"
+              className="text-gray-300 hover:text-blue-400 transition"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+              </svg>
+            </button>
             <button onClick={onDelete} className="text-gray-300 hover:text-red-400 transition">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -385,7 +584,19 @@ function SavingsGoalCard({ goal, statements, onDelete, onAdvise }: {
           </span>
         </div>
         <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
-          <span>From {monthLabel(goal.startMonth)}</span>
+          <div className="flex items-center gap-2">
+            <span>From {monthLabel(goal.startMonth)}</span>
+            {mode === 'manual' && (
+              <span className="px-1.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 font-medium">
+                Manual
+              </span>
+            )}
+            {mode === 'linked' && linkedAsset && (
+              <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400 font-medium truncate max-w-[100px]">
+                🔗 {linkedAsset.name}
+              </span>
+            )}
+          </div>
           <span className="font-medium text-gray-600 dark:text-gray-400">{pct.toFixed(1)}%</span>
         </div>
       </div>
@@ -490,12 +701,19 @@ interface Props {
 
 export default function GoalSection({ statements }: Props) {
   const [goals, setGoals] = useState<Goal[]>(() => getGoals())
+  const [assets, setAssets] = useState<Asset[]>(() => getAssets())
   const [showModal, setShowModal] = useState(false)
   const [advisingGoal, setAdvisingGoal] = useState<SavingsGoal | null>(null)
+  const [updatingGoal, setUpdatingGoal] = useState<SavingsGoal | null>(null)
 
   function handleDelete(id: string) {
     deleteGoal(id)
     setGoals(getGoals())
+  }
+
+  function refreshGoals() {
+    setGoals(getGoals())
+    setAssets(getAssets())
   }
 
   return (
@@ -506,6 +724,15 @@ export default function GoalSection({ statements }: Props) {
           goal={advisingGoal}
           statements={statements}
           onClose={() => setAdvisingGoal(null)}
+        />
+      )}
+
+      {updatingGoal && (
+        <UpdateProgressModal
+          goal={updatingGoal}
+          assets={assets}
+          onClose={() => setUpdatingGoal(null)}
+          onSaved={refreshGoals}
         />
       )}
 
@@ -561,8 +788,10 @@ export default function GoalSection({ statements }: Props) {
                   key={goal.id}
                   goal={goal}
                   statements={statements}
+                  assets={assets}
                   onDelete={() => handleDelete(goal.id)}
                   onAdvise={() => setAdvisingGoal(goal)}
+                  onUpdateProgress={() => setUpdatingGoal(goal)}
                 />
               ) : (
                 <SpendingGoalCard

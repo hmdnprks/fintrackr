@@ -74,11 +74,12 @@ Checklist of shipped features and planned improvements. Items without a check ar
 - [x] IDR thousand-separator formatting in budget input
 - [x] AI budget suggestions — based on last 3 months avg spending; editable per-row before applying
 - [x] Financial goals — savings goals (name + target amount + deadline) and spending habit goals (consecutive months under limit); goal name shown as card title; falls back to "Save Rp X" for unnamed goals
+- [x] **Savings goal progress tracking modes** — pencil button opens "Track Progress" modal; three modes: Auto (net savings from statements), Manual (user-entered amount), Linked (reads balance from a savings/pocket/investment/gold asset); mode badge shown on card
 - [x] Category breakdown — donut chart + ranked list; Expenses/Income toggle
 - [ ] Budget rollover — unspent budget carries forward to next month
 - [ ] Goal notifications — in-app alert when a goal deadline is approaching
 - [ ] Shared budget mode — split expenses between people (future)
-- [x] **AI Goal Instrument Advisor** — indigo "AI Plan" button on each active savings goal card; goal name auto-filled from the saved goal name (no re-entry needed); optional override input; context summary shows target, deadline, months left, monthly surplus, required/month, and achievability badge (green ✓ / amber ⚠ / red ✗); time-horizon tiers: <3mo → Tabungan/Deposito, 3–12mo → Deposito/RDPU, 12–36mo → RDPT/ORI/Sukuk/SBR, 36mo+ → RDPU buffer + RD Campuran + RD Saham; AI returns instrument cards (name, allocation %, expected return range, rationale + allocation bar), required monthly contribution, risk level badge, risk note, and summary; last 3 plans per goal persisted in vault and reloadable without re-running AI; button hidden on completed or overdue goals
+- [x] **AI Goal Instrument Advisor** — indigo "AI Plan" button on each active savings goal card; goal name auto-filled from the saved goal name (no re-entry needed); optional override input; context summary shows target, deadline, months left, monthly surplus (avg last 6 months), required/month, and achievability badge (green ✓ / amber ⚠ / red ✗); time-horizon tiers: <3mo → Tabungan/Deposito, 3–12mo → Deposito/RDPU, 12–36mo → RDPT/ORI/Sukuk/SBR, 36mo+ → RDPU buffer + RD Campuran + RD Saham; AI returns instrument cards (name, allocation %, expected return range, rationale + allocation bar), required monthly contribution, risk level badge, risk note, and summary; last 3 plans per goal persisted in vault and reloadable without re-running AI; button hidden on completed or overdue goals; max_tokens 2048 to prevent JSON truncation
 
 ---
 
