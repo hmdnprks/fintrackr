@@ -11,7 +11,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 | # | Feature | Section | Why |
 |---|---------|---------|-----|
 | 1 | **Generic CSV import** | Import & Parsing | Unblocks all banks (BCA, BRI, BNI, Jago, GoPay, OVO all export CSV); one column-mapper UI supports every bank without writing a parser |
-| 2 | **Google Drive auto-backup** | Data & Backup | localStorage can be wiped by the browser; one accidental "Clear site data" = all data gone; this is the biggest trust gap for serious long-term use |
+| 2 | ~~**Google Drive auto-backup**~~ ✓ | Data & Backup | ~~localStorage can be wiped by the browser; one accidental "Clear site data" = all data gone; this is the biggest trust gap for serious long-term use~~ Shipped |
 | 3 | **Debt payoff optimizer** | Assets Tab | Avalanche vs snowball comparison with total interest saved; the data (balance, rate, installment) is already stored — just needs the math and UI |
 | 4 | **Gold price auto-fetch** | Assets Tab | Antam/LM publishes a public price; auto-multiply by weight = zero manual input for the most common Indonesian non-bank asset |
 | 5 | **In-app notification center** | Mobile & UX | Budget overrun, goal deadline, stale assets, backup overdue — currently all silent; a bell icon with a list makes the app proactive |
@@ -141,7 +141,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 - [x] Backwards-compatible restore — v1/v2/v3 backups load cleanly
 - [x] Merge restore — deduplicates by ID; backup wins on same-day snapshots
 - [x] CSV export — filtered transaction list
-- [ ] **Google Drive auto-backup** ⭐ — OAuth2 PKCE flow; auto-save encrypted backup to Drive appdata folder on every vault save; requires Google Cloud project + OAuth client ID; critical because localStorage can be wiped by the browser (Clear site data, storage pressure) with no recovery
+- [x] **Google Drive backup** — GIS token client (popup OAuth2, no server/redirect/client-secret needed); saves `fintrackr-backup.json` to Drive `appDataFolder` (private, not visible in My Drive); Connect/Save to Drive/Restore from Drive/Disconnect in Settings; restore feeds into the existing merge-or-replace flow; session token stored in sessionStorage with 1-hour TTL; 401 auto-clears token and prompts reconnect; first-time auth requires adding email as test user in Google Cloud Console (app in Testing mode)
 - [ ] Scheduled auto-backup reminder — prompt user to export manual backup every 30 days if Google Drive is not connected
 - [ ] Backup encryption option — encrypt the JSON file itself before download (separate from vault encryption) so it's safe to store in cloud
 
