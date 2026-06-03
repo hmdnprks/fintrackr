@@ -23,7 +23,7 @@ Built with [Next.js](https://nextjs.org) (App Router), React 19, TypeScript, Tai
 - **Financial term hints** — ⓘ info icon on every card that contains financial jargon (Savings Rate, Investment Rate, Income Stability, 50/30/20, Emergency Fund, Liquid Coverage); click for a plain-language explanation and benchmark context
 - **FIRE Number** — 25× annual expenses target; progress bar vs net worth; projected FIRE age and year from birth year (saved to vault); collapsible FIRE explainer
 - **Asset Reallocation Advisor** — AI restructures your existing portfolio (not new money); risk preference selector; priority-ordered suggestions with confidence levels, running balance, and savings safety check post-rebalance; result auto-saved to vault; exportable as PDF
-- **Data backup** — JSON export/import (v4); includes statements, assets, net worth snapshots, per-asset history, rebalance history; v1–v3 backups remain compatible; merge or replace modes
+- **Data backup** — JSON export/import (v4); includes statements, assets, net worth snapshots, per-asset history, rebalance history, settings, goal advisor plans; API key excluded from backup; v1–v3 backups remain compatible; merge or replace modes
 - **CSV export** — Download filtered transactions as CSV
 - **Secure vault** — AES-GCM encryption, PBKDF2 key derivation, confirm-on-create, all data local; biometric unlock (Face ID / Touch ID / fingerprint) via WebAuthn on supported devices
 - **Privacy-first** — No server, no database, no tracking; AI features are explicitly opt-in
@@ -106,7 +106,7 @@ src/
 │   ├── useAICategorization.ts
 │   └── useMonthComparison.ts # Month-over-month deltas
 └── lib/
-    ├── backup.ts             # Export/import backup (v2, includes goals)
+    ├── backup.ts             # Export/import backup (v4, includes goals, settings, advisor history)
     ├── budgetStorage.ts      # Budget CRUD
     ├── categories.ts         # Category types & 50+ Indonesian rules
     ├── goalStorage.ts        # Goals CRUD

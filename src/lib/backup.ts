@@ -19,6 +19,8 @@ export type BackupData = {
     rebalanceHistory: any[]
     learnedRules: any[]
     transactionLabels: Record<string, string>
+    settings: Record<string, string>              // excludes chatApiKey
+    goalAdvisorHistory: Record<string, any[]>     // goalId → last 3 AI plans
   }
 }
 
@@ -50,6 +52,11 @@ export async function exportBackup(): Promise<BackupData> {
       rebalanceHistory:   vault.rebalanceHistory ?? [],
       learnedRules:       vault.learnedRules ?? [],
       transactionLabels:  vault.transactionLabels ?? {},
+      // strip API key — sensitive credential stays on device only
+      settings:           Object.fromEntries(
+        Object.entries(vault.settings ?? {}).filter(([k]) => k !== 'chatApiKey')
+      ),
+      goalAdvisorHistory: vault.goalAdvisorHistory ?? {},
     },
   }
 }
@@ -101,8 +108,16 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
   const rebalanceHistory   = backup.data.rebalanceHistory   ?? []
   const learnedRules       = backup.data.learnedRules       ?? []
   const transactionLabels  = backup.data.transactionLabels  ?? {}
+  const backupSettings     = backup.data.settings           ?? {}
+  const goalAdvisorHistory = backup.data.goalAdvisorHistory ?? {}
 
   if (mode === 'replace') {
+    const existingVault = await getVaultData()
+    // preserve the API key — never overwrite it from backup
+    const preservedApiKey = existingVault.settings?.chatApiKey
+    const restoredSettings = { ...backupSettings }
+    if (preservedApiKey) restoredSettings.chatApiKey = preservedApiKey
+
     await saveVaultData({
       statements: backup.data.statements,
       manualTransactions: backup.data.manualTransactions,
@@ -115,6 +130,8 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       rebalanceHistory,
       learnedRules,
       transactionLabels,
+      settings: restoredSettings,
+      goalAdvisorHistory,
     })
     return
   }
@@ -187,6 +204,16 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       ),
       ...learnedRules,
     ],
+    // Merge settings — backup wins except for chatApiKey (stays on device)
+    settings: {
+      ...backupSettings,
+      ...(existingVault.settings ?? {}),  // existing wins (preserves API key + local overrides)
+    },
+    // Merge goal advisor history — backup wins per goalId
+    goalAdvisorHistory: {
+      ...(existingVault.goalAdvisorHistory ?? {}),
+      ...goalAdvisorHistory,
+    },
   }
 
   await saveVaultData(newVaultState)

@@ -112,7 +112,7 @@ Checklist of shipped features and planned improvements. Items without a check ar
 
 ## Data & Backup
 
-- [x] JSON backup v4 — statements, transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots, rebalance history, learned rules, transaction labels
+- [x] JSON backup v4 — statements, transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots, rebalance history, learned rules, transaction labels, settings (excl. API key), goal advisor history
 - [x] Backwards-compatible restore — v1/v2/v3 backups load cleanly
 - [x] Merge restore — deduplicates by ID; backup wins on same-day snapshots
 - [x] CSV export — filtered transaction list

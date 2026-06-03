@@ -177,8 +177,8 @@ Two goal types displayed as cards in the Budget tab:
 ## Data Export
 
 - **CSV export** — download currently filtered transactions (Date, Description, Amount, Type, Category, Balance)
-- **JSON backup** — full vault export: statements, manual transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots, rebalance history, learned categorization rules, transaction labels
-- Vault credentials excluded (device-specific)
+- **JSON backup** — full vault export: statements, manual transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots, rebalance history, learned categorization rules, transaction labels, app settings (household type, birth year, etc.), goal advisor AI plans
+- API key excluded from backup (stays on device only); on restore the existing API key is always preserved
 
 ## Data Backup & Restore
 
@@ -190,7 +190,8 @@ Available in Settings:
 - File validation — rejects non-Fintrackr JSON
 - Preview before restoring: statement count, manual transactions, rules, budgets, goals, assets, export date
 - Backwards-compatible: v1 (no goals), v2 (no assets), v3 (no asset snapshots) all restore cleanly; missing fields default to empty
-- v4 backup includes: statements, manual transactions, rules, budgets, goals, assets, net worth snapshots (daily aggregate), asset snapshots (daily per-asset value history), rebalance history (last 5 entries)
+- v4 backup includes: statements, manual transactions, rules, budgets, goals (incl. progress mode + linked asset), assets, net worth snapshots, asset snapshots, rebalance history, learned rules, transaction labels, settings (excl. API key), goal advisor AI plans
+- API key never written to backup; on replace-restore the existing key is re-applied; on merge-restore existing settings take precedence (preserving local overrides)
 
 ## Recurring Transaction Detection
 
