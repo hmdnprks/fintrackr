@@ -31,8 +31,8 @@ export default function SummaryCard({
         <div className="flex items-center gap-1 mt-1.5">
           <span className={`flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded-full ${
             delta.isGood
-              ? 'bg-green-50 text-green-600'
-              : 'bg-red-50 text-red-500'
+              ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
+              : 'bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400'
           }`}>
             {delta.pct > 0 ? '↑' : '↓'}
             {Math.abs(delta.pct).toFixed(1)}%

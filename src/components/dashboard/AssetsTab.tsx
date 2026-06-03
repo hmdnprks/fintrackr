@@ -36,13 +36,13 @@ import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 type IconComponent = React.ComponentType<{ className?: string }>
 
 const TYPE_META: Record<AssetType, { label: string; color: string; bg: string; Icon: IconComponent }> = {
-  savings:    { label: 'Savings',          color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-100',     Icon: BanknotesIcon      },
-  gold:       { label: 'Gold',             color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-100',  Icon: StarIcon            },
-  investment: { label: 'Investment',       color: 'text-green-700',  bg: 'bg-green-50 border-green-100',    Icon: ArrowTrendingUpIcon },
-  pocket:     { label: 'Pocket',           color: 'text-purple-700', bg: 'bg-purple-50 border-purple-100',  Icon: WalletIcon          },
-  vehicle:    { label: 'Vehicle',          color: 'text-orange-700', bg: 'bg-orange-50 border-orange-100',  Icon: TruckIcon           },
-  property:   { label: 'Property',         color: 'text-teal-700',   bg: 'bg-teal-50 border-teal-100',      Icon: HomeModernIcon      },
-  other:      { label: 'Other',            color: 'text-gray-700',   bg: 'bg-gray-50 border-gray-200',      Icon: ArchiveBoxIcon      },
+  savings:    { label: 'Savings',    color: 'text-blue-700 dark:text-blue-400',     bg: 'bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800/50',       Icon: BanknotesIcon      },
+  gold:       { label: 'Gold',       color: 'text-yellow-700 dark:text-yellow-400', bg: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-100 dark:border-yellow-800/50', Icon: StarIcon            },
+  investment: { label: 'Investment', color: 'text-green-700 dark:text-green-400',   bg: 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800/50',     Icon: ArrowTrendingUpIcon },
+  pocket:     { label: 'Pocket',     color: 'text-purple-700 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20 border-purple-100 dark:border-purple-800/50', Icon: WalletIcon          },
+  vehicle:    { label: 'Vehicle',    color: 'text-orange-700 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800/50', Icon: TruckIcon           },
+  property:   { label: 'Property',   color: 'text-teal-700 dark:text-teal-400',     bg: 'bg-teal-50 dark:bg-teal-900/20 border-teal-100 dark:border-teal-800/50',         Icon: HomeModernIcon      },
+  other:      { label: 'Other',      color: 'text-gray-600 dark:text-gray-400',     bg: 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700',               Icon: ArchiveBoxIcon      },
 }
 
 const TYPE_ORDER: AssetType[] = ['savings', 'gold', 'investment', 'pocket', 'vehicle', 'property', 'other']
@@ -343,7 +343,7 @@ export default function AssetsTab({ statements }: Props) {
             )}
             {netWorthGrowth !== null && (
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                <span className={`inline-flex items-center gap-1 text-sm font-semibold ${netWorthGrowth.change >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                <span className={`inline-flex items-center gap-1 text-sm font-semibold ${netWorthGrowth.change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
                   {netWorthGrowth.change >= 0 ? '↑' : '↓'}
                   {formatIDR(Math.abs(netWorthGrowth.change))}
                   <span className="font-normal text-xs">({Math.abs(netWorthGrowth.pct).toFixed(1)}%)</span>
@@ -368,7 +368,7 @@ export default function AssetsTab({ statements }: Props) {
               <div className="text-gray-300 dark:text-gray-600 text-lg">−</div>
               <div>
                 <p className="text-xs text-gray-400 dark:text-gray-500">Total Liabilities</p>
-                <p className="font-semibold text-red-500">{formatIDRFull(totalLiabilities)}</p>
+                <p className="font-semibold text-red-500 dark:text-red-400">{formatIDRFull(totalLiabilities)}</p>
               </div>
               <div className="text-gray-300 dark:text-gray-600 text-lg">=</div>
               <div>
@@ -663,7 +663,7 @@ function LiabilityCard({ liability: l, linkedAsset, onEdit, onDelete }: {
 
         <div className="mt-3">
           <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Remaining balance</p>
-          <p className="text-lg font-bold text-red-500">−{formatIDRFull(l.remainingBalance)}</p>
+          <p className="text-lg font-bold text-red-500 dark:text-red-400">−{formatIDRFull(l.remainingBalance)}</p>
         </div>
 
         {/* Progress bar */}
@@ -690,7 +690,7 @@ function LiabilityCard({ liability: l, linkedAsset, onEdit, onDelete }: {
           <span>{monthsLeft} mo left</span>
         )}
         {monthsLeft !== null && monthsLeft < 0 && (
-          <span className="text-red-400">Matured</span>
+          <span className="text-red-400 dark:text-red-400">Matured</span>
         )}
         {l.endDate && !monthsLeft && monthsLeft !== 0 && (
           <span>ends {l.endDate}</span>
@@ -707,11 +707,11 @@ type EFStatus = 'critical' | 'low' | 'building' | 'healthy' | 'strong'
 const EF_STATUS: Record<EFStatus, {
   label: string; color: string; bg: string; border: string; bar: string; Icon: IconComponent
 }> = {
-  critical: { label: 'Critical', Icon: ExclamationCircleIcon,   color: 'text-red-700',    bg: 'bg-red-50',    border: 'border-red-200',    bar: 'bg-red-500'    },
-  low:      { label: 'Low',      Icon: ExclamationTriangleIcon,  color: 'text-orange-700', bg: 'bg-orange-50', border: 'border-orange-200', bar: 'bg-orange-400' },
-  building: { label: 'Building', Icon: ArrowTrendingUpIcon,      color: 'text-amber-700',  bg: 'bg-amber-50',  border: 'border-amber-200',  bar: 'bg-amber-400'  },
-  healthy:  { label: 'Healthy',  Icon: CheckCircleIcon,          color: 'text-green-700',  bg: 'bg-green-50',  border: 'border-green-200',  bar: 'bg-green-500'  },
-  strong:   { label: 'Strong',   Icon: ShieldCheckIcon,          color: 'text-emerald-700',bg: 'bg-emerald-50',border: 'border-emerald-200', bar: 'bg-emerald-500'},
+  critical: { label: 'Critical', Icon: ExclamationCircleIcon,   color: 'text-red-700 dark:text-red-400',       bg: 'bg-red-50 dark:bg-red-900/20',       border: 'border-red-200 dark:border-red-800/50',       bar: 'bg-red-500'    },
+  low:      { label: 'Low',      Icon: ExclamationTriangleIcon,  color: 'text-orange-700 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-200 dark:border-orange-800/50', bar: 'bg-orange-400' },
+  building: { label: 'Building', Icon: ArrowTrendingUpIcon,      color: 'text-amber-700 dark:text-amber-400',   bg: 'bg-amber-50 dark:bg-amber-900/20',   border: 'border-amber-200 dark:border-amber-800/50',   bar: 'bg-amber-400'  },
+  healthy:  { label: 'Healthy',  Icon: CheckCircleIcon,          color: 'text-green-700 dark:text-green-400',   bg: 'bg-green-50 dark:bg-green-900/20',   border: 'border-green-200 dark:border-green-800/50',   bar: 'bg-green-500'  },
+  strong:   { label: 'Strong',   Icon: ShieldCheckIcon,          color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20', border: 'border-emerald-200 dark:border-emerald-800/50', bar: 'bg-emerald-500'},
 }
 
 const EF_ADVICE: Record<EFStatus, string> = {
@@ -789,7 +789,7 @@ function EmergencyFundSection({
         </div>
         <div className="text-right shrink-0">
           <p className={`text-2xl font-bold ${s.color}`}>{months.toFixed(1)}</p>
-          <p className="text-xs text-gray-500">months covered</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">months covered</p>
         </div>
       </div>
 
@@ -934,10 +934,10 @@ function LiquidCoverageSection({
   const status = months >= 12 ? 'excellent' : months >= 6 ? 'healthy' : months >= 3 ? 'adequate' : 'low'
 
   const meta = {
-    excellent: { label: 'Excellent',  color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200', bar: 'bg-emerald-500' },
-    healthy:   { label: 'Healthy',    color: 'text-green-700',   bg: 'bg-green-50',   border: 'border-green-200',   bar: 'bg-green-500'   },
-    adequate:  { label: 'Adequate',   color: 'text-amber-700',   bg: 'bg-amber-50',   border: 'border-amber-200',   bar: 'bg-amber-400'   },
-    low:       { label: 'Low',        color: 'text-orange-700',  bg: 'bg-orange-50',  border: 'border-orange-200',  bar: 'bg-orange-400'  },
+    excellent: { label: 'Excellent', color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20', border: 'border-emerald-200 dark:border-emerald-800/50', bar: 'bg-emerald-500' },
+    healthy:   { label: 'Healthy',   color: 'text-green-700 dark:text-green-400',     bg: 'bg-green-50 dark:bg-green-900/20',     border: 'border-green-200 dark:border-green-800/50',     bar: 'bg-green-500'   },
+    adequate:  { label: 'Adequate',  color: 'text-amber-700 dark:text-amber-400',     bg: 'bg-amber-50 dark:bg-amber-900/20',     border: 'border-amber-200 dark:border-amber-800/50',     bar: 'bg-amber-400'   },
+    low:       { label: 'Low',       color: 'text-orange-700 dark:text-orange-400',   bg: 'bg-orange-50 dark:bg-orange-900/20',   border: 'border-orange-200 dark:border-orange-800/50',   bar: 'bg-orange-400'  },
   }[status]
 
   const pct = Math.min(100, (months / 12) * 100)
@@ -954,10 +954,10 @@ function LiquidCoverageSection({
                 <p>How many months your <strong>total savings</strong> (all accounts) could cover your expenses.</p>
                 <p>Broader than the Emergency Fund — it includes your Mandiri payroll account and every savings account, not just the ones you designated as emergency fund.</p>
                 <div className="pt-1 border-t border-gray-100 dark:border-gray-700 space-y-1">
-                  <p><span className="font-medium text-emerald-600">12+ months</span> — Excellent liquidity buffer</p>
-                  <p><span className="font-medium text-green-600">6–11 months</span> — Healthy overall position</p>
-                  <p><span className="font-medium text-amber-600">3–5 months</span> — Adequate but could be stronger</p>
-                  <p><span className="font-medium text-orange-600">{'<'}3 months</span> — Low — prioritize building liquid savings</p>
+                  <p><span className="font-medium text-emerald-600 dark:text-emerald-400">12+ months</span> — Excellent liquidity buffer</p>
+                  <p><span className="font-medium text-green-600 dark:text-green-400">6–11 months</span> — Healthy overall position</p>
+                  <p><span className="font-medium text-amber-600 dark:text-amber-400">3–5 months</span> — Adequate but could be stronger</p>
+                  <p><span className="font-medium text-orange-600 dark:text-orange-400">{'<'}3 months</span> — Low — prioritize building liquid savings</p>
                 </div>
                 <p className="text-gray-400 dark:text-gray-500">Use both metrics together: Emergency Fund for dedicated buffer, Liquid Coverage for the full picture.</p>
               </div>
@@ -967,7 +967,7 @@ function LiquidCoverageSection({
         </div>
         <div className="text-right shrink-0">
           <p className={`text-2xl font-bold ${meta.color}`}>{months.toFixed(1)}</p>
-          <p className="text-xs text-gray-500">months total</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">months total</p>
         </div>
       </div>
 
@@ -1172,12 +1172,12 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
               <meta.Icon className="w-3 h-3" />{meta.label}
             </span>
             {asset.isEmergencyFund && (
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 border border-green-100 text-green-700">
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/50 text-green-700 dark:text-green-400">
                 Emergency Fund
               </span>
             )}
             {stale && (
-              <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700">
+              <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-amber-700 dark:text-amber-400">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                 </svg>
@@ -1213,7 +1213,7 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
       <div className="mt-3">
         <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{formatIDRFull(asset.currentValue)}</p>
         {assetGrowth !== null && (
-          <p className={`text-xs font-medium mt-0.5 ${assetGrowth.change >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+          <p className={`text-xs font-medium mt-0.5 ${assetGrowth.change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
             {assetGrowth.change >= 0 ? '↑' : '↓'} {formatIDR(Math.abs(assetGrowth.change))}
             {' '}({Math.abs(assetGrowth.pct).toFixed(1)}%)
             <span className="text-gray-400 font-normal ml-1">
@@ -1234,13 +1234,13 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
       <div className="mt-2 space-y-1.5">
         {asset.interestRate != null && (
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Interest: <span className="font-medium text-green-600">{asset.interestRate}% p.a.</span>
+            Interest: <span className="font-medium text-green-600 dark:text-green-400">{asset.interestRate}% p.a.</span>
           </p>
         )}
 
         {efMonths !== null && (
           <p className={`text-xs font-medium ${
-            efMonths >= 6 ? 'text-green-600' : efMonths >= 3 ? 'text-amber-600' : 'text-red-500'
+            efMonths >= 6 ? 'text-green-600 dark:text-green-400' : efMonths >= 3 ? 'text-amber-600 dark:text-amber-400' : 'text-red-500 dark:text-red-400'
           }`}>
             {efMonths.toFixed(1)} months of expenses covered
           </p>
@@ -1266,8 +1266,8 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
         {asset.type === 'investment' && (
           <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border ${
             asset.contributable !== false
-              ? 'bg-green-50 border-green-100 text-green-700'
-              : 'bg-gray-50 border-gray-200 text-gray-500'
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800/50 text-green-700 dark:text-green-400'
+              : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400'
           }`}>
             {asset.contributable !== false
               ? <><CheckIcon className="w-3 h-3" /> Can top up</>
@@ -1341,7 +1341,7 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
             {asset.annualChangeRate != null && (
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Annual rate:{' '}
-                <span className={`font-medium ${asset.annualChangeRate < 0 ? 'text-red-500' : 'text-green-600'}`}>
+                <span className={`font-medium ${asset.annualChangeRate < 0 ? 'text-red-500 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
                   {asset.annualChangeRate > 0 ? '+' : ''}{asset.annualChangeRate}%/yr
                 </span>
               </p>
@@ -1355,7 +1355,7 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
                   Est. today:{' '}
                   <span className="font-medium text-gray-700 dark:text-gray-300">{formatIDR(est)}</span>
                   {absDiff > 0 && (
-                    <span className={`ml-1 ${diff > 0 ? 'text-green-600' : 'text-amber-500'}`}>
+                    <span className={`ml-1 ${diff > 0 ? 'text-green-600 dark:text-green-400' : 'text-amber-500 dark:text-amber-400'}`}>
                       ({diff > 0 ? '+' : '-'}{formatIDR(absDiff)} vs estimate)
                     </span>
                   )}

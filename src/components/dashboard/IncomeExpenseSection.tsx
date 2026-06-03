@@ -17,7 +17,7 @@ export default function IncomeExpenseSection({ income, expense, avgDailyExpense 
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Income vs Expense</h2>
         <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
-          isPositive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+          isPositive ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
         }`}>
           {isPositive ? `Saved ${savingsRate}%` : `Over by ${Math.abs(savingsRate)}%`}
         </span>
@@ -62,7 +62,7 @@ export default function IncomeExpenseSection({ income, expense, avgDailyExpense 
             />
           </div>
           <span className={`text-sm font-semibold w-32 text-right shrink-0 tabular-nums ${
-            isPositive ? 'text-gray-800 dark:text-gray-200' : 'text-red-500'
+            isPositive ? 'text-gray-800 dark:text-gray-200' : 'text-red-500 dark:text-red-400'
           }`}>
             {isPositive ? '+' : '−'}{formatIDR(Math.abs(net))}
           </span>

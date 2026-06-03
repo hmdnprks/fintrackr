@@ -129,7 +129,7 @@ export default function FinancialHealthScore({
                   <p>• <span className="font-medium">Budget Adherence</span> — 20 pts</p>
                 </div>
                 <div className="pt-1 border-t border-gray-100 dark:border-gray-700 space-y-0.5">
-                  <p><span className="font-medium text-emerald-600">A+ (90+)</span> · <span className="font-medium text-green-600">A (80+)</span> · <span className="font-medium text-blue-600">B (70+)</span> · <span className="font-medium text-amber-600">C (55+)</span> · <span className="font-medium text-red-600">D (below 55)</span></p>
+                  <p><span className="font-medium text-emerald-600 dark:text-emerald-400">A+ (90+)</span> · <span className="font-medium text-green-600 dark:text-green-400">A (80+)</span> · <span className="font-medium text-blue-600 dark:text-blue-400">B (70+)</span> · <span className="font-medium text-amber-600 dark:text-amber-400">C (55+)</span> · <span className="font-medium text-red-600 dark:text-red-400">D (below 55)</span></p>
                 </div>
                 <p className="text-gray-400 dark:text-gray-500">Click the ⓘ next to each dimension below for details on how it&apos;s scored.</p>
               </div>

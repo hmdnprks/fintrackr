@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { Asset } from '@/lib/assetStorage'
+import { getLiabilities } from '@/lib/liabilityStorage'
 import { RebalanceResult, RebalanceContext, RebalanceSavedEntry } from '@/lib/categorizer/aiCategorizer'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 import { ArrowRightIcon, CheckCircleIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon, MinusCircleIcon, ShieldCheckIcon, ExclamationTriangleIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline'
@@ -171,7 +172,8 @@ export default function RebalanceModal({
     return recent.length ? recent.reduce((s, v) => s + v, 0) / recent.length : 0
   }, [statements])
 
-  const totalNetWorth = assets.reduce((s, a) => s + a.currentValue, 0)
+  const totalLiabilities = getLiabilities().reduce((s, l) => s + l.remainingBalance, 0)
+  const totalNetWorth = assets.reduce((s, a) => s + a.currentValue, 0) - totalLiabilities
   const byType: Record<string, number> = {}
   for (const a of assets) byType[a.type] = (byType[a.type] || 0) + a.currentValue
 

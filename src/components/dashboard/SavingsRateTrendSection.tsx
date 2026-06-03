@@ -51,10 +51,10 @@ export default function SavingsRateTrendSection({ data }: Props) {
                 <p>It shows how much of your income you actually keep. A rate ≥20% is considered healthy in personal finance.</p>
                 <p className="text-gray-400 dark:text-gray-500">Transfer transactions (cash moves between your own accounts) are excluded because they are not real expenses.</p>
                 <div className="pt-1 border-t border-gray-100 dark:border-gray-700 space-y-1">
-                  <p><span className="font-medium text-green-600">≥30%</span> — great, building wealth fast</p>
-                  <p><span className="font-medium text-green-500">20–29%</span> — on track</p>
-                  <p><span className="font-medium text-amber-500">10–19%</span> — low, room to improve</p>
-                  <p><span className="font-medium text-red-500">{'<'}10%</span> — critical, nearly all income spent</p>
+                  <p><span className="font-medium text-green-600 dark:text-green-400">≥30%</span> — great, building wealth fast</p>
+                  <p><span className="font-medium text-green-500 dark:text-green-400">20–29%</span> — on track</p>
+                  <p><span className="font-medium text-amber-500 dark:text-amber-400">10–19%</span> — low, room to improve</p>
+                  <p><span className="font-medium text-red-500 dark:text-red-400">{'<'}10%</span> — critical, nearly all income spent</p>
                 </div>
               </div>
             } />
@@ -62,7 +62,7 @@ export default function SavingsRateTrendSection({ data }: Props) {
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">% of income kept after categorized spending — Transfer excluded (see note below)</p>
         </div>
         <div className="text-right shrink-0 ml-4">
-          <p className={`text-2xl font-bold ${avg >= IDEAL ? 'text-green-600' : avg >= 10 ? 'text-amber-500' : 'text-red-500'}`}>
+          <p className={`text-2xl font-bold ${avg >= IDEAL ? 'text-green-600 dark:text-green-400' : avg >= 10 ? 'text-amber-500 dark:text-amber-400' : 'text-red-500 dark:text-red-400'}`}>
             {avg}%
           </p>
           <p className="text-xs text-gray-400 dark:text-gray-500">avg this period</p>
@@ -71,10 +71,10 @@ export default function SavingsRateTrendSection({ data }: Props) {
 
       {/* Target badges */}
       <div className="flex gap-2 mb-5 flex-wrap">
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg >= 30 ? 'bg-green-100 text-green-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>≥30% great</span>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg >= IDEAL && avg < 30 ? 'bg-green-100 text-green-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>≥20% good</span>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg < IDEAL && avg >= 10 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>10–19% low</span>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg < 10 ? 'bg-red-100 text-red-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>{'<'}10% critical</span>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg >= 30 ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>≥30% great</span>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg >= IDEAL && avg < 30 ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>≥20% good</span>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg < IDEAL && avg >= 10 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>10–19% low</span>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg < 10 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>{'<'}10% critical</span>
       </div>
 
       {/* Bar chart — horizontally scrollable, min bar width ensures readability */}

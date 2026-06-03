@@ -114,11 +114,11 @@ export default function SpendingForecastSection({ statements }: Props) {
         </div>
         <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-center">
           <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Expenses</p>
-          <p className="text-sm font-bold text-red-500">{formatIDR(forecast.avgExpense)}</p>
+          <p className="text-sm font-bold text-red-500 dark:text-red-400">{formatIDR(forecast.avgExpense)}</p>
         </div>
         <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-center">
           <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Net</p>
-          <p className={`text-sm font-bold ${forecast.avgNet >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-500'}`}>
+          <p className={`text-sm font-bold ${forecast.avgNet >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-500 dark:text-red-400'}`}>
             {forecast.avgNet >= 0 ? '+' : ''}{formatIDR(forecast.avgNet)}
           </p>
         </div>

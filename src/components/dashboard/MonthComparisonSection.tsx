@@ -86,14 +86,14 @@ export default function MonthComparisonSection({ comparison }: Props) {
 
                   {/* Delta badge */}
                   {isNew ? (
-                    <span className="text-xs font-medium bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full w-14 text-center">New</span>
+                    <span className="text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full w-14 text-center">New</span>
                   ) : isGone ? (
                     <span className="text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 px-2 py-0.5 rounded-full w-14 text-center">Gone</span>
                   ) : item.pct !== null ? (
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full w-14 text-center ${
-                      isBig && isIncrease ? 'bg-amber-50 text-amber-600'
-                      : isIncrease        ? 'bg-red-50 text-red-500'
-                      :                     'bg-green-50 text-green-600'
+                      isBig && isIncrease ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400'
+                      : isIncrease        ? 'bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400'
+                      :                     'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
                     }`}>
                       {isIncrease ? '↑' : '↓'} {Math.abs(item.pct).toFixed(0)}%
                     </span>

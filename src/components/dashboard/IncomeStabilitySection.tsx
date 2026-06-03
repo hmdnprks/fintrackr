@@ -78,9 +78,9 @@ export default function IncomeStabilitySection({ savingsRateTrend }: Props) {
                 <p>Using the <strong>Coefficient of Variation (CV)</strong> — standard deviation ÷ average income — across your last 6 months of data.</p>
                 <p>A lower CV means more predictable income.</p>
                 <div className="pt-1 border-t border-gray-100 dark:border-gray-700 space-y-1">
-                  <p><span className="font-medium text-green-600">Stable (CV {'<'} 15%)</span> — consistent salary or fixed income</p>
-                  <p><span className="font-medium text-amber-500">Variable (15–40%)</span> — seasonal bonuses, overtime, mixed sources</p>
-                  <p><span className="font-medium text-red-500">Highly Variable ({'>'} 40%)</span> — freelance, commissions, irregular work</p>
+                  <p><span className="font-medium text-green-600 dark:text-green-400">Stable (CV {'<'} 15%)</span> — consistent salary or fixed income</p>
+                  <p><span className="font-medium text-amber-500 dark:text-amber-400">Variable (15–40%)</span> — seasonal bonuses, overtime, mixed sources</p>
+                  <p><span className="font-medium text-red-500 dark:text-red-400">Highly Variable ({'>'} 40%)</span> — freelance, commissions, irregular work</p>
                 </div>
                 <p className="text-gray-400 dark:text-gray-500 pt-1">Higher income variability = larger emergency fund recommended, since gaps between paychecks can be unpredictable.</p>
               </div>

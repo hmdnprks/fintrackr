@@ -31,24 +31,24 @@ export default function SummarySection({
   return (
     <div className="grid md:grid-cols-3 gap-6">
       <SummaryCard
-        icon={<ArrowUpIcon className="w-4 h-4 text-green-600" />}
+        icon={<ArrowUpIcon className="w-4 h-4 text-green-600 dark:text-green-400" />}
         label="Income"
         value={formatIDR(totalIncome)}
-        valueColor="text-green-600"
+        valueColor="text-green-600 dark:text-green-400"
         delta={incomePct != null ? { pct: incomePct, isGood: incomePct >= 0 } : null}
       />
       <SummaryCard
-        icon={<ArrowDownIcon className="w-4 h-4 text-red-600" />}
+        icon={<ArrowDownIcon className="w-4 h-4 text-red-600 dark:text-red-400" />}
         label="Expense"
         value={formatIDR(totalExpense)}
-        valueColor="text-red-600"
+        valueColor="text-red-600 dark:text-red-400"
         delta={expensePct != null ? { pct: expensePct, isGood: expensePct <= 0 } : null}
       />
       <SummaryCard
-        icon={<WalletIcon className={`w-4 h-4 ${netCurr >= 0 ? 'text-blue-600' : 'text-red-500'}`} />}
+        icon={<WalletIcon className={`w-4 h-4 ${netCurr >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-500 dark:text-red-400'}`} />}
         label="Net"
         value={formatIDR(netCurr)}
-        valueColor={netCurr >= 0 ? 'text-gray-800' : 'text-red-500'}
+        valueColor={netCurr >= 0 ? 'text-gray-800 dark:text-gray-200' : 'text-red-500 dark:text-red-400'}
         delta={netPct != null ? { pct: netPct, isGood: netPct >= 0 } : null}
       />
     </div>

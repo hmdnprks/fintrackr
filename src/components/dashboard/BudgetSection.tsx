@@ -327,7 +327,7 @@ export default function BudgetSection({ budgets, spending, statements, onBudgetC
               onClick={handleAISuggest}
               disabled={aiLoading}
               title="Get AI budget suggestions based on your spending history"
-              className="flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 px-3 py-1.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {aiLoading ? (
                 <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -346,7 +346,7 @@ export default function BudgetSection({ budgets, spending, statements, onBudgetC
             {availableCategories.length > 0 && (
               <button
                 onClick={openAdd}
-                className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
+                className="flex items-center gap-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-3 py-1.5 rounded-lg transition"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -359,7 +359,7 @@ export default function BudgetSection({ budgets, spending, statements, onBudgetC
 
         {/* AI error */}
         {aiError && (
-          <div className="flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3 mb-5 text-sm text-red-600">
+          <div className="flex items-start gap-2 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 rounded-xl px-4 py-3 mb-5 text-sm text-red-600 dark:text-red-400">
             <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>
@@ -403,18 +403,18 @@ export default function BudgetSection({ budgets, spending, statements, onBudgetC
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{category}</span>
                         {isOver && (
-                          <span className="text-xs font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+                          <span className="text-xs font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">
                             Over budget
                           </span>
                         )}
                         {isWarning && (
-                          <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                          <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full">
                             {Math.round(pct)}%
                           </span>
                         )}
                       </div>
                       <p className="text-xs mt-0.5">
-                        <span className={isOver ? 'text-red-600 font-medium' : 'text-gray-600 dark:text-gray-400'}>
+                        <span className={isOver ? 'text-red-600 dark:text-red-400 font-medium' : 'text-gray-600 dark:text-gray-400'}>
                           {formatIDR(spent)}
                         </span>
                         <span className="text-gray-400 dark:text-gray-500"> / {formatIDR(budget)}</span>

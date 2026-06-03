@@ -530,7 +530,7 @@ function SavingsGoalCard({ goal, statements, assets, onDelete, onAdvise, onUpdat
             {goal.name && (
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Target: {formatIDR(goal.targetAmount)}</p>
             )}
-            <p className={`text-xs mt-0.5 ${isOverdue ? 'text-red-500' : 'text-gray-400'}`}>
+            <p className={`text-xs mt-0.5 ${isOverdue ? 'text-red-500 dark:text-red-400' : 'text-gray-400 dark:text-gray-500'}`}>
               {isComplete
                 ? '🎉 Goal achieved!'
                 : isOverdue
@@ -576,7 +576,7 @@ function SavingsGoalCard({ goal, statements, assets, onDelete, onAdvise, onUpdat
           />
         </div>
         <div className="flex items-center justify-between text-sm">
-          <span className={`font-semibold ${isComplete ? 'text-green-600' : 'text-gray-800'}`}>
+          <span className={`font-semibold ${isComplete ? 'text-green-600 dark:text-green-400' : 'text-gray-800 dark:text-gray-200'}`}>
             {formatIDR(saved)} saved
           </span>
           <span className="text-gray-400 dark:text-gray-500">
@@ -668,7 +668,7 @@ function SpendingGoalCard({ goal, statements, onDelete }: {
             {[...results].reverse().map((r) => (
               <div key={r.monthKey} className="flex items-center gap-3">
                 <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                  r.passed ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'
+                  r.passed ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/30 text-red-500 dark:text-red-400'
                 }`}>
                   {r.passed ? '✓' : '✗'}
                 </span>
@@ -680,7 +680,7 @@ function SpendingGoalCard({ goal, statements, onDelete }: {
                   />
                 </div>
                 <span className={`text-xs font-medium w-24 text-right shrink-0 ${
-                  r.passed ? 'text-green-600' : 'text-red-500'
+                  r.passed ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'
                 }`}>
                   {formatIDR(r.amount)}
                 </span>
@@ -755,7 +755,7 @@ export default function GoalSection({ statements }: Props) {
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
+            className="flex items-center gap-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-3 py-1.5 rounded-lg transition"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />

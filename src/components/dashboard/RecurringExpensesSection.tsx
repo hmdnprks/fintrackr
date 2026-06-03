@@ -13,13 +13,13 @@ interface Props {
 }
 
 const CATEGORY_COLOR: Record<string, string> = {
-  'Housing':         'bg-blue-50 text-blue-700',
-  'Services':        'bg-indigo-50 text-indigo-700',
-  'Entertainment':   'bg-pink-50 text-pink-700',
-  'Insurance':       'bg-orange-50 text-orange-700',
-  'Bank Charges':    'bg-gray-100 text-gray-600',
-  'Health & Medical':'bg-red-50 text-red-700',
-  'Transportation':  'bg-amber-50 text-amber-700',
+  'Housing':         'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400',
+  'Services':        'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400',
+  'Entertainment':   'bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-400',
+  'Insurance':       'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400',
+  'Bank Charges':    'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
+  'Health & Medical':'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400',
+  'Transportation':  'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400',
 }
 
 function formatIDR(n: number) {

@@ -13,21 +13,21 @@ const CATEGORIES = [
 ]
 
 const CATEGORY_COLORS: Record<string, string> = {
-  'Income':           'bg-green-100 text-green-700',
-  'Food & Dining':    'bg-orange-100 text-orange-700',
-  'Groceries':        'bg-lime-100 text-lime-700',
-  'Shopping':         'bg-pink-100 text-pink-700',
-  'Services':         'bg-blue-100 text-blue-700',
-  'Transportation':   'bg-sky-100 text-sky-700',
-  'Health & Medical': 'bg-red-100 text-red-700',
-  'Entertainment':    'bg-purple-100 text-purple-700',
-  'Education':        'bg-indigo-100 text-indigo-700',
-  'Housing':          'bg-amber-100 text-amber-700',
-  'Insurance':        'bg-teal-100 text-teal-700',
-  'Bank Charges':     'bg-gray-100 text-gray-600',
-  'Transfer':         'bg-slate-100 text-slate-600',
-  'Loan':             'bg-rose-100 text-rose-700',
-  'Uncategorized':    'bg-amber-50 text-amber-600',
+  'Income':           'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+  'Food & Dining':    'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
+  'Groceries':        'bg-lime-100 dark:bg-lime-900/30 text-lime-700 dark:text-lime-400',
+  'Shopping':         'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400',
+  'Services':         'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+  'Transportation':   'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400',
+  'Health & Medical': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+  'Entertainment':    'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400',
+  'Education':        'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400',
+  'Housing':          'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
+  'Insurance':        'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400',
+  'Bank Charges':     'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
+  'Transfer':         'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400',
+  'Loan':             'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400',
+  'Uncategorized':    'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400',
 }
 
 function heatColor(amount: number, max: number): string {
@@ -251,12 +251,12 @@ export default function CalendarSection({ allTransactions, selectedMonth, onReca
               </p>
               <div className="flex items-center gap-3 mt-0.5">
                 {selectedData.spending > 0 && (
-                  <span className="text-xs text-red-500 font-medium">
+                  <span className="text-xs text-red-500 dark:text-red-400 font-medium">
                     −{formatIDR(selectedData.spending)} spent
                   </span>
                 )}
                 {selectedData.income > 0 && (
-                  <span className="text-xs text-green-600 font-medium">
+                  <span className="text-xs text-green-600 dark:text-green-400 font-medium">
                     +{formatIDR(selectedData.income)} received
                   </span>
                 )}
@@ -288,7 +288,7 @@ export default function CalendarSection({ allTransactions, selectedMonth, onReca
                     onClick={() => setEditingIdx(null)}
                   >
                     <span className={`text-sm font-semibold tabular-nums shrink-0 ${
-                      tx.type === 'credit' ? 'text-green-600' : 'text-red-500'
+                      tx.type === 'credit' ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'
                     }`}>
                       {tx.type === 'credit' ? '+' : '−'}{formatIDR(tx.amount)}
                     </span>

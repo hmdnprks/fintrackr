@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { getAssets, Asset } from '@/lib/assetStorage'
+import { getLiabilities } from '@/lib/liabilityStorage'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 import { ChevronDownIcon, ChevronUpIcon, PencilSquareIcon } from '@heroicons/react/24/outline'
 
@@ -26,7 +27,8 @@ function formatYears(y: number): string {
 const CURRENT_YEAR = new Date().getFullYear()
 
 export default function FIRENumberSection({ savingsRateTrend }: Props) {
-  const [assets]   = useState<Asset[]>(() => getAssets())
+  const assets           = getAssets()
+  const totalLiabilities = getLiabilities().reduce((s, l) => s + l.remainingBalance, 0)
   const [showInfo, setShowInfo] = useState(false)
 
   const [birthYear, setBirthYear] = useState<string>(() =>
@@ -49,7 +51,7 @@ export default function FIRENumberSection({ savingsRateTrend }: Props) {
   const annualExpense = avgMonthlyExpense  * 12
   const annualSavings = avgMonthlySavings  * 12
   const fireTarget    = annualExpense * 25
-  const netWorth      = assets.reduce((s, a) => s + a.currentValue, 0)
+  const netWorth      = assets.reduce((s, a) => s + a.currentValue, 0) - totalLiabilities
   const gap           = Math.max(0, fireTarget - netWorth)
   const progressPct   = fireTarget > 0 ? Math.min(100, (netWorth / fireTarget) * 100) : 0
   const yearsToFire   = annualSavings > 0 && gap > 0 ? gap / annualSavings : 0

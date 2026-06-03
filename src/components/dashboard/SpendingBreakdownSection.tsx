@@ -78,9 +78,9 @@ export default function SpendingBreakdownSection({ data }: Props) {
               <p className="font-semibold text-gray-700 dark:text-gray-200">The 50/30/20 Rule</p>
               <p>A budgeting framework popularized by Elizabeth Warren. Split your after-tax income into:</p>
               <div className="space-y-1 pt-1">
-                <p><span className="font-medium text-blue-600">50% Needs</span> — essentials you must pay (rent, groceries, utilities, transport, health)</p>
-                <p><span className="font-medium text-purple-600">30% Wants</span> — lifestyle spending (dining out, entertainment, shopping)</p>
-                <p><span className="font-medium text-green-600">20% Surplus</span> — savings, investments, debt repayment</p>
+                <p><span className="font-medium text-blue-600 dark:text-blue-400">50% Needs</span> — essentials you must pay (rent, groceries, utilities, transport, health)</p>
+                <p><span className="font-medium text-purple-600 dark:text-purple-400">30% Wants</span> — lifestyle spending (dining out, entertainment, shopping)</p>
+                <p><span className="font-medium text-green-600 dark:text-green-400">20% Surplus</span> — savings, investments, debt repayment</p>
               </div>
               <p className="text-gray-400 dark:text-gray-500 pt-1 border-t border-gray-100 dark:border-gray-700">It&apos;s a guideline, not a law. High cost-of-living cities (Jakarta) often push needs above 50%. The key principle: always aim to save and invest at least 20%.</p>
             </div>
@@ -117,8 +117,8 @@ export default function SpendingBreakdownSection({ data }: Props) {
                   <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{row.label}</span>
                   <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
                     row.key === 'surplus'
-                      ? actual >= row.ideal ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
-                      : isOver ? 'bg-red-50 text-red-600' : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                      ? actual >= row.ideal ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
+                      : isOver ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                   }`}>
                     {row.idealLabel}
                   </span>
@@ -126,8 +126,8 @@ export default function SpendingBreakdownSection({ data }: Props) {
                 <div className="text-right">
                   <span className={`text-sm font-bold ${
                     row.key === 'surplus'
-                      ? actual >= row.ideal ? 'text-green-600' : 'text-amber-600'
-                      : isOver ? 'text-red-500' : 'text-gray-800 dark:text-gray-200'
+                      ? actual >= row.ideal ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'
+                      : isOver ? 'text-red-500 dark:text-red-400' : 'text-gray-800 dark:text-gray-200'
                   }`}>{actual}%</span>
                   <span className="text-xs text-gray-400 dark:text-gray-500 ml-1.5">{formatIDR(amount)}</span>
                 </div>
@@ -152,8 +152,8 @@ export default function SpendingBreakdownSection({ data }: Props) {
               {/* Status message */}
               <p className={`text-xs mt-0.5 font-medium ${
                 row.key === 'surplus'
-                  ? actual >= row.ideal ? 'text-green-600' : 'text-amber-600'
-                  : isOver ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'
+                  ? actual >= row.ideal ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'
+                  : isOver ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
               }`}>
                 {statusMsg}
               </p>
@@ -164,7 +164,7 @@ export default function SpendingBreakdownSection({ data }: Props) {
 
       {/* Uncategorized note */}
       {totalAccountedPct < 80 && (
-        <p className="text-xs text-amber-600 mt-4 bg-amber-50 rounded-xl px-3 py-2">
+        <p className="text-xs text-amber-600 dark:text-amber-400 mt-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl px-3 py-2">
           Some spending may be uncategorized — categorize transactions for a more accurate breakdown.
         </p>
       )}

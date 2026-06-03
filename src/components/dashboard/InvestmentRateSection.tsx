@@ -25,9 +25,9 @@ const GREAT  = 20  // strong investment rate
 export default function InvestmentRateSection({ rate, total, items, totalIncome }: Props) {
   if (!totalIncome) return null
 
-  const rateColor = rate >= GREAT  ? 'text-green-600'
-                  : rate >= IDEAL  ? 'text-amber-500'
-                  : 'text-red-500'
+  const rateColor = rate >= GREAT  ? 'text-green-600 dark:text-green-400'
+                  : rate >= IDEAL  ? 'text-amber-500 dark:text-amber-400'
+                  : 'text-red-500 dark:text-red-400'
 
   const barPct = Math.min(100, rate)
   const barColor = rate >= GREAT  ? 'bg-green-500'
@@ -46,9 +46,9 @@ export default function InvestmentRateSection({ rate, total, items, totalIncome 
                 <p>Investment Rate = Investment transfers ÷ Total income × 100.</p>
                 <p>It measures how much of your income is actively being put to work in growth assets (stocks, mutual funds, etc.).</p>
                 <div className="pt-1 border-t border-gray-100 dark:border-gray-700 space-y-1">
-                  <p><span className="font-medium text-green-600">≥20%</span> — strong wealth-building pace</p>
-                  <p><span className="font-medium text-amber-500">15–19%</span> — meets minimum target</p>
-                  <p><span className="font-medium text-red-500">{'<'}15%</span> — below recommended level</p>
+                  <p><span className="font-medium text-green-600 dark:text-green-400">≥20%</span> — strong wealth-building pace</p>
+                  <p><span className="font-medium text-amber-500 dark:text-amber-400">15–19%</span> — meets minimum target</p>
+                  <p><span className="font-medium text-red-500 dark:text-red-400">{'<'}15%</span> — below recommended level</p>
                 </div>
                 <p className="text-gray-400 dark:text-gray-500 pt-1">General guideline: invest at least 15–20% of income for meaningful long-term wealth accumulation.</p>
               </div>
