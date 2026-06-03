@@ -36,10 +36,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${poppins.className} antialiased`}>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
 
-          <NavBar />
-
-          {/* Pages manage their own padding — no extra wrapper here */}
           <VaultProvider>
+            <NavBar />
+            {/* Pages manage their own padding — no extra wrapper here */}
             {children}
             {/* Bottom padding on mobile so fixed bottom nav never covers page content */}
             <div className="h-16 sm:hidden" />

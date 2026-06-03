@@ -34,6 +34,7 @@ import FIRENumberSection from '@/components/dashboard/FIRENumberSection'
 import SpendingForecastSection from '@/components/dashboard/SpendingForecastSection'
 import YearOverYearSection from '@/components/dashboard/YearOverYearSection'
 import IncomeStabilitySection from '@/components/dashboard/IncomeStabilitySection'
+import ZakatCard from '@/components/dashboard/ZakatCard'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 import { useVault } from '@/context/VaultContext'
 
@@ -53,6 +54,7 @@ export default function Dashboard() {
   const [selectedMonth, setSelectedMonth] = useState('all')
   const [showAddTx, setShowAddTx] = useState(false)
   const [budgets, setBudgets] = useState(() => getBudgets())
+  const showZakat = getVaultDataSync().settings?.showZakat === 'true'
 
   function handleYearChange(year: string) {
     setSelectedYear(year)
@@ -361,6 +363,10 @@ export default function Dashboard() {
                 items={investmentRate.items}
                 totalIncome={totalIncome}
               />
+
+              {showZakat && (
+                <ZakatCard savingsRateTrend={savingsRateTrend} />
+              )}
             </div>
           )}
 

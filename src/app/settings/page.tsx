@@ -139,6 +139,19 @@ export default function SettingsPage() {
     setTimeout(() => setAutoLockSaved(false), 2000)
   }
 
+  // ── zakat toggle ──────────────────────────────────────────────────────────
+  const [showZakat, setShowZakat] = useState(() =>
+    typeof window !== 'undefined'
+      ? getVaultDataSync().settings?.showZakat === 'true'
+      : false
+  )
+
+  async function handleZakatToggle(enabled: boolean) {
+    setShowZakat(enabled)
+    const cur = getVaultDataSync().settings ?? {}
+    await saveVaultData({ settings: { ...cur, showZakat: String(enabled) } })
+  }
+
   // ── biometric ──────────────────────────────────────────────────────────────
   const [biometricAvailable, setBiometricAvailable] = useState(false)
   const [biometricEnrolled, setBiometricEnrolled]   = useState(false)
@@ -549,7 +562,38 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* ── 6. Data ───────────────────────────────────────────────────── */}
+        {/* ── 6. Zakat ─────────────────────────────────────────────────── */}
+        <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Zakat Calculator</h2>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">
+              Show a Zakat Penghasilan (income zakat) card in the Insights tab.
+            </p>
+          </div>
+          <div className="px-6 py-5 flex items-center justify-between gap-6">
+            <div>
+              <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Show Zakat card</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                Calculates your 2.5% income zakat obligation based on the BAZNAS nisab threshold.
+                Off by default — enable if applicable to you.
+              </p>
+            </div>
+            <button
+              onClick={() => handleZakatToggle(!showZakat)}
+              className={`relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
+                showZakat ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700'
+              }`}
+              role="switch"
+              aria-checked={showZakat}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                showZakat ? 'translate-x-5' : 'translate-x-0'
+              }`} />
+            </button>
+          </div>
+        </div>
+
+        {/* ── 7. Data ───────────────────────────────────────────────────── */}
         <BackupSection />
 
       </div>

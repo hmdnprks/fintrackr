@@ -9,6 +9,7 @@ import {
   Cog6ToothIcon,
 } from '@heroicons/react/24/outline'
 import DarkModeToggle from '@/components/DarkModeToggle'
+import NotificationCenter from '@/components/NotificationCenter'
 
 const NAV_LINKS = [
   { href: '/',          label: 'Import',    Icon: ArrowUpTrayIcon  },
@@ -41,11 +42,13 @@ export default function NavBar() {
                 {label}
               </Link>
             ))}
+            <NotificationCenter />
             <DarkModeToggle />
           </div>
 
-          {/* Mobile: dark mode toggle in top bar */}
-          <div className="sm:hidden">
+          {/* Mobile: notification bell + dark mode toggle in top bar */}
+          <div className="sm:hidden flex items-center gap-1">
+            <NotificationCenter />
             <DarkModeToggle />
           </div>
         </div>

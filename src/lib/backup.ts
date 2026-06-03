@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getVaultData, saveVaultData, VaultData } from '@/lib/storage/secureStorage'
+import { getVaultData, getVaultDataSync, saveVaultData, VaultData } from '@/lib/storage/secureStorage'
 
 const BACKUP_VERSION = 4
 
@@ -72,6 +72,8 @@ export async function downloadBackup() {
   a.download = `fintrackr-backup-${new Date().toISOString().split('T')[0]}.json`
   a.click()
   URL.revokeObjectURL(url)
+  const cur = getVaultDataSync().settings ?? {}
+  await saveVaultData({ settings: { ...cur, lastBackupAt: new Date().toISOString() } })
 }
 
 export function getBackupSummary(backup: BackupData): BackupSummary {

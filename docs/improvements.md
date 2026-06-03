@@ -14,7 +14,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 | 2 | ~~**Google Drive auto-backup**~~ ✓ | Data & Backup | ~~localStorage can be wiped by the browser; one accidental "Clear site data" = all data gone; this is the biggest trust gap for serious long-term use~~ Shipped |
 | 3 | **Debt payoff optimizer** | Assets Tab | Avalanche vs snowball comparison with total interest saved; the data (balance, rate, installment) is already stored — just needs the math and UI |
 | 4 | **Gold price auto-fetch** | Assets Tab | Antam/LM publishes a public price; auto-multiply by weight = zero manual input for the most common Indonesian non-bank asset |
-| 5 | **In-app notification center** | Mobile & UX | Budget overrun, goal deadline, stale assets, backup overdue — currently all silent; a bell icon with a list makes the app proactive |
+| 5 | ~~**In-app notification center**~~ ✓ | Mobile & UX | ~~Budget overrun, goal deadline, stale assets, backup overdue — currently all silent; a bell icon with a list makes the app proactive~~ Shipped |
 | 6 | **Investment return tracking** | Assets Tab | Add "initial invested amount" field; compute actual return % vs current value; the one number investors care about most |
 | 7 | **Budget rollover** | Budget Tab | Unspent budget carries to next month; widely expected by users |
 | 8 | ~~**Vault inactivity timeout**~~ ✓ | Security & Vault | ~~Auto-lock after X minutes of inactivity; basic security hygiene~~ Shipped |
@@ -200,7 +200,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 - [x] Fixed commitments: card layout with full-width description
 - [x] Import page: secondary button with Squares2X2Icon for dashboard link
 - [ ] **Pull-to-refresh** on dashboard (mobile)
-- [ ] **In-app notification center** ⭐ — bell icon in nav with unread badge; surfaced events: budget category exceeded, goal deadline within 30 days, asset value stale >30 days, backup not exported in >30 days; notifications stored in vault; mark-as-read; makes the app proactive instead of passive
+- [x] **In-app notification center** — bell icon in top nav (desktop + mobile) with red unread badge; 4 event types: budget category exceeded (current month), savings goal deadline ≤30 days away, asset value stale >30 days (excludes vehicle/property), backup not exported >30 days; notifications stored in vault; per-item dismiss + mark-all-read; dedupeKey prevents duplicate unread notifications; click navigates to relevant tab; empty state "All caught up"; `lastBackupAt` tracked on both local download and Drive save
 - [x] **Bottom navigation bar** on mobile — fixed bottom bar with Import/Dashboard/Settings icons, iOS safe-area inset, replaces hamburger entirely
 - [x] Dark mode support — OS preference detection, localStorage persistence, full component coverage, Sun/Moon toggle in nav
 - [x] **Dark mode contrast audit** — all colored status cards (Emergency Fund, Liquid Coverage), category badges, delta pills, tier badges, and tooltip threshold labels now carry matching `dark:bg-*/dark:border-*/dark:text-*` variants; 18 files updated so no text goes invisible against a light-colored card background in dark mode
@@ -225,7 +225,8 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 
 - [x] **Debt tracking** — see Liabilities section in Assets Tab above
 - [ ] **Subscription manager** ⭐ — detect recurring charges from fixed commitments (Netflix, Spotify, iCloud, etc.); show monthly and annual total; surface cancel/manage links per service; highlight subscriptions that increased in price
-- [ ] **Tax summary** ⭐ — annual gross income summary for SPT Tahunan filing; breakdown by month; Zakat nisab check (if income > nisab threshold, surface the obligated amount); Indonesian PPh 21 context
+- [ ] **Tax summary** ⭐ — annual gross income summary for SPT Tahunan filing; breakdown by month; Indonesian PPh 21 context
+- [x] **Zakat Penghasilan calculator** — opt-in toggle in Settings; ZakatCard in Insights tab; BAZNAS 2025 nisab (85g × Rp 1,500,000 = Rp 127,500,000/year ≈ Rp 10,625,000/month); shows avg monthly income vs nisab, progress bar, obligated amount (monthly + annual), "Pay via BAZNAS" link; "Belum Wajib" state with Infaq/Sedekah suggestion when below nisab; footer with gold price basis and baznas.go.id link; nisab constant easy to update annually
 - [ ] **Multi-currency** — gold in USD/gram, investments in USD; display in IDR equivalent
 - [ ] **Shared / household mode** — combine two users' finances into one dashboard
 - [ ] Public release checklist — multi-bank support, custom parser SDK, privacy policy, App Store / Play Store listing

@@ -10,6 +10,7 @@ import {
   type BackupData,
   type BackupSummary,
 } from '@/lib/backup'
+import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 import {
   getStoredToken,
   clearToken,
@@ -98,6 +99,8 @@ export default function BackupSection({ onRestored }: { onRestored?: () => void 
       const backup = await exportBackup()
       const info = await uploadToDrive(driveToken, JSON.stringify(backup, null, 2))
       setDriveFile(info)
+      const cur = getVaultDataSync().settings ?? {}
+      await saveVaultData({ settings: { ...cur, lastBackupAt: new Date().toISOString() } })
       flashDriveMsg('ok', 'Backup saved to Google Drive.')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)

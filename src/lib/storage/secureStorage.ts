@@ -25,6 +25,7 @@ export type VaultData = {
   transactionLabels: Record<string, string>  // labelKey → human alias e.g. 'UBPFFFFFF' → 'Shopee'
   goalAdvisorHistory: Record<string, { savedAt: string; label: string; result: any }[]>  // goalId → last 3
   liabilities: any[]        // Liability objects
+  notifications: any[]      // AppNotification objects
 }
 
 const defaultVaultData: VaultData = {
@@ -42,6 +43,7 @@ const defaultVaultData: VaultData = {
   transactionLabels: {},
   goalAdvisorHistory: {},
   liabilities: [],
+  notifications: [],
 }
 
 // ============================
