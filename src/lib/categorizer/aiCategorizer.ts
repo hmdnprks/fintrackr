@@ -603,7 +603,7 @@ export async function generateRebalancingSuggestions(
   const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens: 3000 }),
+    body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens: 8192 }),
   })
 
   if (!res.ok) {
@@ -612,14 +612,34 @@ export async function generateRebalancingSuggestions(
   }
 
   const json = await res.json()
-  let content: string = json.choices?.[0]?.message?.content || ''
-  content = content.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```\s*$/g, '').trim()
+  const msg = json.choices?.[0]?.message
+
+  if (!msg) {
+    throw new Error(`DeepSeek returned no message. Full response: ${JSON.stringify(json).slice(0, 500)}`)
+  }
+
+  // reasoning models (e.g. deepseek-reasoner) put the answer in `content`;
+  // if content is empty the entire budget went to reasoning — fall back to
+  // reasoning_content which sometimes contains the final JSON at the end
+  let raw: string = msg.content || msg.reasoning_content || ''
+  raw = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```\s*$/g, '').trim()
+
+  // if the model prefixed prose before the JSON, extract the first {...} block
+  if (!raw.startsWith('{')) {
+    const match = raw.match(/\{[\s\S]*\}/)
+    if (match) raw = match[0].trim()
+  }
+
+  if (!raw) {
+    const finish = json.choices?.[0]?.finish_reason ?? 'unknown'
+    throw new Error(`AI returned empty content (finish_reason: ${finish}). Check your API key and model quota.`)
+  }
 
   let parsed: any
   try {
-    parsed = JSON.parse(content)
+    parsed = JSON.parse(raw)
   } catch {
-    throw new Error(`Failed to parse rebalance response: ${content.slice(0, 300)}`)
+    throw new Error(`Failed to parse rebalance JSON (finish_reason: ${json.choices?.[0]?.finish_reason}): ${raw.slice(0, 400)}`)
   }
   if (!parsed.suggestions || !Array.isArray(parsed.suggestions)) {
     throw new Error('Unexpected response format from AI')
