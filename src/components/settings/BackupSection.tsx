@@ -104,9 +104,10 @@ export default function BackupSection({ onRestored }: { onRestored?: () => void 
       flashDriveMsg('ok', 'Backup saved to Google Drive.')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
-      if (msg === 'auth_expired') {
+      const isAuthIssue = msg === 'auth_expired' || msg.toLowerCase().includes('failed to fetch')
+      if (isAuthIssue) {
         setDriveToken(null)
-        flashDriveMsg('err', 'Session expired — please reconnect.')
+        flashDriveMsg('err', 'Session expired — please reconnect and try again.')
       } else {
         flashDriveMsg('err', `Save failed: ${msg}`)
       }

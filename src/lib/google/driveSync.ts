@@ -114,23 +114,44 @@ export async function findBackupFile(token: string): Promise<DriveFileInfo | nul
 export async function uploadToDrive(token: string, content: string): Promise<DriveFileInfo> {
   const existing = await findBackupFile(token)
 
-  const metadata = {
-    name: BACKUP_FILENAME,
-    ...(existing ? {} : { parents: ['appDataFolder'] }),
+  // PATCH on the /upload/ endpoint is blocked by CORS preflight in browsers.
+  // Instead: delete the old file (DELETE on /drive/v3/ is CORS-safe), then
+  // always POST a new one — the replace window is milliseconds.
+  if (existing) {
+    const del = await driveRequest(
+      `https://www.googleapis.com/drive/v3/files/${existing.id}`,
+      { method: 'DELETE' },
+      token
+    )
+    // 204 = deleted, 404 = already gone — both are fine
+    if (!del.ok && del.status !== 404) {
+      throw new Error(`Drive delete failed: ${del.status}`)
+    }
   }
 
-  const form = new FormData()
-  form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }))
-  form.append('file', new Blob([content], { type: 'application/json' }))
+  const metadata = JSON.stringify({ name: BACKUP_FILENAME, parents: ['appDataFolder'] })
 
-  const url = existing
-    ? `https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=multipart&fields=id,name,modifiedTime,size`
-    : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,modifiedTime,size`
+  // Manual multipart body — avoids FormData CORS preflight issues
+  const boundary = 'fintrackr_backup_boundary_' + Date.now()
+  const body = [
+    `--${boundary}\r\n`,
+    `Content-Type: application/json; charset=UTF-8\r\n\r\n`,
+    metadata,
+    `\r\n--${boundary}\r\n`,
+    `Content-Type: application/json\r\n\r\n`,
+    content,
+    `\r\n--${boundary}--`,
+  ].join('')
 
-  const method = existing ? 'PATCH' : 'POST'
-
-  const res = await driveRequest(url, { method, body: form }, token)
-  if (!res.ok) throw new Error(`Drive upload failed: ${res.status}`)
+  const res = await driveRequest(
+    `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,modifiedTime,size`,
+    { method: 'POST', body, headers: { 'Content-Type': `multipart/related; boundary=${boundary}` } },
+    token
+  )
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '')
+    throw new Error(`Drive upload failed: ${res.status}${errText ? ` — ${errText.slice(0, 200)}` : ''}`)
+  }
   return res.json()
 }
 
