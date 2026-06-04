@@ -140,3 +140,21 @@ export function generateNotifications(): AppNotification[] {
 
   return toCreate
 }
+
+// Dismiss stale notifications whose underlying condition is no longer true.
+// Currently handles backup_overdue — clears it as soon as backup is up to date.
+export function autoResolveNotifications(existing: AppNotification[]): AppNotification[] {
+  const vault = getVaultDataSync() as any
+  const now = new Date()
+  let updated = existing
+
+  const lastBackupAt = vault.settings?.lastBackupAt as string | undefined
+  const backupAgeMs  = lastBackupAt ? now.getTime() - new Date(lastBackupAt).getTime() : Infinity
+  if (backupAgeMs <= STALE_MS) {
+    updated = updated.map(n =>
+      n.type === 'backup_overdue' && !n.readAt ? { ...n, readAt: now.toISOString() } : n
+    )
+  }
+
+  return updated
+}

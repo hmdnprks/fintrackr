@@ -6,6 +6,7 @@ import { useVault } from '@/context/VaultContext'
 import {
   getNotifications,
   generateNotifications,
+  autoResolveNotifications,
   saveNotifications,
   markNotificationRead,
   markAllNotificationsRead,
@@ -111,13 +112,13 @@ export default function NotificationCenter() {
   // Generate + load whenever vault is unlocked
   useEffect(() => {
     if (!unlocked) { setItems([]); return }
-    const fresh = generateNotifications()
+    const fresh    = generateNotifications()
     const existing = getNotifications()
-    const merged = fresh.length > 0 ? [...existing, ...fresh] : existing
-    if (fresh.length > 0) {
-      saveNotifications(merged).catch(() => {})
-    }
-    setItems([...merged].sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
+    const merged   = fresh.length > 0 ? [...existing, ...fresh] : existing
+    const resolved = autoResolveNotifications(merged)
+    const hasChanges = fresh.length > 0 || resolved.some((n, i) => n !== merged[i])
+    if (hasChanges) saveNotifications(resolved).catch(() => {})
+    setItems([...resolved].sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
   }, [unlocked])
 
   // Click-outside to close
