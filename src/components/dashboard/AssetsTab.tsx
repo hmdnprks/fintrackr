@@ -619,10 +619,14 @@ function LiabilityCard({ liability: l, linkedAsset, onEdit, onDelete }: {
   onEdit: () => void
   onDelete: () => void
 }) {
-  const meta = LIABILITY_TYPE_META[l.type]
-  const paidOff = l.originalAmount > 0
+  const meta       = LIABILITY_TYPE_META[l.type]
+  const isCC       = l.type === 'credit_card'
+  const paidOff    = l.originalAmount > 0
     ? Math.min(100, ((l.originalAmount - l.remainingBalance) / l.originalAmount) * 100)
     : 0
+  const utilization      = l.originalAmount > 0 ? Math.min(100, (l.remainingBalance / l.originalAmount) * 100) : 0
+  const utilizationColor = utilization >= 70 ? 'bg-red-400' : utilization >= 30 ? 'bg-amber-400' : 'bg-green-400'
+  const utilizationText  = utilization >= 70 ? 'text-red-500 dark:text-red-400' : utilization >= 30 ? 'text-amber-500 dark:text-amber-400' : 'text-green-600 dark:text-green-400'
 
   const now = new Date()
   let monthsLeft: number | null = null
@@ -662,29 +666,45 @@ function LiabilityCard({ liability: l, linkedAsset, onEdit, onDelete }: {
         </div>
 
         <div className="mt-3">
-          <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Remaining balance</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">
+            {isCC ? 'Outstanding balance' : 'Remaining balance'}
+          </p>
           <p className="text-lg font-bold text-red-500 dark:text-red-400">−{formatIDRFull(l.remainingBalance)}</p>
         </div>
 
         {/* Progress bar */}
         <div className="mt-3">
-          <div className="flex justify-between text-xs text-gray-400 mb-1">
-            <span>{paidOff.toFixed(1)}% paid off</span>
-            <span>of {formatIDR(l.originalAmount)}</span>
-          </div>
-          <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div className="h-full bg-green-400 rounded-full" style={{ width: `${paidOff}%` }} />
-          </div>
+          {isCC ? (
+            <>
+              <div className="flex justify-between text-xs mb-1">
+                <span className={utilizationText}>{utilization.toFixed(1)}% utilized</span>
+                <span className="text-gray-400 dark:text-gray-500">limit {formatIDR(l.originalAmount)}</span>
+              </div>
+              <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div className={`h-full rounded-full ${utilizationColor}`} style={{ width: `${utilization}%` }} />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex justify-between text-xs text-gray-400 mb-1">
+                <span>{paidOff.toFixed(1)}% paid off</span>
+                <span>of {formatIDR(l.originalAmount)}</span>
+              </div>
+              <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-full bg-green-400 rounded-full" style={{ width: `${paidOff}%` }} />
+              </div>
+            </>
+          )}
         </div>
       </div>
 
       {/* Footer details */}
       <div className="px-4 pb-3 flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500 flex-wrap">
         {l.monthlyInstallment && (
-          <span>{formatIDR(l.monthlyInstallment)}/mo</span>
+          <span>{isCC ? 'min ' : ''}{formatIDR(l.monthlyInstallment)}/mo</span>
         )}
         {l.interestRate != null && (
-          <span>{l.interestRate}% p.a.</span>
+          <span>{l.interestRate}%{isCC ? '/mo' : ' p.a.'}</span>
         )}
         {monthsLeft !== null && monthsLeft >= 0 && (
           <span>{monthsLeft} mo left</span>
@@ -1087,6 +1107,175 @@ function NetWorthTrendChart({ snapshots }: { snapshots: NetWorthSnapshot[] }) {
   )
 }
 
+// ── Interest Simulator ─────────────────────────────────────────────────────────
+
+const TAX_RATE = 0.20  // PPh Final 20% on bank interest (Indonesia)
+
+function calcProjection(principal: number, ratePA: number, monthlyTopup: number, months: number, applyTax: boolean) {
+  const r = ratePA / 100 / 12
+  const n = months
+  const fvPrincipal     = principal * Math.pow(1 + r, n)
+  const fvContrib       = r > 0 ? monthlyTopup * ((Math.pow(1 + r, n) - 1) / r) : monthlyTopup * n
+  const totalContrib    = monthlyTopup * n
+  const grossInterest   = fvPrincipal + fvContrib - principal - totalContrib
+  const tax             = applyTax ? grossInterest * TAX_RATE : 0
+  const netInterest     = grossInterest - tax
+  const finalValue      = principal + totalContrib + netInterest
+  return { grossInterest, tax, netInterest, finalValue, totalContrib }
+}
+
+function parseRaw(s: string): number {
+  return Number(s.replace(/[^0-9]/g, '')) || 0
+}
+
+const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+function InterestSimulator({ principal, ratePA }: { principal: number; ratePA: number }) {
+  const [topupRaw, setTopupRaw]   = useState('')
+  const [applyTax, setApplyTax]   = useState(true)
+  const [view, setView]           = useState<'yearly' | 'monthly'>('yearly')
+
+  const topup = parseRaw(topupRaw)
+
+  // Yearly: columns = periods, rows = metrics
+  const yearlyPeriods = [1, 3, 5, 10]
+  const yearlyRows    = yearlyPeriods.map(y => ({ label: `${y}yr`, ...calcProjection(principal, ratePA, topup, y * 12, applyTax) }))
+
+  // Monthly: rows = months 1–12, columns = metrics
+  const monthlyRows = Array.from({ length: 12 }, (_, i) => ({
+    month: i + 1,
+    label: MONTH_LABELS[i],
+    ...calcProjection(principal, ratePA, topup, i + 1, applyTax),
+  }))
+
+  return (
+    <div className="mt-3 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-3 space-y-3">
+      {/* Controls row */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* View toggle */}
+        <div className="flex rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 text-[11px] shrink-0">
+          {(['yearly', 'monthly'] as const).map(v => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className={`px-2.5 py-1 font-medium transition-colors capitalize ${
+                view === v
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+              }`}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+
+        {/* Monthly top-up */}
+        <div className="flex items-center gap-1.5 min-w-0">
+          <label className="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap shrink-0">Top-up/mo</label>
+          <div className="flex items-center border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg overflow-hidden focus-within:ring-1 focus-within:ring-blue-500">
+            <span className="pl-2 text-xs text-gray-400 dark:text-gray-500 select-none">Rp</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={topupRaw}
+              onChange={e => setTopupRaw(e.target.value.replace(/[^0-9]/g, ''))}
+              onBlur={() => setTopupRaw(topup > 0 ? topup.toLocaleString('id-ID') : '')}
+              onFocus={() => setTopupRaw(topup > 0 ? String(topup) : '')}
+              placeholder="0"
+              className="w-24 px-1.5 py-1 text-xs bg-transparent focus:outline-none text-gray-900 dark:text-gray-100"
+            />
+          </div>
+        </div>
+
+        {/* Tax toggle */}
+        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+          <div
+            onClick={() => setApplyTax(v => !v)}
+            className={`w-8 h-4 rounded-full transition-colors relative shrink-0 ${applyTax ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+          >
+            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${applyTax ? 'translate-x-4' : 'translate-x-0.5'}`} />
+          </div>
+          <span className="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap">20% PPh tax</span>
+        </label>
+      </div>
+
+      {/* Yearly table — columns are periods */}
+      {view === 'yearly' && (
+        <div className="overflow-x-auto -mx-1">
+          <table className="w-full text-[11px]">
+            <thead>
+              <tr className="text-gray-400 dark:text-gray-500">
+                <th className="text-left font-medium pb-1.5 pr-2"></th>
+                {yearlyRows.map(r => (
+                  <th key={r.label} className="text-right font-medium pb-1.5 pl-3 whitespace-nowrap">{r.label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tr>
+                <td className="py-1.5 pr-2 text-gray-500 dark:text-gray-400 whitespace-nowrap">Final value</td>
+                {yearlyRows.map(r => (
+                  <td key={r.label} className="py-1.5 pl-3 text-right font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">{formatIDR(r.finalValue)}</td>
+                ))}
+              </tr>
+              {topup > 0 && (
+                <tr>
+                  <td className="py-1.5 pr-2 text-gray-500 dark:text-gray-400 whitespace-nowrap">Contributions</td>
+                  {yearlyRows.map(r => (
+                    <td key={r.label} className="py-1.5 pl-3 text-right text-gray-500 dark:text-gray-400 whitespace-nowrap">+{formatIDR(r.totalContrib)}</td>
+                  ))}
+                </tr>
+              )}
+              <tr>
+                <td className="py-1.5 pr-2 text-gray-500 dark:text-gray-400 whitespace-nowrap">Interest earned</td>
+                {yearlyRows.map(r => (
+                  <td key={r.label} className="py-1.5 pl-3 text-right text-green-600 dark:text-green-400 whitespace-nowrap">+{formatIDR(r.netInterest)}</td>
+                ))}
+              </tr>
+              {applyTax && (
+                <tr>
+                  <td className="py-1.5 pr-2 text-gray-500 dark:text-gray-400 whitespace-nowrap">Tax withheld</td>
+                  {yearlyRows.map(r => (
+                    <td key={r.label} className="py-1.5 pl-3 text-right text-red-500 dark:text-red-400 whitespace-nowrap">−{formatIDR(r.tax)}</td>
+                  ))}
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Monthly table — rows are months */}
+      {view === 'monthly' && (
+        <div className="overflow-x-auto -mx-1">
+          <table className="w-full text-[11px]">
+            <thead>
+              <tr className="text-gray-400 dark:text-gray-500">
+                <th className="text-left font-medium pb-1.5 pr-3 whitespace-nowrap">Month</th>
+                <th className="text-right font-medium pb-1.5 px-2 whitespace-nowrap">Final value</th>
+                <th className="text-right font-medium pb-1.5 px-2 whitespace-nowrap">Interest</th>
+                {applyTax && <th className="text-right font-medium pb-1.5 pl-2 whitespace-nowrap">Tax</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              {monthlyRows.map(r => (
+                <tr key={r.month} className={r.month === 12 ? 'font-semibold' : ''}>
+                  <td className="py-1 pr-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">{r.label}</td>
+                  <td className="py-1 px-2 text-right text-gray-900 dark:text-gray-100 whitespace-nowrap">{formatIDR(r.finalValue)}</td>
+                  <td className="py-1 px-2 text-right text-green-600 dark:text-green-400 whitespace-nowrap">+{formatIDR(r.netInterest)}</td>
+                  {applyTax && <td className="py-1 pl-2 text-right text-red-500 dark:text-red-400 whitespace-nowrap">−{formatIDR(r.tax)}</td>}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <p className="text-[10px] text-gray-400 dark:text-gray-500">Monthly compounding · PPh Final 20% (Indonesia)</p>
+    </div>
+  )
+}
+
 // ── Asset Sparkline ────────────────────────────────────────────────────────────
 
 function AssetSparkline({ snapshots }: { snapshots: AssetSnapshot[] }) {
@@ -1140,6 +1329,7 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const nowMs = useMemo(() => Date.now(), [])
   const stale = isStale(asset.updatedAt)
+  const [simOpen, setSimOpen] = useState(false)
   const staleDays = stale ? daysSince(asset.updatedAt) : 0
 
   // Find the most recent snapshot ≥25 days old for growth comparison
@@ -1233,9 +1423,22 @@ function AssetCard({ asset, meta, avgMonthlyExpense, snapshots, onEdit, onDelete
       {/* Type-specific detail */}
       <div className="mt-2 space-y-1.5">
         {asset.interestRate != null && (
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Interest: <span className="font-medium text-green-600 dark:text-green-400">{asset.interestRate}% p.a.</span>
-          </p>
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Interest: <span className="font-medium text-green-600 dark:text-green-400">{asset.interestRate}% p.a.</span>
+              </p>
+              <button
+                onClick={() => setSimOpen(v => !v)}
+                className="text-[11px] text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center gap-0.5 transition-colors"
+              >
+                {simOpen ? '▴' : '▾'} Simulate
+              </button>
+            </div>
+            {simOpen && (
+              <InterestSimulator principal={asset.currentValue} ratePA={asset.interestRate} />
+            )}
+          </div>
         )}
 
         {efMonths !== null && (

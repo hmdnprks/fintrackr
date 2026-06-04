@@ -78,12 +78,16 @@ export default function LiabilityModal({ isOpen, liability, onClose, onSaved }: 
 
   if (!isOpen) return null
 
+  const isCC = type === 'credit_card'
+
   function validate() {
     const e: Record<string, string> = {}
-    if (!name.trim())                        e.name = 'Name is required'
-    if (!institution.trim())                 e.institution = 'Institution is required'
-    if (!parseIDR(originalAmount))           e.originalAmount = 'Enter original loan amount'
-    if (parseIDR(remainingBalance) > parseIDR(originalAmount))
+    if (!name.trim())       e.name = 'Name is required'
+    if (!institution.trim()) e.institution = 'Institution is required'
+    if (!parseIDR(originalAmount))
+      e.originalAmount = isCC ? 'Enter credit limit' : 'Enter original loan amount'
+    // For loans: balance can't exceed original. For CC: over-limit is possible — just warn, don't block.
+    if (!isCC && parseIDR(remainingBalance) > parseIDR(originalAmount))
       e.remainingBalance = 'Cannot exceed original amount'
     setErrors(e)
     return Object.keys(e).length === 0
@@ -117,9 +121,12 @@ export default function LiabilityModal({ isOpen, liability, onClose, onSaved }: 
     setSaving(false)
   }
 
-  const paidOff = parseIDR(originalAmount) > 0
-    ? Math.max(0, Math.min(100, ((parseIDR(originalAmount) - parseIDR(remainingBalance)) / parseIDR(originalAmount)) * 100))
-    : 0
+  const limit       = parseIDR(originalAmount)
+  const outstanding = parseIDR(remainingBalance)
+  // Loans: % paid off. Credit cards: % of limit used (utilization).
+  const paidOff      = limit > 0 ? Math.max(0, Math.min(100, ((limit - outstanding) / limit) * 100)) : 0
+  const utilization  = limit > 0 ? Math.min(100, (outstanding / limit) * 100) : 0
+  const utilizationColor = utilization >= 70 ? 'bg-red-400' : utilization >= 30 ? 'bg-amber-400' : 'bg-green-400'
 
   return (
     <div
@@ -171,7 +178,12 @@ export default function LiabilityModal({ isOpen, liability, onClose, onSaved }: 
             <input
               type="text"
               autoFocus
-              placeholder={type === 'mortgage' ? 'KPR BCA – Rumah Depok' : type === 'vehicle_loan' ? 'KKB Mandiri – Avanza 2022' : 'Nama pinjaman'}
+              placeholder={
+                type === 'mortgage'      ? 'KPR BCA – Rumah Depok' :
+                type === 'vehicle_loan'  ? 'KKB Mandiri – Avanza 2022' :
+                type === 'credit_card'   ? 'e.g. BCA Mastercard, Mandiri Signature' :
+                'Nama pinjaman'
+              }
               value={name}
               onChange={e => { setName(e.target.value); setErrors(p => ({ ...p, name: '' })) }}
               className={`w-full px-3 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-red-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.name ? 'border-red-300' : 'border-gray-200 dark:border-gray-700'}`}
@@ -192,10 +204,12 @@ export default function LiabilityModal({ isOpen, liability, onClose, onSaved }: 
             {errors.institution && <p className="text-xs text-red-500 mt-1">{errors.institution}</p>}
           </div>
 
-          {/* Original + Remaining amounts */}
+          {/* Credit limit / Original amount + Outstanding / Remaining balance */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Original Amount</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                {isCC ? 'Credit Limit' : 'Original Amount'}
+              </label>
               <div className={`flex items-center border rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-red-400 ${errors.originalAmount ? 'border-red-300' : 'border-gray-200 dark:border-gray-700'}`}>
                 <span className="px-2 py-2.5 text-xs text-gray-400 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 select-none">Rp</span>
                 <input
@@ -212,7 +226,9 @@ export default function LiabilityModal({ isOpen, liability, onClose, onSaved }: 
               {errors.originalAmount && <p className="text-xs text-red-500 mt-1">{errors.originalAmount}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Remaining Balance</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                {isCC ? 'Outstanding Balance' : 'Remaining Balance'}
+              </label>
               <div className={`flex items-center border rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-red-400 ${errors.remainingBalance ? 'border-red-300' : 'border-gray-200 dark:border-gray-700'}`}>
                 <span className="px-2 py-2.5 text-xs text-gray-400 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 select-none">Rp</span>
                 <input
@@ -227,26 +243,48 @@ export default function LiabilityModal({ isOpen, liability, onClose, onSaved }: 
                 />
               </div>
               {errors.remainingBalance && <p className="text-xs text-red-500 mt-1">{errors.remainingBalance}</p>}
+              {isCC && outstanding > limit && limit > 0 && (
+                <p className="text-xs text-amber-500 mt-1">Over credit limit</p>
+              )}
             </div>
           </div>
 
           {/* Progress preview */}
-          {parseIDR(originalAmount) > 0 && (
+          {limit > 0 && (
             <div>
-              <div className="flex justify-between text-xs text-gray-400 mb-1">
-                <span>{paidOff.toFixed(1)}% paid off</span>
-                <span>{(100 - paidOff).toFixed(1)}% remaining</span>
-              </div>
-              <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div className="h-full bg-green-400 rounded-full transition-all" style={{ width: `${paidOff}%` }} />
-              </div>
+              {isCC ? (
+                <>
+                  <div className="flex justify-between text-xs text-gray-400 mb-1">
+                    <span className={utilization >= 70 ? 'text-red-500' : utilization >= 30 ? 'text-amber-500' : 'text-green-600'}>
+                      {utilization.toFixed(1)}% utilized
+                    </span>
+                    <span>limit {formatThousands(limit)}</span>
+                  </div>
+                  <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all ${utilizationColor}`} style={{ width: `${utilization}%` }} />
+                  </div>
+                  {utilization >= 70 && <p className="text-xs text-red-500 mt-1">High utilization may affect your credit score.</p>}
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-between text-xs text-gray-400 mb-1">
+                    <span>{paidOff.toFixed(1)}% paid off</span>
+                    <span>{(100 - paidOff).toFixed(1)}% remaining</span>
+                  </div>
+                  <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-full bg-green-400 rounded-full transition-all" style={{ width: `${paidOff}%` }} />
+                  </div>
+                </>
+              )}
             </div>
           )}
 
-          {/* Monthly installment + interest rate */}
+          {/* Minimum payment / installment + interest rate */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Monthly Installment</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                {isCC ? 'Minimum Payment' : 'Monthly Installment'}
+              </label>
               <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-red-400">
                 <span className="px-2 py-2.5 text-xs text-gray-400 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 select-none">Rp</span>
                 <input
@@ -261,38 +299,53 @@ export default function LiabilityModal({ isOpen, liability, onClose, onSaved }: 
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Interest Rate (% p.a.)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                {isCC ? 'Interest Rate (% / month)' : 'Interest Rate (% p.a.)'}
+              </label>
               <input
-                type="number" step="0.1" min="0" placeholder="optional"
+                type="number" step="0.01" min="0"
+                placeholder={isCC ? 'e.g. 1.75' : 'optional'}
                 value={interestRate}
                 onChange={e => setInterestRate(e.target.value)}
                 className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
+              {isCC && <p className="text-xs text-gray-400 mt-1">OJK cap: 1.75%/month</p>}
             </div>
           </div>
 
-          {/* Start + End date */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Start Date</label>
-              <input
-                type="month" value={startDate}
-                onChange={e => setStartDate(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">End / Maturity</label>
+          {/* Dates — loans: start + maturity; CC: expiry only */}
+          {isCC ? (
+            <div className="w-1/2 pr-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Card Expiry <span className="font-normal text-gray-400">(optional)</span></label>
               <input
                 type="month" value={endDate}
                 onChange={e => setEndDate(e.target.value)}
                 className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Start Date</label>
+                <input
+                  type="month" value={startDate}
+                  onChange={e => setStartDate(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">End / Maturity</label>
+                <input
+                  type="month" value={endDate}
+                  onChange={e => setEndDate(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                />
+              </div>
+            </div>
+          )}
 
-          {/* Link to asset (vehicle/property only if applicable) */}
-          {assets.length > 0 && (
+          {/* Link to asset — not applicable for credit cards */}
+          {assets.length > 0 && !isCC && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Linked Asset <span className="font-normal text-gray-400">(optional)</span>
