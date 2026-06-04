@@ -146,7 +146,7 @@ export function parseTransactions(rows: Row[]): Transaction[] {
         valutaDate: valuta?.text.trim(),
         detail: detail?.text.trim() ?? '',
         amount: parseNumber(amountItem?.text),
-        type: debitMarker?.text.trim() === 'D' ? 'debit' : 'credit',
+        type: debitMarker?.text.trim() === 'D' ? 'debit' : debitMarker?.text.trim() === 'K' ? 'credit' : undefined,
         balance: parseNumber(balanceItem?.text),
       }
     }

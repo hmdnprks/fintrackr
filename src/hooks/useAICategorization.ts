@@ -58,6 +58,8 @@ export function useAICategorization(
           const ruleCat = categorizeTransaction(tx.detail, tx.type)
           const effective = storedCat || ruleCat
           if (effective !== 'Uncategorized') {
+            // Don't seed Income for debit transactions — protects against past misclassifications
+            if (effective === 'Income' && tx.type === 'debit') return
             const key = normalizeDescription(tx.detail)
             if (!learnedCategories.has(key) || storedCat) {
               learnedCategories.set(key, effective)
@@ -80,7 +82,9 @@ export function useAICategorization(
           const storedCategory = tx.category
           const ruleCategory = categorizeTransaction(tx.detail, tx.type)
           const effective = storedCategory || ruleCategory
-          if (effective === 'Uncategorized') {
+          // Include uncategorized AND debit transactions wrongly tagged as Income
+          const isMisclassifiedIncome = tx.type === 'debit' && effective === 'Income'
+          if (effective === 'Uncategorized' || isMisclassifiedIncome) {
             uncategorized.push({
               txIndex: ti,
               statementIndex: si,
@@ -109,7 +113,8 @@ export function useAICategorization(
       for (const u of uncategorized) {
         const key = normalizeDescription(u.detail)
         const learned = learnedCategories.get(key)
-        if (learned) {
+        // Never apply a learned Income rule to a debit — it would propagate past errors
+        if (learned && !(learned === 'Income' && u.type === 'debit')) {
           updated[u.statementIndex].transactions[u.txIndex].category      = learned
           updated[u.statementIndex].transactions[u.txIndex].categorizedBy = 'learned'
           learnedCount++
@@ -170,20 +175,25 @@ export function useAICategorization(
         groupsArray.forEach((group, i) => {
           const item = data.categories[i] as any
           // Handle both old string format and new {category, confidence} format
-          const category   = typeof item === 'string' ? item : (item.category ?? 'Uncategorized')
-          const confidence = typeof item === 'string' ? 'medium' : (item.confidence ?? 'medium')
+          const rawCategory = typeof item === 'string' ? item : (item.category ?? 'Uncategorized')
+          const confidence  = typeof item === 'string' ? 'medium' : (item.confidence ?? 'medium')
 
+          let effectiveCategory = rawCategory
           group.indices.forEach(({ si, ti }) => {
-            updated[si].transactions[ti].category      = category
+            const txType = updated[si].transactions[ti].type
+            // Never let AI assign Income to a debit transaction
+            const finalCategory = rawCategory === 'Income' && txType === 'debit' ? 'Uncategorized' : rawCategory
+            if (finalCategory !== rawCategory) effectiveCategory = finalCategory
+            updated[si].transactions[ti].category      = finalCategory
             updated[si].transactions[ti].categorizedBy = 'ai'
             updated[si].transactions[ti].aiConfidence  = confidence
           })
 
-          if (category !== 'Uncategorized') {
+          if (effectiveCategory !== 'Uncategorized') {
             aiCount += group.indices.length
             // Persist to learnedRules so future runs skip the AI for this description
             const normalizedDesc = normalizeDescription(group.representative)
-            newLearnedRules.push({ normalizedDesc, category, source: 'ai', updatedAt: new Date().toISOString() })
+            newLearnedRules.push({ normalizedDesc, category: effectiveCategory, source: 'ai', updatedAt: new Date().toISOString() })
           } else {
             remaining.push({ detail: group.representative, amount: group.amount })
           }
