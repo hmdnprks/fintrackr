@@ -128,6 +128,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 - [x] **Net worth trend chart** — inline SVG area chart inside the net worth summary card; groups NetWorthSnapshots by month; up to 12 months; indigo fill + line; y-axis labels (rb/jt/M); x-axis month labels; shown when ≥2 months of data exist
 - [x] **Per-asset mini sparkline** — compact SVG line on each asset card (between value and type details); groups AssetSnapshots by month; last 6 months; green when value ↑, red when ↓; shown when ≥2 months of data exist for that asset
 - [x] **Interest projection simulator** — "▾ Simulate" toggle on any savings/pocket/investment asset card that has an interest rate; yearly view (1/3/5/10yr columns) and monthly view (12 rows); Rp/month top-up input; PPh Final 20% tax toggle (Indonesian bank deposit withholding tax); monthly compounding `FV = P(1+r)^n + M×((1+r)^n−1)/r`; shows gross interest, tax deduction, net interest, and final value per period
+- [x] **Pocket interest rate** — optional interest rate field on pocket assets (e.g. Jago Kantong, GoPay Tabungan Plus); stored alongside the asset and surfaces the interest simulator automatically on the card
 - [ ] **Investment allocation targets** — user sets desired % per asset type (e.g. 30% savings, 40% investments, 20% gold); shows actual vs target with gap
 - [ ] **BPJS JHT claim reminder** — if a JHT asset is marked as "from previous employer", surface a note that it is withdrawable now
 - [ ] Manual portfolio import — paste Bibit/Stockbit portfolio value from app screenshot or CSV
@@ -140,7 +141,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 
 ## Data & Backup
 
-- [x] JSON backup v4 — statements, transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots, rebalance history, learned rules, transaction labels, settings (excl. API key), goal advisor history
+- [x] JSON backup v4 — statements, transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots, rebalance history, learned rules, transaction labels, settings (excl. API key), goal advisor history, liabilities, notifications (incl. read/dismissed state)
 - [x] Backwards-compatible restore — v1/v2/v3 backups load cleanly
 - [x] Merge restore — deduplicates by ID; backup wins on same-day snapshots
 - [x] CSV export — filtered transaction list
