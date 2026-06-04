@@ -1,7 +1,8 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import InfoTooltip from '@/components/ui/InfoTooltip'
+import { formatIDR } from '@/lib/formatter'
 
 interface MonthData {
   label: string
@@ -14,13 +15,23 @@ interface Props {
   data: MonthData[]
 }
 
-function shortLabel(label: string): string {
+function shortMonth(label: string): string {
   // "January 2024" → "Jan"
+  return label.slice(0, 3)
+}
+
+function getYear(label: string): string {
+  // "January 2024" → "2024"
+  return label.split(' ')[1] ?? ''
+}
+
+function shortLabel(label: string): string {
   return label.slice(0, 3)
 }
 
 export default function SavingsRateTrendSection({ data }: Props) {
   const chartRef = useRef<HTMLDivElement>(null)
+  const [hovered, setHovered] = useState<number | null>(null)
 
   // Auto-scroll to the latest (rightmost) months on mount and data change
   useEffect(() => {
@@ -77,6 +88,27 @@ export default function SavingsRateTrendSection({ data }: Props) {
         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${avg < 10 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>{'<'}10% critical</span>
       </div>
 
+      {/* Hover info banner — outside the scroll container so it's never clipped */}
+      <div className="h-9 mb-2 flex items-center">
+        {hovered !== null ? (() => {
+          const d = data[hovered]
+          const saved = d.income - d.expense
+          return (
+            <div className="flex items-center gap-3 text-xs">
+              <span className="font-semibold text-gray-800 dark:text-gray-200">
+                {shortMonth(d.label)} {getYear(d.label)}
+              </span>
+              <span className="text-gray-500 dark:text-gray-400">{d.rate}% savings rate</span>
+              <span className={`font-medium ${saved >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
+                {saved >= 0 ? '+' : ''}{formatIDR(saved)} saved
+              </span>
+            </div>
+          )
+        })() : (
+          <span className="text-xs text-gray-400 dark:text-gray-600">Hover a bar to see details</span>
+        )}
+      </div>
+
       {/* Bar chart — horizontally scrollable, min bar width ensures readability */}
       <div className="flex gap-2">
         {/* Y-axis labels — fixed outside scroll area */}
@@ -93,7 +125,7 @@ export default function SavingsRateTrendSection({ data }: Props) {
 
           <div ref={chartRef} className="overflow-x-auto pb-1">
             {/* 20% reference line — spans the full scrollable width */}
-            <div className="relative h-36" style={{ minWidth: `${data.length * 28}px` }}>
+            <div className="relative h-36" style={{ minWidth: `${data.length * 36}px` }}>
               <div className="absolute left-0 right-0 z-10 pointer-events-none" style={{ bottom: '20%' }}>
                 <div className="border-t-2 border-dashed border-blue-500 w-full" />
                 <span className="absolute -top-5 right-0 bg-blue-600 text-white text-xs font-semibold px-1.5 py-0.5 rounded">
@@ -105,17 +137,19 @@ export default function SavingsRateTrendSection({ data }: Props) {
               <div className="absolute inset-0 flex items-end gap-1 px-0.5">
                 {data.map((d, i) => {
                   const height = Math.max(1, Math.min(100, d.rate))
+                  const isHovered = hovered === i
                   const barColor = d.rate >= 30 ? 'bg-green-500' :
                                    d.rate >= IDEAL ? 'bg-green-400' :
                                    d.rate >= 10 ? 'bg-amber-400' : 'bg-red-400'
                   return (
-                    <div key={i} className="flex-1 min-w-[20px] flex flex-col items-center justify-end h-full relative group">
-                      {/* Tooltip */}
-                      <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none z-30">
-                        {shortLabel(d.label)}: {d.rate}%
-                      </div>
+                    <div
+                      key={i}
+                      className="flex-1 min-w-[28px] flex flex-col items-center justify-end h-full cursor-pointer"
+                      onMouseEnter={() => setHovered(i)}
+                      onMouseLeave={() => setHovered(null)}
+                    >
                       <div
-                        className={`w-full rounded-t-sm ${barColor}`}
+                        className={`w-full rounded-t-sm transition-opacity ${barColor} ${isHovered ? 'opacity-75' : 'opacity-100'}`}
                         style={{ height: `${height}%` }}
                       />
                     </div>
@@ -124,13 +158,27 @@ export default function SavingsRateTrendSection({ data }: Props) {
               </div>
             </div>
 
-            {/* Month labels — same min-width as chart */}
-            <div className="flex gap-1 mt-1 px-0.5" style={{ minWidth: `${data.length * 28}px` }}>
-              {data.map((d, i) => (
-                <div key={i} className="flex-1 min-w-[20px] text-center">
-                  <span className="text-xs text-gray-400 dark:text-gray-500 truncate block">{shortLabel(d.label)}</span>
-                </div>
-              ))}
+            {/* Month + year labels — year shown only when it changes */}
+            <div className="flex gap-1 mt-1 px-0.5" style={{ minWidth: `${data.length * 36}px` }}>
+              {data.map((d, i) => {
+                const year = getYear(d.label)
+                const prevYear = i > 0 ? getYear(data[i - 1].label) : null
+                const showYear = year !== prevYear
+                return (
+                  <div key={i} className={`flex-1 min-w-[28px] text-center ${hovered === i ? 'opacity-100' : 'opacity-70'}`}>
+                    <span className={`text-[10px] block leading-tight ${hovered === i ? 'text-gray-600 dark:text-gray-300 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
+                      {shortMonth(d.label)}
+                    </span>
+                    <span className={`text-[9px] block leading-tight font-medium ${
+                      showYear
+                        ? 'text-gray-500 dark:text-gray-400'
+                        : 'text-transparent select-none'
+                    }`}>
+                      {year}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>
