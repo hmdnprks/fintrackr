@@ -210,17 +210,16 @@ export default function TransactionSection({
     if (editingOriginalIndex !== null) editingRef.current?.focus()
   }, [editingOriginalIndex])
 
-  // Fix 5 — total of filtered transactions
-  const filteredTotal = useMemo(
-    () => filtered.reduce((sum: number, tx: any) => sum + (tx.amount ?? 0), 0),
-    [filtered]
-  )
+  const filteredTotals = useMemo(() => {
+    let income = 0, expense = 0
+    for (const tx of filtered) {
+      if (tx.type === 'credit') income  += tx.amount ?? 0
+      else                      expense += tx.amount ?? 0
+    }
+    return { income, expense }
+  }, [filtered])
 
-  // Fix 6 — show year when transactions span multiple years
-  const showYear = useMemo(() => {
-    const years = new Set(transactions.map((tx: any) => tx.fullDate?.getFullYear()).filter(Boolean))
-    return years.size > 1
-  }, [transactions])
+  const showYear = true
 
   const uncategorizedCount = useMemo(
     () => transactions.filter((tx: any) => tx.category === 'Uncategorized').length,
@@ -253,8 +252,11 @@ export default function TransactionSection({
             {isFiltered && filtered.length !== transactions.length && (
               <span className="text-gray-400 dark:text-gray-500">of {transactions.length}</span>
             )}
-            {filtered.length > 0 && (
-              <span className="text-gray-400 dark:text-gray-500">· {formatIDR(filteredTotal)}</span>
+            {filtered.length > 0 && filteredTotals.income > 0 && (
+              <span className="text-green-600 dark:text-green-400">· +{formatIDR(filteredTotals.income)}</span>
+            )}
+            {filtered.length > 0 && filteredTotals.expense > 0 && (
+              <span className="text-red-500 dark:text-red-400">· −{formatIDR(filteredTotals.expense)}</span>
             )}
             {uncategorizedCount > 0 && (
               <span className="text-amber-500">· {uncategorizedCount} uncategorized</span>
