@@ -58,6 +58,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 - [x] **Category icons** — each category badge shows a small Heroicon (w-3 h-3) before the label for faster visual scanning
 - [x] **Loan category** — for KKB, KPR, personal loan installments; 9 default keyword rules; excluded from spending analysis and savings rate trend; counted as Needs in 50/30/20; appears in fixed commitments detection; rose/pink badge + ReceiptPercentIcon
 - [x] **ATM withdrawal rules** — Tarik ATM, TARIK ATM, ATM-, TARIKAN ATM → Transfer (cash conversion, not spending)
+- [x] **Income miscategorization guard** — parser checks explicitly for D/K marker (no silent default to credit when column is missing); categorizer skips Income keyword rules for debit transactions; AI hook blocks learned Income rules from being seeded or applied to debits; Phase 2 re-queues existing debit+Income transactions for AI re-categorization; AI results overridden to Uncategorized if AI still returns Income for a debit
 
 ---
 
@@ -77,7 +78,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 
 - [x] AI Insights panel — Generate/Regenerate/Clear; pre-aggregates data before sending; structured 4-bullet output; period-aware
 - [x] 50/30/20 Spending Breakdown — Needs / Wants / Surplus with ideal threshold markers and contextual status messages
-- [x] Savings Rate Trend — monthly bar chart; horizontally scrollable (min 20px/bar, auto-scrolls to latest); 20% target line; best month label
+- [x] Savings Rate Trend — monthly bar chart; horizontally scrollable (36px/bar, auto-scrolls to latest); 20% target line; best month label; hover banner (outside scroll container to avoid CSS overflow clipping) shows month/year, savings rate %, and ±IDR saved; X-axis shows year label only at year boundaries to disambiguate multi-year data
 - [x] Fixed Monthly Commitments — auto-detects recurring expenses across ≥2 months; card layout with full description visible
 - [x] Investment Rate — keyword-based detection of investment platform transfers (Bibit, Stockbit, Ajaib, etc.)
 - [x] **Financial Health Score** — composite 0–100 score (grades A+/A/B/C/D) across savings rate (30 pts), emergency fund (30 pts), investment rate (20 pts), budget adherence (20 pts); per-dimension progress bars; motivating message per grade; placed in Insights tab
@@ -194,6 +195,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 - [x] 5-tab dashboard with horizontally scrollable tab bar
 - [x] Dashboard header filters: 2-column grid for selects, actions on separate row
 - [x] Transaction tab: stacked header + full-width category filter on mobile
+- [x] Transaction table: date column always shows year (was conditional on multi-year data); summary line shows separate green +income and red −expense totals instead of a single meaningless gross sum
 - [x] Budget tab: stacked header; amount shown below category name on mobile
 - [x] Assets tab: responsive net worth bars; stacked modals; windfall cards stack on mobile
 - [x] Savings rate chart: swipeable, auto-scrolls to latest month
