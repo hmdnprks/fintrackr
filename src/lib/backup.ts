@@ -22,6 +22,7 @@ export type BackupData = {
     settings: Record<string, string>              // excludes chatApiKey
     goalAdvisorHistory: Record<string, any[]>     // goalId → last 3 AI plans
     liabilities: any[]
+    notifications: any[]
   }
 }
 
@@ -59,6 +60,7 @@ export async function exportBackup(): Promise<BackupData> {
       ),
       goalAdvisorHistory: vault.goalAdvisorHistory ?? {},
       liabilities:        vault.liabilities ?? [],
+      notifications:      vault.notifications ?? [],
     },
   }
 }
@@ -115,6 +117,7 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
   const backupSettings     = backup.data.settings           ?? {}
   const goalAdvisorHistory = backup.data.goalAdvisorHistory ?? {}
   const liabilities        = backup.data.liabilities        ?? []
+  const notifications      = backup.data.notifications      ?? []
 
   if (mode === 'replace') {
     const existingVault = await getVaultData()
@@ -138,6 +141,7 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       settings: restoredSettings,
       goalAdvisorHistory,
       liabilities,
+      notifications,
     })
     return
   }
@@ -227,6 +231,17 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       ),
       ...liabilities,
     ],
+    // Merge notifications by id — if either side has readAt set, treat as read
+    notifications: (() => {
+      const existingMap = new Map((existingVault.notifications ?? []).map((n: any) => [n.id, n]))
+      const merged = notifications.map((b: any) => {
+        const existing = existingMap.get(b.id)
+        if (!existing) return b
+        existingMap.delete(b.id)
+        return { ...b, readAt: b.readAt ?? existing.readAt }
+      })
+      return [...merged, ...Array.from(existingMap.values())]
+    })(),
   }
 
   await saveVaultData(newVaultState)
