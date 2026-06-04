@@ -284,6 +284,7 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
         goalName: goalName.trim() || undefined,
         goalTarget: goalTarget ? parseIDR(goalTarget) : undefined,
         goalDeadline: goalDeadline || undefined,
+        interestRate: interestRate ? Number(interestRate) : undefined,
       }),
       ...((type === 'vehicle' || type === 'property') && {
         physicalSubtype,
@@ -533,6 +534,19 @@ export default function AssetModal({ isOpen, asset, onClose, onSaved }: Props) {
                   placeholder="e.g. Trip to Japan"
                   value={goalName}
                   onChange={e => setGoalName(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Interest Rate (% p.a.) <span className="text-gray-400 dark:text-gray-500 font-normal">— optional</span>
+                </label>
+                <input
+                  type="number"
+                  min="0" max="20" step="0.1"
+                  placeholder="e.g. 4.5"
+                  value={interestRate}
+                  onChange={e => setInterestRate(e.target.value)}
                   className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
