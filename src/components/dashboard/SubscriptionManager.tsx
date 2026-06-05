@@ -157,7 +157,7 @@ function AddManualModal({
 
 // ── Subscription Row ──────────────────────────────────────────────────────────
 
-function SubscriptionRow({ entry, onDelete }: { entry: SubscriptionEntry; onDelete: () => void }) {
+function SubscriptionRow({ entry, onDelete }: { entry: SubscriptionEntry; onDelete?: () => void }) {
   const [confirmDel, setConfirmDel] = useState(false)
 
   return (
@@ -182,9 +182,9 @@ function SubscriptionRow({ entry, onDelete }: { entry: SubscriptionEntry; onDele
                 {Math.abs(entry.priceChange.pct)}%
               </span>
             )}
-            {entry.source === 'manual' && (
+            {(entry.source === 'manual' || entry.source === 'user') && (
               <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
-                manual
+                {entry.source === 'user' ? 'flagged' : 'manual'}
               </span>
             )}
           </div>
@@ -198,6 +198,9 @@ function SubscriptionRow({ entry, onDelete }: { entry: SubscriptionEntry; onDele
             )}
             {entry.source === 'manual' && (
               <p className="text-xs text-gray-400 dark:text-gray-500">Manually added</p>
+            )}
+            {entry.source === 'user' && (
+              <p className="text-xs text-gray-400 dark:text-gray-500">Flagged from transactions</p>
             )}
           </div>
 
@@ -236,7 +239,7 @@ function SubscriptionRow({ entry, onDelete }: { entry: SubscriptionEntry; onDele
             </a>
           )}
 
-          {entry.source === 'manual' && !confirmDel && (
+          {onDelete && !confirmDel && (
             <button
               onClick={() => setConfirmDel(true)}
               className="p-1.5 text-gray-300 hover:text-red-400 dark:text-gray-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
@@ -247,7 +250,7 @@ function SubscriptionRow({ entry, onDelete }: { entry: SubscriptionEntry; onDele
             </button>
           )}
 
-          {entry.source === 'manual' && confirmDel && (
+          {onDelete && confirmDel && (
             <div className="flex items-center gap-1">
               <button
                 onClick={onDelete}
@@ -275,11 +278,20 @@ export default function SubscriptionManager({ statements }: Props) {
   const [manualSubs, setManualSubs] = useState<ManualSubscription[]>(
     () => (getVaultDataSync().manualSubscriptions ?? []) as ManualSubscription[]
   )
+  const [subscribedDescriptions, setSubscribedDescriptions] = useState<string[]>(
+    () => (getVaultDataSync().subscribedDescriptions ?? []) as string[]
+  )
   const [showAdd, setShowAdd] = useState(false)
 
+  const transactionLabels = useMemo(
+    () => (getVaultDataSync().transactionLabels ?? {}) as Record<string, string>,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  )
+
   const entries = useMemo(
-    () => detectSubscriptions(statements, manualSubs),
-    [statements, manualSubs]
+    () => detectSubscriptions(statements, manualSubs, subscribedDescriptions, transactionLabels),
+    [statements, manualSubs, subscribedDescriptions, transactionLabels]
   )
 
   const totalMonthly = entries.reduce((s, e) => s + e.monthlyAmount, 0)
@@ -294,10 +306,16 @@ export default function SubscriptionManager({ statements }: Props) {
     await saveVaultData({ manualSubscriptions: updated } as any)
   }
 
-  async function handleDelete(id: string) {
+  async function handleDeleteManual(id: string) {
     const updated = manualSubs.filter(m => m.id !== id)
     setManualSubs(updated)
     await saveVaultData({ manualSubscriptions: updated } as any)
+  }
+
+  async function handleUnmark(normKey: string) {
+    const updated = subscribedDescriptions.filter(k => k !== normKey)
+    setSubscribedDescriptions(updated)
+    await saveVaultData({ subscribedDescriptions: updated } as any)
   }
 
   if (statements.length === 0) return null
@@ -338,7 +356,13 @@ export default function SubscriptionManager({ statements }: Props) {
               <SubscriptionRow
                 key={entry.key}
                 entry={entry}
-                onDelete={() => handleDelete(entry.key)}
+                onDelete={
+                  entry.source === 'manual'
+                    ? () => handleDeleteManual(entry.key)
+                    : entry.source === 'user' && entry.normKey
+                    ? () => handleUnmark(entry.normKey!)
+                    : undefined
+                }
               />
             ))}
           </div>

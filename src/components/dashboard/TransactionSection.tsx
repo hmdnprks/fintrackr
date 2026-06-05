@@ -4,9 +4,9 @@
 import { useMemo, useState, useRef, useEffect, Fragment } from 'react'
 import RecurringSuggestionPanel from './RecurringSuggestionPanel'
 import { formatIDR } from '@/lib/formatter'
-import { isSafeSimilarityMatch, getLabelKey } from '@/lib/insights/recurring'
+import { isSafeSimilarityMatch, getLabelKey, normalizeDetail } from '@/lib/insights/recurring'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
-import { TagIcon } from '@heroicons/react/24/outline'
+import { TagIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 
 // Extract a human-readable merchant label from a raw Mandiri transaction description.
 // Mandiri card format: -XXXXXXXX /XXXXXXXXXX/MERCHANT-NAME/SUFFIX
@@ -141,6 +141,20 @@ export default function TransactionSection({
   )
   const [labelingKey, setLabelingKey]   = useState<string | null>(null)
   const [labelInput, setLabelInput]     = useState('')
+
+  const [subscribedSet, setSubscribedSet] = useState<Set<string>>(
+    () => new Set(getVaultDataSync().subscribedDescriptions ?? [])
+  )
+
+  async function toggleSubscription(detail: string) {
+    const normKey = normalizeDetail(detail)
+    if (!normKey) return
+    const next = new Set(subscribedSet)
+    if (next.has(normKey)) next.delete(normKey)
+    else next.add(normKey)
+    setSubscribedSet(next)
+    await saveVaultData({ subscribedDescriptions: [...next] } as any)
+  }
 
   async function saveLabel(key: string, alias: string) {
     const vault = getVaultDataSync()
@@ -499,6 +513,19 @@ export default function TransactionSection({
                                 >
                                   <TagIcon className="w-3.5 h-3.5" />
                                 </button>
+                                {tx.type === 'debit' && (() => {
+                                  const normKey = normalizeDetail(tx.detail ?? '')
+                                  const active  = normKey ? subscribedSet.has(normKey) : false
+                                  return (
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); toggleSubscription(tx.detail ?? '') }}
+                                      title={active ? 'Marked as subscription — click to unmark' : 'Mark as recurring subscription'}
+                                      className={`shrink-0 transition ${active ? 'text-purple-500 dark:text-purple-400' : 'text-gray-300 dark:text-gray-600 hover:text-purple-400 dark:hover:text-purple-400'}`}
+                                    >
+                                      <ArrowPathIcon className="w-3.5 h-3.5" />
+                                    </button>
+                                  )
+                                })()}
                               </div>
                               {isLabeling && (
                                 <div className="flex items-center gap-1.5 mt-1.5" onClick={e => e.stopPropagation()}>

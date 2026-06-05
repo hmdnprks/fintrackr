@@ -24,6 +24,7 @@ export type BackupData = {
     liabilities: any[]
     notifications: any[]
     manualSubscriptions: any[]
+    subscribedDescriptions: string[]
   }
 }
 
@@ -62,7 +63,8 @@ export async function exportBackup(): Promise<BackupData> {
       goalAdvisorHistory: vault.goalAdvisorHistory ?? {},
       liabilities:          vault.liabilities ?? [],
       notifications:        vault.notifications ?? [],
-      manualSubscriptions:  vault.manualSubscriptions ?? [],
+      manualSubscriptions:    vault.manualSubscriptions    ?? [],
+      subscribedDescriptions: vault.subscribedDescriptions ?? [],
     },
   }
 }
@@ -120,7 +122,8 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
   const goalAdvisorHistory = backup.data.goalAdvisorHistory ?? {}
   const liabilities        = backup.data.liabilities        ?? []
   const notifications         = backup.data.notifications         ?? []
-  const manualSubscriptions   = backup.data.manualSubscriptions   ?? []
+  const manualSubscriptions    = backup.data.manualSubscriptions    ?? []
+  const subscribedDescriptions = backup.data.subscribedDescriptions ?? []
 
   if (mode === 'replace') {
     const existingVault = await getVaultData()
@@ -146,6 +149,7 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       liabilities,
       notifications,
       manualSubscriptions,
+      subscribedDescriptions,
     })
     return
   }
@@ -252,6 +256,13 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
         (m: any) => !manualSubscriptions.find((b: any) => b.id === m.id)
       ),
       ...manualSubscriptions,
+    ],
+    // Union of subscribed description keys from both sides
+    subscribedDescriptions: [
+      ...new Set([
+        ...(existingVault.subscribedDescriptions ?? []),
+        ...subscribedDescriptions,
+      ]),
     ],
   }
 

@@ -26,7 +26,8 @@ export type VaultData = {
   goalAdvisorHistory: Record<string, { savedAt: string; label: string; result: any }[]>  // goalId → last 3
   liabilities: any[]        // Liability objects
   notifications: any[]      // AppNotification objects
-  manualSubscriptions: any[] // ManualSubscription objects
+  manualSubscriptions: any[]    // ManualSubscription objects
+  subscribedDescriptions: string[] // normalizeDetail keys user-flagged as subscriptions
 }
 
 const defaultVaultData: VaultData = {
@@ -46,6 +47,7 @@ const defaultVaultData: VaultData = {
   liabilities: [],
   notifications: [],
   manualSubscriptions: [],
+  subscribedDescriptions: [],
 }
 
 // ============================
