@@ -27,7 +27,7 @@ export type VaultData = {
   liabilities: any[]        // Liability objects
   notifications: any[]      // AppNotification objects
   manualSubscriptions: any[]    // ManualSubscription objects
-  subscribedDescriptions: string[] // normalizeDetail keys user-flagged as subscriptions
+  subscribedDescriptions: string[] // subscription keys (normalizeDetail|amount) user-flagged
 }
 
 const defaultVaultData: VaultData = {

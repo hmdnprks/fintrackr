@@ -4,7 +4,7 @@
 import { useMemo, useState, useRef, useEffect, Fragment } from 'react'
 import RecurringSuggestionPanel from './RecurringSuggestionPanel'
 import { formatIDR } from '@/lib/formatter'
-import { isSafeSimilarityMatch, getLabelKey, normalizeDetail } from '@/lib/insights/recurring'
+import { isSafeSimilarityMatch, getLabelKey, getDescAmountLabelKey, getSubscriptionKey, normalizeDetail } from '@/lib/insights/recurring'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 import { TagIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 
@@ -146,12 +146,12 @@ export default function TransactionSection({
     () => new Set(getVaultDataSync().subscribedDescriptions ?? [])
   )
 
-  async function toggleSubscription(detail: string) {
-    const normKey = normalizeDetail(detail)
-    if (!normKey) return
+  async function toggleSubscription(detail: string, amount: number) {
+    const subKey = getSubscriptionKey(detail, amount)
+    if (!subKey) return
     const next = new Set(subscribedSet)
-    if (next.has(normKey)) next.delete(normKey)
-    else next.add(normKey)
+    if (next.has(subKey)) next.delete(subKey)
+    else next.add(subKey)
     setSubscribedSet(next)
     await saveVaultData({ subscribedDescriptions: [...next] } as any)
   }
@@ -485,8 +485,9 @@ export default function TransactionSection({
 
                       <td className="px-5 py-3">
                         {(() => {
-                          const lkey  = getLabelKey(tx.detail)
-                          const alias = lkey ? labels[lkey] : undefined
+                          const lkey       = getDescAmountLabelKey(tx.detail, tx.amount ?? 0)
+                          const lkeyLegacy = getLabelKey(tx.detail)
+                          const alias      = (lkey ? labels[lkey] : undefined) ?? (lkeyLegacy ? labels[lkeyLegacy] : undefined)
                           const isLabeling = labelingKey === lkey && lkey !== null
                           return (
                             <div>
@@ -514,11 +515,13 @@ export default function TransactionSection({
                                   <TagIcon className="w-3.5 h-3.5" />
                                 </button>
                                 {tx.type === 'debit' && (() => {
+                                  const subKey  = getSubscriptionKey(tx.detail ?? '', tx.amount ?? 0)
                                   const normKey = normalizeDetail(tx.detail ?? '')
-                                  const active  = normKey ? subscribedSet.has(normKey) : false
+                                  // new-style key (normKey|amount) or legacy plain normKey
+                                  const active  = subKey ? subscribedSet.has(subKey) || subscribedSet.has(normKey) : false
                                   return (
                                     <button
-                                      onClick={(e) => { e.stopPropagation(); toggleSubscription(tx.detail ?? '') }}
+                                      onClick={(e) => { e.stopPropagation(); toggleSubscription(tx.detail ?? '', tx.amount ?? 0) }}
                                       title={active ? 'Marked as subscription — click to unmark' : 'Mark as recurring subscription'}
                                       className={`shrink-0 transition ${active ? 'text-purple-500 dark:text-purple-400' : 'text-gray-300 dark:text-gray-600 hover:text-purple-400 dark:hover:text-purple-400'}`}
                                     >

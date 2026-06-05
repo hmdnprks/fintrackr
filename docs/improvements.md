@@ -18,7 +18,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 | 6 | **Investment return tracking** | Assets Tab | Add "initial invested amount" field; compute actual return % vs current value; the one number investors care about most |
 | 7 | **Budget rollover** | Budget Tab | Unspent budget carries to next month; widely expected by users |
 | 8 | ~~**Vault inactivity timeout**~~ ✓ | Security & Vault | ~~Auto-lock after X minutes of inactivity; basic security hygiene~~ Shipped |
-| 9 | **Subscription manager** | Nice to Have | Detect recurring charges from fixed commitments; show total monthly and annual cost; surface cancel links |
+| 9 | ~~**Subscription manager**~~ ✓ | Nice to Have | ~~Detect recurring charges from fixed commitments; show total monthly and annual cost; surface cancel links~~ Shipped |
 | 10 | **SPT / tax summary** | Nice to Have | Annual income summary for Indonesian tax filing (PPh 21 context) |
 
 ---
@@ -54,7 +54,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 - [x] User feedback loop — "wrong category" flag on AI-categorized rows; flagged + reassigned transactions recorded in learnedRules with source 'ai-corrected'; improves future categorization without re-running AI
 - [x] Learn from manual overrides automatically — every inline category change upserts normalizedDesc → category into vault learnedRules; Phase 1 seeds from learnedRules before scanning transaction history; AI results also persisted to learnedRules; included in backup
 - [x] **Bulk search categorize** — "Set all N results as…" bar in filter card when search is active; applies selected category to all filtered transactions across all pages; 3s success indicator
-- [x] **Merchant labels** — tag icon on each description to assign a human-readable alias (e.g. UBP...FFFFFF... → "Shopee"); alias shown as primary bold text with raw description below in gray; saved to vault transactionLabels; included in backup; label key keeps digits for precision (different UBP merchants stay distinct)
+- [x] **Merchant labels** — tag icon on each description to assign a human-readable alias (e.g. UBP...FFFFFF... → "Shopee"); alias shown as primary bold text with raw description below in gray; saved to vault transactionLabels; included in backup; label key is `normalizeDetail(description) + '|' + amount` so the same merchant at the same price (e.g. all 35k Apple Music charges) share one label, while the same merchant at a different price (169k iCloud vs 35k Apple Music) get separate labels; legacy keys kept for backward compat
 - [x] **Category icons** — each category badge shows a small Heroicon (w-3 h-3) before the label for faster visual scanning
 - [x] **Loan category** — for KKB, KPR, personal loan installments; 9 default keyword rules; excluded from spending analysis and savings rate trend; counted as Needs in 50/30/20; appears in fixed commitments detection; rose/pink badge + ReceiptPercentIcon
 - [x] **ATM withdrawal rules** — Tarik ATM, TARIK ATM, ATM-, TARIKAN ATM → Transfer (cash conversion, not spending)
@@ -141,7 +141,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 
 ## Data & Backup
 
-- [x] JSON backup v4 — statements, transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots, rebalance history, learned rules, transaction labels, settings (excl. API key), goal advisor history, liabilities, notifications (incl. read/dismissed state)
+- [x] JSON backup v4 — statements, transactions, rules, budgets, goals, assets, net worth snapshots, per-asset snapshots, rebalance history, learned rules, transaction labels, settings (excl. API key), goal advisor history, liabilities, notifications (incl. read/dismissed state), manual subscriptions, subscribed description keys
 - [x] Backwards-compatible restore — v1/v2/v3 backups load cleanly
 - [x] Merge restore — deduplicates by ID; backup wins on same-day snapshots
 - [x] CSV export — filtered transaction list
@@ -229,7 +229,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 ## Nice to Have / Long Term
 
 - [x] **Debt tracking** — see Liabilities section in Assets Tab above
-- [ ] **Subscription manager** ⭐ — detect recurring charges from fixed commitments (Netflix, Spotify, iCloud, etc.); show monthly and annual total; surface cancel/manage links per service; highlight subscriptions that increased in price
+- [x] **Subscription manager** — auto-detects 25 catalog services (Netflix, Spotify, Apple, Canva, etc.) from statement transactions; ↻ flag button on each debit row to mark any charge as a subscription; flag key is `normalizeDetail + '|' + amount` so 169k iCloud and 35k Apple Music are separate entries even though they share the same VAP-APPLE.COM description; catalog detection groups by service name (all Apple variants → one Apple entry unless explicitly flagged); user-flagged entries use per-amount transaction groups for accurate monthly average and price-change detection; manual add for GoPay/OVO subscriptions (name, amount, cancel URL, notes); cancel / manage links per service; NEW badge for services first seen in last 2 months; price-change badge (▲/▼ % vs prior 3-month avg, threshold ≥5%); unmark from subscription manager removes both the flag and the entry; all data in vault (`manualSubscriptions`, `subscribedDescriptions`) and included in backup
 - [ ] **Tax summary** ⭐ — annual gross income summary for SPT Tahunan filing; breakdown by month; Indonesian PPh 21 context
 - [x] **Zakat Penghasilan calculator** — opt-in toggle in Settings; ZakatCard in Insights tab; BAZNAS 2025 nisab (85g × Rp 1,500,000 = Rp 127,500,000/year ≈ Rp 10,625,000/month); shows avg monthly income vs nisab, progress bar, obligated amount (monthly + annual), "Pay via BAZNAS" link; "Belum Wajib" state with Infaq/Sedekah suggestion when below nisab; footer with gold price basis and baznas.go.id link; nisab constant easy to update annually
 - [ ] **Multi-currency** — gold in USD/gram, investments in USD; display in IDR equivalent

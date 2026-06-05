@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { normalizeDetail, getLabelKey } from '@/lib/insights/recurring'
+import { normalizeDetail, getLabelKey, getDescAmountLabelKey } from '@/lib/insights/recurring'
 
 export type ManualSubscription = {
   id: string
@@ -130,8 +130,13 @@ export function detectSubscriptions(
   const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1)
   const twoMonthsAgoKey = `${twoMonthsAgo.getFullYear()}-${String(twoMonthsAgo.getMonth() + 1).padStart(2, '0')}`
 
-  // Single pass: collect all debit transactions into raw groups by normalizeDetail
-  const rawGroups: Record<string, { sampleDetail: string; monthAmounts: Record<string, number> }> = {}
+  type GroupData = { sampleDetail: string; monthAmounts: Record<string, number>; labelKeys: Set<string> }
+
+  // rawGroups: by normalizeDetail — for catalog Pass 1 (aggregates all amounts)
+  // rawAmtGroups: by normalizeDetail|amount — for user-flagged Pass 2 (per price point)
+  const rawGroups:    Record<string, GroupData> = {}
+  const rawAmtGroups: Record<string, GroupData> = {}
+
   for (const s of statements) {
     const mk: string = s.monthKey
     if (!mk) continue
@@ -140,19 +145,40 @@ export function detectSubscriptions(
       const detail  = (t.detail ?? '') as string
       const normKey = normalizeDetail(detail)
       if (!normKey) continue
-      if (!rawGroups[normKey]) rawGroups[normKey] = { sampleDetail: detail, monthAmounts: {} }
+      const amt    = Math.round(t.amount ?? 0)
+      const amtKey = `${normKey}|${amt}`
+
+      if (!rawGroups[normKey]) rawGroups[normKey] = { sampleDetail: detail, monthAmounts: {}, labelKeys: new Set() }
       rawGroups[normKey].monthAmounts[mk] = (rawGroups[normKey].monthAmounts[mk] ?? 0) + (t.amount ?? 0)
+
+      if (!rawAmtGroups[amtKey]) rawAmtGroups[amtKey] = { sampleDetail: detail, monthAmounts: {}, labelKeys: new Set() }
+      rawAmtGroups[amtKey].monthAmounts[mk] = (rawAmtGroups[amtKey].monthAmounts[mk] ?? 0) + (t.amount ?? 0)
+
+      const lkey = getDescAmountLabelKey(detail, t.amount ?? 0) ?? getLabelKey(detail)
+      if (lkey) {
+        rawGroups[normKey].labelKeys.add(lkey)
+        rawAmtGroups[amtKey].labelKeys.add(lkey)
+      }
     }
   }
 
-  // ── Pass 1: catalog-matched entries (merge variants under catalog name) ───
+  const subDescSet = new Set(subscribedDescriptions)
+
+  // Derive the set of normKeys that have any user-flagged entry.
+  // Keys can be new-style (normKey|amount) or old-style (just normKey).
+  const flaggedNormKeys = new Set<string>()
+  for (const key of subDescSet) {
+    const pipeIdx = key.lastIndexOf('|')
+    flaggedNormKeys.add(pipeIdx !== -1 ? key.slice(0, pipeIdx) : key)
+  }
+
+  // ── Pass 1: catalog-matched entries (skip normKeys with any user-flagged amount) ───
   const catalogGroupAmounts: Record<string, { catalogEntry: CatalogEntry; monthAmounts: Record<string, number>; sampleDetail: string }> = {}
-  const normKeysCoveredByCatalog = new Set<string>()
 
   for (const [normKey, g] of Object.entries(rawGroups)) {
+    if (flaggedNormKeys.has(normKey)) continue
     const match = matchCatalog(g.sampleDetail)
     if (!match) continue
-    normKeysCoveredByCatalog.add(normKey)
     if (!catalogGroupAmounts[match.name]) {
       catalogGroupAmounts[match.name] = { catalogEntry: match, monthAmounts: {}, sampleDetail: g.sampleDetail }
     }
@@ -162,36 +188,41 @@ export function detectSubscriptions(
     }
   }
 
-  const autoEntries: SubscriptionEntry[] = Object.values(catalogGroupAmounts).map(g =>
-    buildEntry(g.monthAmounts, twoMonthsAgoKey, {
-      key:       g.catalogEntry.name,
-      source:    'auto',
-      name:      g.catalogEntry.name,
-      emoji:     g.catalogEntry.emoji,
-      cancelUrl: g.catalogEntry.cancelUrl,
-      isApple:   g.catalogEntry.name === 'Apple',
-    })
-  ).sort((a, b) => b.monthlyAmount - a.monthlyAmount)
+  const autoEntries: SubscriptionEntry[] = Object.values(catalogGroupAmounts)
+    .filter(g => Object.keys(g.monthAmounts).length > 0)
+    .map(g =>
+      buildEntry(g.monthAmounts, twoMonthsAgoKey, {
+        key:       g.catalogEntry.name,
+        source:    'auto',
+        name:      g.catalogEntry.name,
+        emoji:     g.catalogEntry.emoji,
+        cancelUrl: g.catalogEntry.cancelUrl,
+        isApple:   g.catalogEntry.name === 'Apple',
+      })
+    ).sort((a, b) => b.monthlyAmount - a.monthlyAmount)
 
-  // ── Pass 2: user-flagged entries not covered by catalog ───────────────────
-  const subDescSet = new Set(subscribedDescriptions)
+  // ── Pass 2: user-flagged entries — each unique normalizeDetail|amount is its own row ───
   const userEntries: SubscriptionEntry[] = []
 
-  for (const normKey of subDescSet) {
-    if (normKeysCoveredByCatalog.has(normKey)) continue  // already in catalog
-    const g = rawGroups[normKey]
-    if (!g) continue  // description was flagged but no transaction found (e.g. after data clear)
+  for (const subKey of subDescSet) {
+    const pipeIdx     = subKey.lastIndexOf('|')
+    const isNewStyle  = pipeIdx !== -1
+    // For new-style keys use the per-amount group; old-style falls back to full normKey group
+    const g = isNewStyle ? rawAmtGroups[subKey] : rawGroups[subKey]
+    if (!g) continue
 
-    const lkey  = getLabelKey(g.sampleDetail)
-    const alias = lkey ? (transactionLabels[lkey] ?? null) : null
-    const name  = alias ?? (g.sampleDetail.length > 35 ? g.sampleDetail.slice(0, 35) + '…' : g.sampleDetail)
+    const alias      = [...g.labelKeys].map(lk => transactionLabels[lk]).find(Boolean) ?? null
+    const catalogHit = matchCatalog(g.sampleDetail)
+    const name  = alias ?? catalogHit?.name ?? (g.sampleDetail.length > 35 ? g.sampleDetail.slice(0, 35) + '…' : g.sampleDetail)
+    const emoji = catalogHit?.emoji ?? '🔄'
 
     userEntries.push(buildEntry(g.monthAmounts, twoMonthsAgoKey, {
-      key:     normKey,
-      source:  'user',
+      key:       subKey,
+      source:    'user',
       name,
-      emoji:   '🔄',
-      normKey,
+      emoji,
+      cancelUrl: catalogHit?.cancelUrl,
+      normKey:   subKey,
     }))
   }
   userEntries.sort((a, b) => b.monthlyAmount - a.monthlyAmount)

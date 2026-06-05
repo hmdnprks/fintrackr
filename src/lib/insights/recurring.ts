@@ -65,6 +65,21 @@ export function getLabelKey(detail: string): string | null {
   return key.length >= 3 ? key : null
 }
 
+// Groups by description pattern + exact amount so that e.g. all 35k Apple Music
+// charges share a label while 169k iCloud charges get their own label bucket.
+export function getDescAmountLabelKey(detail: string, amount: number): string | null {
+  const norm = normalizeDetail(detail)
+  return norm.length >= 3 ? `${norm}|${Math.round(amount)}` : null
+}
+
+// Subscription flag key: normalizeDetail + '|' + amount.
+// Two transactions that differ only in reference number but have the same
+// description pattern and price are treated as the same subscription.
+export function getSubscriptionKey(detail: string, amount: number): string | null {
+  const norm = normalizeDetail(detail)
+  return norm.length >= 3 ? `${norm}|${Math.round(amount)}` : null
+}
+
 export function detectRecurringUncategorized(
   transactions: any[],
   minOccurrences = 2
