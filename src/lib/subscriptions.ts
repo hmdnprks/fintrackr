@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { normalizeDetail, getLabelKey, getDescAmountLabelKey } from '@/lib/insights/recurring'
+import { normalizeDetail, getLabelKey, getDescAmountLabelKey, getNormLabelKey } from '@/lib/insights/recurring'
 
 export type ManualSubscription = {
   id: string
@@ -255,7 +255,10 @@ export function detectSubscriptions(
     const windowMonths = Object.keys(windowAmounts).sort()
     if (!hasConsecutiveMonths(windowMonths, MIN_CONSECUTIVE_MONTHS)) continue
 
-    const alias = [...g.labelKeys].map(lk => transactionLabels[lk]).find(Boolean) ?? null
+    const normLabelKey = getNormLabelKey(g.sampleDetail)
+    const alias = [...g.labelKeys].map(lk => transactionLabels[lk]).find(Boolean)
+               ?? (normLabelKey ? transactionLabels[normLabelKey] : undefined)
+               ?? null
     const name  = alias ?? (g.sampleDetail.length > 35 ? g.sampleDetail.slice(0, 35) + '…' : g.sampleDetail)
 
     detectedEntries.push(buildEntry(windowAmounts, twoMonthsAgoKey, {
@@ -280,7 +283,10 @@ export function detectSubscriptions(
     const g = isNewStyle ? rawAmtGroups[subKey] : rawGroups[subKey]
     if (!g) continue
 
-    const alias      = [...g.labelKeys].map(lk => transactionLabels[lk]).find(Boolean) ?? null
+    const normLabelKey2 = getNormLabelKey(g.sampleDetail)
+    const alias      = [...g.labelKeys].map(lk => transactionLabels[lk]).find(Boolean)
+                    ?? (normLabelKey2 ? transactionLabels[normLabelKey2] : undefined)
+                    ?? null
     const catalogHit = matchCatalog(g.sampleDetail)
     const name  = alias ?? catalogHit?.name ?? (g.sampleDetail.length > 35 ? g.sampleDetail.slice(0, 35) + '…' : g.sampleDetail)
     const emoji = catalogHit?.emoji ?? '🔄'

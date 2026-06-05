@@ -65,6 +65,14 @@ export function getLabelKey(detail: string): string | null {
   return key.length >= 3 ? key : null
 }
 
+// General description-only label key — no amount.
+// Used as fallback when no specific normalizeDetail|amount label exists,
+// so one label covers all price points of the same merchant.
+export function getNormLabelKey(detail: string): string | null {
+  const norm = normalizeDetail(detail)
+  return norm.length >= 3 ? norm : null
+}
+
 // Groups by description pattern + exact amount so that e.g. all 35k Apple Music
 // charges share a label while 169k iCloud charges get their own label bucket.
 export function getDescAmountLabelKey(detail: string, amount: number): string | null {

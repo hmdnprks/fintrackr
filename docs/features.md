@@ -27,7 +27,7 @@
 - Live status text during processing shows each phase; result modal breaks down counts: "X from learned rules · Y via AI"
 - **Manual override** — click any category badge to reassign inline; apply-to-all-similar prompt expands inline below the edited row showing up to 5 matching transactions with merchant label, current category, and amount; per-row × button to exclude false matches before applying; success message shows actual applied count
 - **Bulk search categorize** — type any keyword in the search box to filter transactions; a "Set all N results as…" bar appears with a category picker; applies to all filtered results across all pages in one tap
-- **Merchant labels** — tag icon on each description row to assign a human-readable alias (e.g. `UBP60148960801FFFFFF...` → "Shopee"); alias shown as primary bold text with raw description in gray below; labels saved to `vault.transactionLabels` and included in backup; label key is alphanumeric (preserves digits) so different merchants with similar patterns stay distinct
+- **Merchant labels** — tag icon on each description row to assign a human-readable alias (e.g. `UBP60148960801FFFFFF...` → "Shopee" or "Dana topup"); alias shown as primary bold text with raw description in gray below; labels saved to `vault.transactionLabels` and included in backup; three-level key cascade: (1) exact raw key preserving all digits — most specific, prevents two transactions with identical normalized description but different reference numbers from sharing a label; (2) norm|amount key for backward-compat lookup; (3) normalized-only key for "Apply to all similar"; save scope toggled per transaction when multiple distinct raw descriptions share the same normalized pattern ("All similar" vs "Just this transaction"); hover over truncated descriptions shows full text as native tooltip
 - **Category icons** — each category badge displays a small Heroicon before the label for faster visual scanning
 - **Recurring batch** — detect repeating uncategorized transactions and assign category to all occurrences at once; expandable row shows last 5 occurrences with timestamps for manual Livin Mandiri lookup
 - 15 categories: Income, Food & Dining, Groceries, Shopping, Services, Transportation, Health & Medical, Entertainment, Education, Housing, Insurance, Bank Charges, Transfer, Loan, Uncategorized
@@ -64,7 +64,7 @@ Five-tab layout with shared year/month filter:
 - Budgets always compare against current calendar month, regardless of dashboard filter
 - **Financial goals** — savings goals and spending habit goals (see Goals section)
 - Category breakdown — donut chart + ranked list showing color dot, name, proportional bar, amount, percentage; Expenses/Income toggle
-- **Fixed Monthly Commitments** — auto-detects expenses recurring in ≥2 distinct months across Housing, Services, Entertainment, Insurance, Bank Charges, Health & Medical, Transportation; shows monthly average per item, total fixed cost, and % of avg income; hidden when no recurring patterns found
+- **Digital Wallets** — tracks top-up and direct-charge spending per Indonesian e-wallet (GoPay, OVO, ShopeePay, DANA, LinkAja, GrabPay); label-only detection: transactions are counted toward a wallet only when the user explicitly labels them (e.g. label "Dana topup" matches the DANA bucket); whole-word matching prevents "Indodana" from being grouped under DANA; per-wallet card shows: logo image (emoji fallback for GrabPay), wallet name, delta badge (▲/▼% vs prior month, "new" when first appearance), amount, progress bar relative to highest-spending wallet, folder icon to jump to filtered transactions, mini 6-month bar chart; hovering the bar chart shows a flyout with month + year and amount per bar; independent month navigation (← →) within the card separate from the global dashboard filter, defaults to the currently selected month or latest available; total across all wallets shown above the list; "No wallet activity" placeholder when the selected month has no data
 
 ### Transactions tab
 - Full transaction list with category color badges, green credit / red debit amounts
@@ -77,6 +77,8 @@ Five-tab layout with shared year/month filter:
 - Uncategorized rows highlighted with amber left border
 - Recurring uncategorized pattern panel — bulk-assign categories
 - AI Categorize button — sends descriptions to DeepSeek
+- **Navigation from Subscription Manager** — "Go to transactions" folder icon on each subscription row jumps to the Transactions tab and highlights matching rows with an indigo left border and tinted background; banner shows "Subscription transactions · N found"; dismissable with ✕
+- **Navigation from Digital Wallets** — folder icon on each wallet row jumps to Transactions and highlights only transactions labeled as that wallet in the selected month (e.g. label contains whole word "dana"); banner shows "Digital wallet transactions · Month Year · N found"; whole-word label matching prevents e.g. "Indodana" matching "DANA"; month-scoped so only the wallet card's active month is shown
 
 ### Assets tab
 - Track all asset types in one place: **Savings**, **Gold**, **Investment**, **Pocket**, **Other**
@@ -249,7 +251,6 @@ Available in Settings:
 - **Transaction tab**: title and AI Categorize button stack vertically on mobile; category filter goes full width; type toggle and Clear sit on a row below
 - **Budget tab**: header stacks on mobile; each budget row shows amount below the category name instead of competing with action buttons on the same line
 - **Savings rate chart**: horizontally scrollable with `min-w-[20px]` per bar; auto-scrolls to latest months on load; right-edge fade gradient and swipe hint label; Y-axis labels fixed outside scroll area
-- **Fixed monthly commitments**: each item is a card — description full width on top (`break-words`), category badge + months + amount on the row below
 - **Assets tab**: net worth breakdown bars stack label above bar; asset modal field grids stack on mobile; windfall allocation cards stack destination name above amount
 - Transaction table: horizontally scrollable on mobile with `min-w-[560px]` so columns never collapse
 - Calendar day cells: `h-10` on mobile, `h-14` on desktop

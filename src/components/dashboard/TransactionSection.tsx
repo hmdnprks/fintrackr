@@ -4,7 +4,7 @@
 import { useMemo, useState, useRef, useEffect, Fragment } from 'react'
 import RecurringSuggestionPanel from './RecurringSuggestionPanel'
 import { formatIDR } from '@/lib/formatter'
-import { isSafeSimilarityMatch, getLabelKey, getDescAmountLabelKey, getSubscriptionKey, normalizeDetail } from '@/lib/insights/recurring'
+import { isSafeSimilarityMatch, getLabelKey, getDescAmountLabelKey, getNormLabelKey, getSubscriptionKey, normalizeDetail } from '@/lib/insights/recurring'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 import { TagIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 
@@ -154,6 +154,7 @@ export default function TransactionSection({
   )
   const [labelingKey, setLabelingKey]   = useState<string | null>(null)
   const [labelInput, setLabelInput]     = useState('')
+  const [labelAllAmounts, setLabelAllAmounts] = useState(true)
 
   const [subscribedSet, setSubscribedSet] = useState<Set<string>>(
     () => new Set(getVaultDataSync().subscribedDescriptions ?? [])
@@ -169,14 +170,21 @@ export default function TransactionSection({
     await saveVaultData({ subscribedDescriptions: [...next] } as any)
   }
 
-  async function saveLabel(key: string, alias: string) {
+  async function saveLabel(midKey: string, alias: string, allAmounts = labelAllAmounts, rawDetail?: string) {
+    // allAmounts=true  → getNormLabelKey (normalizeDetail, covers all transactions with same description pattern)
+    // allAmounts=false → getLabelKey (raw with digits, unique per description string)
+    const saveKey = allAmounts
+      ? (getNormLabelKey(rawDetail ?? '') ?? midKey)
+      : (getLabelKey(rawDetail ?? '') ?? midKey)
+
     const vault = getVaultDataSync()
-    const updated = { ...(vault.transactionLabels ?? {}), [key]: alias.trim() }
-    if (!alias.trim()) delete updated[key]
+    const updated = { ...(vault.transactionLabels ?? {}), [saveKey]: alias.trim() }
+    if (!alias.trim()) delete updated[saveKey]
     await saveVaultData({ transactionLabels: updated })
     setLabels(updated)
     setLabelingKey(null)
     setLabelInput('')
+    setLabelAllAmounts(true)
   }
 
   function excludeSimilar(idx: number) {
@@ -200,19 +208,53 @@ export default function TransactionSection({
 
   const isFiltered = search || activeHighlight || filterCategory !== 'all' || filterType !== 'all'
 
-  // Parse the highlight key: "normPart|amount" (detected/user) or plain text (catalog/user-typed)
+  // Parse the highlight key:
+  //   "label:dana:2026-03" → wallet navigation (match by label + month)
+  //   "label:dana"         → wallet navigation (all months)
+  //   "normPart|amount"    → subscription navigation (match by norm description + amount)
+  //   plain text           → plain description search
   const parsedHighlight = useMemo(() => {
     if (!activeHighlight) return null
+    if (activeHighlight.startsWith('label:')) {
+      const rest = activeHighlight.slice(6)
+      // Check for optional ":YYYY-MM" suffix
+      const monthMatch = rest.match(/^(.+):(\d{4}-\d{2})$/)
+      if (monthMatch) {
+        return { norm: monthMatch[1].toLowerCase(), amount: null, isLabel: true, month: monthMatch[2] }
+      }
+      return { norm: rest.toLowerCase(), amount: null, isLabel: true, month: null }
+    }
     const pipeIdx = activeHighlight.lastIndexOf('|')
-    if (pipeIdx === -1) return { norm: activeHighlight.toLowerCase(), amount: null }
+    if (pipeIdx === -1) return { norm: activeHighlight.toLowerCase(), amount: null, isLabel: false, month: null }
     return {
-      norm:   activeHighlight.slice(0, pipeIdx).toLowerCase(),
-      amount: parseInt(activeHighlight.slice(pipeIdx + 1), 10),
+      norm:    activeHighlight.slice(0, pipeIdx).toLowerCase(),
+      amount:  parseInt(activeHighlight.slice(pipeIdx + 1), 10),
+      isLabel: false,
+      month:   null,
     }
   }, [activeHighlight])
 
   function txMatchesHighlight(tx: any): boolean {
     if (!parsedHighlight) return false
+    if (parsedHighlight.isLabel) {
+      // Match by the transaction's resolved label — whole-word only to avoid "indodana" matching "dana"
+      const lkeyExact   = getLabelKey(tx.detail ?? '')
+      const lkeyMid     = getDescAmountLabelKey(tx.detail, tx.amount ?? 0)
+      const lkeyGeneral = getNormLabelKey(tx.detail)
+      const alias = (lkeyExact   ? labels[lkeyExact]   : undefined)
+                 ?? (lkeyMid     ? labels[lkeyMid]     : undefined)
+                 ?? (lkeyGeneral ? labels[lkeyGeneral] : undefined)
+      const words = (alias ?? '').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)
+      if (!words.includes(parsedHighlight.norm)) return false
+      if (parsedHighlight.month) {
+        const d: Date = tx.fullDate instanceof Date ? tx.fullDate : new Date(tx.transactionDate)
+        if (!isNaN(d.getTime())) {
+          const txMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+          if (txMonth !== parsedHighlight.month) return false
+        }
+      }
+      return true
+    }
     const txNorm = normalizeDetail(tx.detail ?? '').toLowerCase()
     if (!txNorm.includes(parsedHighlight.norm)) return false
     if (parsedHighlight.amount !== null && Math.round(tx.amount ?? 0) !== parsedHighlight.amount) return false
@@ -258,6 +300,22 @@ export default function TransactionSection({
 
   const paginated = sorted.slice(0, page * PAGE_SIZE)
   const hasMore   = sorted.length > page * PAGE_SIZE
+
+  // Pre-compute per-normKey "has multiple raw descriptions" flag — used by label UI.
+  // Must live outside the row render so it doesn't rerun on every keypress.
+  const hasMultipleDescsMap = useMemo(() => {
+    const normToDescs = new Map<string, Set<string>>()
+    for (const tx of withIndex) {
+      const nk = getNormLabelKey(tx.detail ?? '')
+      if (!nk) continue
+      const rk = getLabelKey(tx.detail ?? '') ?? ''
+      if (!normToDescs.has(nk)) normToDescs.set(nk, new Set())
+      normToDescs.get(nk)!.add(rk)
+    }
+    const out = new Map<string, boolean>()
+    for (const [nk, descs] of normToDescs) out.set(nk, descs.size > 1)
+    return out
+  }, [withIndex])
 
   // Reset to first page whenever filters or sort change
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -468,9 +526,13 @@ export default function TransactionSection({
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" />
             </svg>
             <span className="text-indigo-700 dark:text-indigo-300 font-medium truncate">
-              Subscription transactions
+              {parsedHighlight?.isLabel ? 'Digital wallet transactions' : 'Subscription transactions'}
             </span>
-            <span className="text-indigo-500 dark:text-indigo-400 truncate hidden sm:block">· {filtered.length} found</span>
+            <span className="text-indigo-500 dark:text-indigo-400 truncate hidden sm:block">
+              {parsedHighlight?.month
+                ? `· ${new Date(parsedHighlight.month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} · ${filtered.length} found`
+                : `· ${filtered.length} found`}
+            </span>
           </div>
           <button
             onClick={() => { setActiveHighlight(''); onClearHighlight?.() }}
@@ -561,10 +623,20 @@ export default function TransactionSection({
 
                       <td className="px-5 py-3">
                         {(() => {
-                          const lkey       = getDescAmountLabelKey(tx.detail, tx.amount ?? 0)
-                          const lkeyLegacy = getLabelKey(tx.detail)
-                          const alias      = (lkey ? labels[lkey] : undefined) ?? (lkeyLegacy ? labels[lkeyLegacy] : undefined)
+                          const lkeyExact    = getLabelKey(tx.detail)              // raw, keeps all digits — most specific
+                          const lkeyMid      = getDescAmountLabelKey(tx.detail, tx.amount ?? 0) // norm|amount — backward compat only
+                          const lkeyGeneral  = getNormLabelKey(tx.detail)          // norm only — broadest
+                          // Cascade: exact raw → norm|amount (compat) → norm only
+                          const alias = (lkeyExact   ? labels[lkeyExact]   : undefined)
+                                     ?? (lkeyMid     ? labels[lkeyMid]     : undefined)
+                                     ?? (lkeyGeneral ? labels[lkeyGeneral] : undefined)
+                          const lkey = lkeyExact  // unique per raw description — prevents two rows opening at once
                           const isLabeling = labelingKey === lkey && lkey !== null
+
+                          const hasMultipleDescs = lkeyGeneral
+                            ? (hasMultipleDescsMap.get(lkeyGeneral) ?? false)
+                            : false
+
                           return (
                             <div>
                               <div className="flex items-center gap-1.5 min-w-0">
@@ -572,18 +644,23 @@ export default function TransactionSection({
                                   {alias ? (
                                     <>
                                       <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{alias}</p>
-                                      <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{tx.detail}</p>
+                                      <p className="text-xs text-gray-400 dark:text-gray-500 truncate" title={tx.detail}>{tx.detail}</p>
                                     </>
                                   ) : (
-                                    <span className="text-gray-700 dark:text-gray-300 line-clamp-1">{tx.detail}</span>
+                                    <span className="text-gray-700 dark:text-gray-300 line-clamp-1" title={tx.detail}>{tx.detail}</span>
                                   )}
                                 </div>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     if (!lkey) return
-                                    if (isLabeling) { setLabelingKey(null); setLabelInput('') }
-                                    else { setLabelingKey(lkey); setLabelInput(alias ?? '') }
+                                    if (isLabeling) { setLabelingKey(null); setLabelInput(''); setLabelAllAmounts(true) }
+                                    else {
+                                      setLabelingKey(lkey)
+                                      setLabelInput(alias ?? '')
+                                      // Default: "all similar" only when the pattern is specific enough to be unique
+                                      setLabelAllAmounts(!hasMultipleDescs)
+                                    }
                                   }}
                                   title={alias ? 'Edit label' : 'Label this merchant'}
                                   className={`shrink-0 transition ${alias ? 'text-blue-400 dark:text-blue-500 hover:text-blue-600' : 'text-gray-300 dark:text-gray-600 hover:text-blue-400'}`}
@@ -592,9 +669,8 @@ export default function TransactionSection({
                                 </button>
                                 {tx.type === 'debit' && (() => {
                                   const subKey  = getSubscriptionKey(tx.detail ?? '', tx.amount ?? 0)
-                                  const normKey = normalizeDetail(tx.detail ?? '')
-                                  // new-style key (normKey|amount) or legacy plain normKey
-                                  const active  = subKey ? subscribedSet.has(subKey) || subscribedSet.has(normKey) : false
+                                  const subNorm = normalizeDetail(tx.detail ?? '')
+                                  const active  = subKey ? subscribedSet.has(subKey) || subscribedSet.has(subNorm) : false
                                   return (
                                     <button
                                       onClick={(e) => { e.stopPropagation(); toggleSubscription(tx.detail ?? '', tx.amount ?? 0) }}
@@ -607,22 +683,38 @@ export default function TransactionSection({
                                 })()}
                               </div>
                               {isLabeling && (
-                                <div className="flex items-center gap-1.5 mt-1.5" onClick={e => e.stopPropagation()}>
-                                  <input
-                                    autoFocus
-                                    type="text"
-                                    value={labelInput}
-                                    onChange={e => setLabelInput(e.target.value)}
-                                    onKeyDown={e => {
-                                      if (e.key === 'Enter') saveLabel(lkey!, labelInput)
-                                      if (e.key === 'Escape') { setLabelingKey(null); setLabelInput('') }
-                                    }}
-                                    placeholder="e.g. Shopee"
-                                    className="flex-1 text-xs border border-blue-300 dark:border-blue-700 rounded-lg px-2 py-1 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                  />
-                                  <button onClick={() => saveLabel(lkey!, labelInput)} className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline shrink-0">Save</button>
-                                  {alias && (
-                                    <button onClick={() => saveLabel(lkey!, '')} className="text-xs text-red-400 hover:underline shrink-0">Remove</button>
+                                <div className="space-y-1.5 mt-1.5" onClick={e => e.stopPropagation()}>
+                                  <div className="flex items-center gap-1.5">
+                                    <input
+                                      autoFocus
+                                      type="text"
+                                      value={labelInput}
+                                      onChange={e => setLabelInput(e.target.value)}
+                                      onKeyDown={e => {
+                                        if (e.key === 'Enter') saveLabel(lkey!, labelInput, labelAllAmounts, tx.detail)
+                                        if (e.key === 'Escape') { setLabelingKey(null); setLabelInput(''); setLabelAllAmounts(true) }
+                                      }}
+                                      placeholder="e.g. Shopee"
+                                      className="flex-1 text-xs border border-blue-300 dark:border-blue-700 rounded-lg px-2 py-1 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    />
+                                    <button onClick={() => saveLabel(lkey!, labelInput, labelAllAmounts, tx.detail)} className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline shrink-0">Save</button>
+                                    {alias && (
+                                      <button onClick={() => saveLabel(lkey!, '', labelAllAmounts, tx.detail)} className="text-xs text-red-400 hover:underline shrink-0">Remove</button>
+                                    )}
+                                  </div>
+                                  {hasMultipleDescs && (
+                                    <div className="flex items-center gap-1 text-[11px]">
+                                      <span className="text-gray-400 dark:text-gray-500">Apply to:</span>
+                                      <button
+                                        onClick={() => setLabelAllAmounts(true)}
+                                        className={`px-1.5 py-0.5 rounded transition ${labelAllAmounts ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600'}`}
+                                      >All similar</button>
+                                      <span className="text-gray-300 dark:text-gray-700">·</span>
+                                      <button
+                                        onClick={() => setLabelAllAmounts(false)}
+                                        className={`px-1.5 py-0.5 rounded transition ${!labelAllAmounts ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600'}`}
+                                      >Just this transaction</button>
+                                    </div>
                                   )}
                                 </div>
                               )}

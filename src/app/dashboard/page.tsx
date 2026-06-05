@@ -36,6 +36,7 @@ import SpendingForecastSection from '@/components/dashboard/SpendingForecastSect
 import YearOverYearSection from '@/components/dashboard/YearOverYearSection'
 import IncomeStabilitySection from '@/components/dashboard/IncomeStabilitySection'
 import ZakatCard from '@/components/dashboard/ZakatCard'
+import EWalletSection from '@/components/dashboard/EWalletSection'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
 import { useVault } from '@/context/VaultContext'
 
@@ -388,16 +389,20 @@ export default function Dashboard() {
 
               <CategorySection allTransactions={allTransactions} />
 
-              <RecurringExpensesSection
-                items={recurringExpenses}
-                avgMonthlyIncome={avgMonthlyIncome}
-              />
-
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               <SubscriptionManager
                 statements={statements as any[]}
                 onGoToTransactions={(search) => {
                   setTransactionHighlight(search)
+                  setActiveTab('transactions')
+                }}
+              />
+
+              <EWalletSection
+                transactions={allTransactions}
+                selectedMonth={selectedMonth}
+                onGoToTransactions={(keyword) => {
+                  setTransactionHighlight(keyword)
                   setActiveTab('transactions')
                 }}
               />

@@ -19,6 +19,7 @@ Ranked by impact-to-effort ratio. Does not include bank parsers (blocked on stat
 | 7 | **Budget rollover** | Budget Tab | Unspent budget carries to next month; widely expected by users |
 | 8 | ~~**Vault inactivity timeout**~~ ✓ | Security & Vault | ~~Auto-lock after X minutes of inactivity; basic security hygiene~~ Shipped |
 | 9 | ~~**Subscription manager**~~ ✓ | Nice to Have | ~~Detect recurring charges from fixed commitments; show total monthly and annual cost; surface cancel links~~ Shipped |
+| 11 | ~~**Digital Wallets tracker**~~ ✓ | Budget Tab | ~~Track GoPay/OVO/DANA/ShopeePay/LinkAja/GrabPay top-up spending from bank statements~~ Shipped |
 | 10 | **SPT / tax summary** | Nice to Have | Annual income summary for Indonesian tax filing (PPh 21 context) |
 
 ---
