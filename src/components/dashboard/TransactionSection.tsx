@@ -107,6 +107,8 @@ interface Props {
   onFlagTransaction?: (txIndex: number, flagged: boolean) => void
   onAICategorize?: () => void
   isAICategorizing?: boolean
+  highlightQuery?: string
+  onClearHighlight?: () => void
 }
 
 export default function TransactionSection({
@@ -116,8 +118,19 @@ export default function TransactionSection({
   onCategorizeGroup,
   onAICategorize,
   isAICategorizing,
+  highlightQuery,
+  onClearHighlight,
 }: Props) {
   const [search, setSearch]               = useState('')
+  // Tracks the active subscription highlight — cleared when user types their own search
+  const [activeHighlight, setActiveHighlight] = useState(highlightQuery ?? '')
+
+  useEffect(() => {
+    if (highlightQuery !== undefined) {
+      setActiveHighlight(highlightQuery)
+      setSearch('')
+    }
+  }, [highlightQuery])
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterType, setFilterType]       = useState('all')
   const [sortBy, setSortBy]               = useState<SortKey>('date-desc')
@@ -185,7 +198,26 @@ export default function TransactionSection({
     setTimeout(() => setSimilarPrompt(null), 2000)
   }
 
-  const isFiltered = search || filterCategory !== 'all' || filterType !== 'all'
+  const isFiltered = search || activeHighlight || filterCategory !== 'all' || filterType !== 'all'
+
+  // Parse the highlight key: "normPart|amount" (detected/user) or plain text (catalog/user-typed)
+  const parsedHighlight = useMemo(() => {
+    if (!activeHighlight) return null
+    const pipeIdx = activeHighlight.lastIndexOf('|')
+    if (pipeIdx === -1) return { norm: activeHighlight.toLowerCase(), amount: null }
+    return {
+      norm:   activeHighlight.slice(0, pipeIdx).toLowerCase(),
+      amount: parseInt(activeHighlight.slice(pipeIdx + 1), 10),
+    }
+  }, [activeHighlight])
+
+  function txMatchesHighlight(tx: any): boolean {
+    if (!parsedHighlight) return false
+    const txNorm = normalizeDetail(tx.detail ?? '').toLowerCase()
+    if (!txNorm.includes(parsedHighlight.norm)) return false
+    if (parsedHighlight.amount !== null && Math.round(tx.amount ?? 0) !== parsedHighlight.amount) return false
+    return true
+  }
 
   // Fix 1 — tag each tx with its stable original index before any filtering/sorting
   const withIndex = useMemo(
@@ -195,12 +227,23 @@ export default function TransactionSection({
 
   const filtered = useMemo(() => {
     return withIndex.filter((tx: any) => {
-      if (search && !tx.detail?.toLowerCase().includes(search.toLowerCase())) return false
+      if (activeHighlight && !search) {
+        if (!txMatchesHighlight(tx)) return false
+      }
+      if (search) {
+        const q       = search.toLowerCase()
+        const raw     = (tx.detail ?? '').toLowerCase()
+        const norm    = normalizeDetail(tx.detail ?? '').toLowerCase()
+        const lkey    = getDescAmountLabelKey(tx.detail, tx.amount ?? 0) ?? getLabelKey(tx.detail)
+        const label   = (lkey ? (labels[lkey] ?? '') : '').toLowerCase()
+        if (!raw.includes(q) && !norm.includes(q) && !label.includes(q)) return false
+      }
       if (filterCategory !== 'all' && tx.category !== filterCategory) return false
       if (filterType !== 'all' && tx.type !== filterType) return false
       return true
     })
-  }, [withIndex, search, filterCategory, filterType])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [withIndex, activeHighlight, search, parsedHighlight, filterCategory, filterType, labels])
 
   // Fix 3 & 4 — sort with newest-first default
   const sorted = useMemo(() => {
@@ -242,6 +285,8 @@ export default function TransactionSection({
 
   function clearFilters() {
     setSearch('')
+    setActiveHighlight('')
+    onClearHighlight?.()
     setFilterCategory('all')
     setFilterType('all')
   }
@@ -313,11 +358,11 @@ export default function TransactionSection({
             type="text"
             placeholder="Search by description..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setActiveHighlight(''); if (e.target.value) onClearHighlight?.() }}
             className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
           {search && (
-            <button onClick={() => { setSearch(''); setBulkCat(''); setBulkApplied(null) }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button onClick={() => { setSearch(''); setActiveHighlight(''); setBulkCat(''); setBulkApplied(null) }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -415,6 +460,30 @@ export default function TransactionSection({
         )}
       </div>
 
+      {/* Subscription highlight banner */}
+      {activeHighlight && !search && (
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl text-sm">
+          <div className="flex items-center gap-2 min-w-0">
+            <svg className="w-4 h-4 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" />
+            </svg>
+            <span className="text-indigo-700 dark:text-indigo-300 font-medium truncate">
+              Subscription transactions
+            </span>
+            <span className="text-indigo-500 dark:text-indigo-400 truncate hidden sm:block">· {filtered.length} found</span>
+          </div>
+          <button
+            onClick={() => { setActiveHighlight(''); onClearHighlight?.() }}
+            className="shrink-0 text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition"
+            title="Clear subscription filter"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Transaction table */}
       <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden overflow-x-auto">
         {paginated.length === 0 ? (
@@ -468,6 +537,7 @@ export default function TransactionSection({
                   const colorClass      = CATEGORY_COLORS[tx.category] ?? CATEGORY_COLORS['Uncategorized']
                   const isEditing       = editingOriginalIndex === tx._idx
                   const showInlinePrompt = similarPrompt?.editedIdx === tx._idx
+                  const isHighlighted   = !!activeHighlight && !search && txMatchesHighlight(tx)
 
                   const dateFormat: Intl.DateTimeFormatOptions = showYear
                     ? { day: '2-digit', month: 'short', year: '2-digit' }
@@ -476,7 +546,13 @@ export default function TransactionSection({
                   return (
                     <Fragment key={tx._idx}>
                     <tr
-                      className={`transition hover:bg-gray-50 dark:hover:bg-gray-800 ${isUncategorized ? 'border-l-2 border-l-amber-400' : ''}`}
+                      className={`transition hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                        isHighlighted
+                          ? 'border-l-2 border-l-indigo-500 bg-indigo-50/60 dark:bg-indigo-900/15'
+                          : isUncategorized
+                          ? 'border-l-2 border-l-amber-400'
+                          : ''
+                      }`}
                       onClick={() => setEditingOriginalIndex(null)}
                     >
                       <td className="px-5 py-3 text-gray-400 dark:text-gray-500 text-xs whitespace-nowrap tabular-nums">

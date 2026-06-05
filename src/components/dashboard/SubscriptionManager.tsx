@@ -3,9 +3,11 @@
 import { useMemo, useState } from 'react'
 import { detectSubscriptions, type ManualSubscription, type SubscriptionEntry } from '@/lib/subscriptions'
 import { getVaultDataSync, saveVaultData } from '@/lib/storage/secureStorage'
+import { normalizeDetail } from '@/lib/insights/recurring'
 
 interface Props {
   statements: any[]
+  onGoToTransactions?: (search: string) => void
 }
 
 function formatIDR(n: number) {
@@ -157,7 +159,12 @@ function AddManualModal({
 
 // ── Subscription Row ──────────────────────────────────────────────────────────
 
-function SubscriptionRow({ entry, onDelete }: { entry: SubscriptionEntry; onDelete?: () => void }) {
+function SubscriptionRow({ entry, onDelete, removeLabel = 'Delete', onGoToTransactions }: {
+  entry: SubscriptionEntry
+  onDelete?: () => void
+  removeLabel?: string
+  onGoToTransactions?: (search: string) => void
+}) {
   const [confirmDel, setConfirmDel] = useState(false)
 
   return (
@@ -182,9 +189,13 @@ function SubscriptionRow({ entry, onDelete }: { entry: SubscriptionEntry; onDele
                 {Math.abs(entry.priceChange.pct)}%
               </span>
             )}
-            {(entry.source === 'manual' || entry.source === 'user') && (
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
-                {entry.source === 'user' ? 'flagged' : 'manual'}
+            {entry.source !== 'auto' && (
+              <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                entry.source === 'detected'
+                  ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+              }`}>
+                {entry.source === 'user' ? 'flagged' : entry.source === 'detected' ? 'auto-detected' : 'manual'}
               </span>
             )}
           </div>
@@ -201,6 +212,11 @@ function SubscriptionRow({ entry, onDelete }: { entry: SubscriptionEntry; onDele
             )}
             {entry.source === 'user' && (
               <p className="text-xs text-gray-400 dark:text-gray-500">Flagged from transactions</p>
+            )}
+            {entry.source === 'detected' && entry.detectedMonths && (
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                Recurring: {entry.detectedMonths.map(monthLabel).join(' → ')}
+              </p>
             )}
           </div>
 
@@ -225,6 +241,17 @@ function SubscriptionRow({ entry, onDelete }: { entry: SubscriptionEntry; onDele
         </div>
 
         <div className="flex items-center gap-1">
+          {entry.sampleDetail && onGoToTransactions && (
+            <button
+              onClick={() => onGoToTransactions(entry.normKey ?? normalizeDetail(entry.sampleDetail ?? ''))}
+              title="Find in transactions"
+              className="p-1.5 text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" />
+              </svg>
+            </button>
+          )}
           {entry.cancelUrl && (
             <a
               href={entry.cancelUrl}
@@ -256,7 +283,7 @@ function SubscriptionRow({ entry, onDelete }: { entry: SubscriptionEntry; onDele
                 onClick={onDelete}
                 className="text-[10px] font-medium px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
               >
-                Delete
+                {removeLabel}
               </button>
               <button
                 onClick={() => setConfirmDel(false)}
@@ -274,12 +301,15 @@ function SubscriptionRow({ entry, onDelete }: { entry: SubscriptionEntry; onDele
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function SubscriptionManager({ statements }: Props) {
+export default function SubscriptionManager({ statements, onGoToTransactions }: Props) {
   const [manualSubs, setManualSubs] = useState<ManualSubscription[]>(
     () => (getVaultDataSync().manualSubscriptions ?? []) as ManualSubscription[]
   )
   const [subscribedDescriptions, setSubscribedDescriptions] = useState<string[]>(
     () => (getVaultDataSync().subscribedDescriptions ?? []) as string[]
+  )
+  const [dismissedSubscriptions, setDismissedSubscriptions] = useState<string[]>(
+    () => (getVaultDataSync().dismissedSubscriptions ?? []) as string[]
   )
   const [showAdd, setShowAdd] = useState(false)
 
@@ -290,8 +320,8 @@ export default function SubscriptionManager({ statements }: Props) {
   )
 
   const entries = useMemo(
-    () => detectSubscriptions(statements, manualSubs, subscribedDescriptions, transactionLabels),
-    [statements, manualSubs, subscribedDescriptions, transactionLabels]
+    () => detectSubscriptions(statements, manualSubs, subscribedDescriptions, transactionLabels, dismissedSubscriptions),
+    [statements, manualSubs, subscribedDescriptions, transactionLabels, dismissedSubscriptions]
   )
 
   const totalMonthly = entries.reduce((s, e) => s + e.monthlyAmount, 0)
@@ -316,6 +346,12 @@ export default function SubscriptionManager({ statements }: Props) {
     const updated = subscribedDescriptions.filter(k => k !== normKey)
     setSubscribedDescriptions(updated)
     await saveVaultData({ subscribedDescriptions: updated } as any)
+  }
+
+  async function handleDismiss(amtKey: string) {
+    const updated = [...dismissedSubscriptions, amtKey]
+    setDismissedSubscriptions(updated)
+    await saveVaultData({ dismissedSubscriptions: updated } as any)
   }
 
   if (statements.length === 0) return null
@@ -361,8 +397,12 @@ export default function SubscriptionManager({ statements }: Props) {
                     ? () => handleDeleteManual(entry.key)
                     : entry.source === 'user' && entry.normKey
                     ? () => handleUnmark(entry.normKey!)
+                    : entry.source === 'detected' && entry.normKey
+                    ? () => handleDismiss(entry.normKey!)
                     : undefined
                 }
+                removeLabel={entry.source === 'detected' ? 'Dismiss' : 'Delete'}
+                onGoToTransactions={onGoToTransactions}
               />
             ))}
           </div>
@@ -393,8 +433,9 @@ export default function SubscriptionManager({ statements }: Props) {
         {/* Limitation note */}
         {(hasApple || hasGoPay || entries.length > 0) && (
           <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-3 leading-relaxed">
-            Auto-detection covers services billed directly to your Mandiri card or via Google Play.
-            {hasApple && ' Apple charges (iCloud, App Store) appear as a single "Apple" entry — individual apps cannot be distinguished.'}
+            Catalog services (Netflix, Spotify, etc.) are detected by name.
+            Other recurring charges are auto-detected when the same amount appears in 3+ consecutive months within the last 6 months.
+            {hasApple && ' Apple charges flagged individually — use ↻ on any VAP-APPLE.COM row to track iCloud or Apple Music separately.'}
             {' '}Services paid via GoPay, OVO, or other wallets won&apos;t appear automatically — add them manually above.
           </p>
         )}

@@ -28,6 +28,7 @@ export type VaultData = {
   notifications: any[]      // AppNotification objects
   manualSubscriptions: any[]    // ManualSubscription objects
   subscribedDescriptions: string[] // subscription keys (normalizeDetail|amount) user-flagged
+  dismissedSubscriptions: string[] // auto-detected keys the user dismissed
 }
 
 const defaultVaultData: VaultData = {
@@ -48,6 +49,7 @@ const defaultVaultData: VaultData = {
   notifications: [],
   manualSubscriptions: [],
   subscribedDescriptions: [],
+  dismissedSubscriptions: [],
 }
 
 // ============================

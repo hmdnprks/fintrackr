@@ -54,6 +54,7 @@ export default function Dashboard() {
   const [selectedYear, setSelectedYear] = useState('all')
   const [selectedMonth, setSelectedMonth] = useState('all')
   const [showAddTx, setShowAddTx] = useState(false)
+  const [transactionHighlight, setTransactionHighlight] = useState('')
   const [budgets, setBudgets] = useState(() => getBudgets())
   const showZakat = getVaultDataSync().settings?.showZakat === 'true'
 
@@ -393,7 +394,13 @@ export default function Dashboard() {
               />
 
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <SubscriptionManager statements={statements as any[]} />
+              <SubscriptionManager
+                statements={statements as any[]}
+                onGoToTransactions={(search) => {
+                  setTransactionHighlight(search)
+                  setActiveTab('transactions')
+                }}
+              />
             </div>
           )}
 
@@ -407,6 +414,8 @@ export default function Dashboard() {
               onFlagTransaction={handleFlagTransaction}
               onAICategorize={categorizeAll}
               isAICategorizing={isCategorizing}
+              highlightQuery={transactionHighlight}
+              onClearHighlight={() => setTransactionHighlight('')}
             />
           )}
 

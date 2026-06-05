@@ -25,6 +25,7 @@ export type BackupData = {
     notifications: any[]
     manualSubscriptions: any[]
     subscribedDescriptions: string[]
+    dismissedSubscriptions: string[]
   }
 }
 
@@ -63,8 +64,9 @@ export async function exportBackup(): Promise<BackupData> {
       goalAdvisorHistory: vault.goalAdvisorHistory ?? {},
       liabilities:          vault.liabilities ?? [],
       notifications:        vault.notifications ?? [],
-      manualSubscriptions:    vault.manualSubscriptions    ?? [],
-      subscribedDescriptions: vault.subscribedDescriptions ?? [],
+      manualSubscriptions:     vault.manualSubscriptions     ?? [],
+      subscribedDescriptions:  vault.subscribedDescriptions  ?? [],
+      dismissedSubscriptions:  vault.dismissedSubscriptions  ?? [],
     },
   }
 }
@@ -124,6 +126,7 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
   const notifications         = backup.data.notifications         ?? []
   const manualSubscriptions    = backup.data.manualSubscriptions    ?? []
   const subscribedDescriptions = backup.data.subscribedDescriptions ?? []
+  const dismissedSubscriptions = backup.data.dismissedSubscriptions ?? []
 
   if (mode === 'replace') {
     const existingVault = await getVaultData()
@@ -150,6 +153,7 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       notifications,
       manualSubscriptions,
       subscribedDescriptions,
+      dismissedSubscriptions,
     })
     return
   }
@@ -262,6 +266,13 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       ...new Set([
         ...(existingVault.subscribedDescriptions ?? []),
         ...subscribedDescriptions,
+      ]),
+    ],
+    // Union of dismissed keys — if dismissed on either side, keep dismissed
+    dismissedSubscriptions: [
+      ...new Set([
+        ...(existingVault.dismissedSubscriptions ?? []),
+        ...dismissedSubscriptions,
       ]),
     ],
   }

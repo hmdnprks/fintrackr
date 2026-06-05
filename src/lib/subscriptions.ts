@@ -12,7 +12,7 @@ export type ManualSubscription = {
 
 export type SubscriptionEntry = {
   key: string
-  source: 'auto' | 'user' | 'manual'
+  source: 'auto' | 'user' | 'manual' | 'detected'
   name: string
   emoji: string
   cancelUrl?: string
@@ -29,7 +29,9 @@ export type SubscriptionEntry = {
   }
   isNew: boolean
   isApple?: boolean
-  normKey?: string  // only set for 'user' source entries, for unmark support
+  normKey?: string        // set for 'user' and 'detected' entries, used for unmark/dismiss
+  detectedMonths?: string[] // sorted month keys where this charge was seen (detected source only)
+  sampleDetail?: string   // raw transaction description for search-in-transactions navigation
 }
 
 type CatalogEntry = {
@@ -120,15 +122,42 @@ function buildEntry(
   }
 }
 
+const DETECTION_WINDOW_MONTHS   = 6  // only look at last N months for auto-detection
+const MIN_CONSECUTIVE_MONTHS    = 3  // must recur in this many consecutive months
+const MIN_DETECTED_AMOUNT       = 5000 // ignore trivial charges (bank admin fees, etc.)
+
+// Returns true if sortedMonths contains a run of n consecutive calendar months.
+function hasConsecutiveMonths(sortedMonths: string[], n: number): boolean {
+  if (sortedMonths.length < n) return false
+  for (let i = 0; i <= sortedMonths.length - n; i++) {
+    let ok = true
+    for (let j = 1; j < n; j++) {
+      const [y1, m1] = sortedMonths[i + j - 1].split('-').map(Number)
+      const [y2, m2] = sortedMonths[i + j].split('-').map(Number)
+      if (y2 * 12 + m2 - (y1 * 12 + m1) !== 1) { ok = false; break }
+    }
+    if (ok) return true
+  }
+  return false
+}
+
 export function detectSubscriptions(
   statements: any[],
   manualSubs: ManualSubscription[],
   subscribedDescriptions: string[] = [],
-  transactionLabels: Record<string, string> = {}
+  transactionLabels: Record<string, string> = {},
+  dismissedSubscriptions: string[] = []
 ): SubscriptionEntry[] {
   const now = new Date()
   const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1)
   const twoMonthsAgoKey = `${twoMonthsAgo.getFullYear()}-${String(twoMonthsAgo.getMonth() + 1).padStart(2, '0')}`
+
+  // Rolling 6-month window used for auto-detection
+  const detectionWindow = new Set<string>()
+  for (let i = 0; i < DETECTION_WINDOW_MONTHS; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    detectionWindow.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+  }
 
   type GroupData = { sampleDetail: string; monthAmounts: Record<string, number>; labelKeys: Set<string> }
 
@@ -192,14 +221,54 @@ export function detectSubscriptions(
     .filter(g => Object.keys(g.monthAmounts).length > 0)
     .map(g =>
       buildEntry(g.monthAmounts, twoMonthsAgoKey, {
-        key:       g.catalogEntry.name,
-        source:    'auto',
-        name:      g.catalogEntry.name,
-        emoji:     g.catalogEntry.emoji,
-        cancelUrl: g.catalogEntry.cancelUrl,
-        isApple:   g.catalogEntry.name === 'Apple',
+        key:          g.catalogEntry.name,
+        source:       'auto',
+        name:         g.catalogEntry.name,
+        emoji:        g.catalogEntry.emoji,
+        cancelUrl:    g.catalogEntry.cancelUrl,
+        isApple:      g.catalogEntry.name === 'Apple',
+        sampleDetail: g.sampleDetail,
       })
     ).sort((a, b) => b.monthlyAmount - a.monthlyAmount)
+
+  // ── Pass 1.5: auto-detected recurring entries ──────────────────────────────
+  // Looks only at the last DETECTION_WINDOW_MONTHS months. A charge qualifies when
+  // it appears in ≥ MIN_CONSECUTIVE_MONTHS consecutive months within that window.
+  const dismissedSet = new Set(dismissedSubscriptions)
+  const detectedEntries: SubscriptionEntry[] = []
+
+  for (const [amtKey, g] of Object.entries(rawAmtGroups)) {
+    const pipeIdx     = amtKey.lastIndexOf('|')
+    const normKeyPart = pipeIdx !== -1 ? amtKey.slice(0, pipeIdx) : amtKey
+    const amtValue    = pipeIdx !== -1 ? Number(amtKey.slice(pipeIdx + 1)) : 0
+
+    if (amtValue < MIN_DETECTED_AMOUNT) continue
+    if (subDescSet.has(amtKey)) continue
+    if (flaggedNormKeys.has(normKeyPart)) continue
+    if (dismissedSet.has(amtKey)) continue
+    if (matchCatalog(g.sampleDetail)) continue
+
+    // Filter to detection window and require MIN_CONSECUTIVE_MONTHS in a row
+    const windowAmounts = Object.fromEntries(
+      Object.entries(g.monthAmounts).filter(([mk]) => detectionWindow.has(mk))
+    )
+    const windowMonths = Object.keys(windowAmounts).sort()
+    if (!hasConsecutiveMonths(windowMonths, MIN_CONSECUTIVE_MONTHS)) continue
+
+    const alias = [...g.labelKeys].map(lk => transactionLabels[lk]).find(Boolean) ?? null
+    const name  = alias ?? (g.sampleDetail.length > 35 ? g.sampleDetail.slice(0, 35) + '…' : g.sampleDetail)
+
+    detectedEntries.push(buildEntry(windowAmounts, twoMonthsAgoKey, {
+      key:            amtKey,
+      source:         'detected',
+      name,
+      emoji:          '🔍',
+      normKey:        amtKey,
+      detectedMonths: windowMonths,
+      sampleDetail:   g.sampleDetail,
+    }))
+  }
+  detectedEntries.sort((a, b) => b.monthlyAmount - a.monthlyAmount)
 
   // ── Pass 2: user-flagged entries — each unique normalizeDetail|amount is its own row ───
   const userEntries: SubscriptionEntry[] = []
@@ -217,12 +286,13 @@ export function detectSubscriptions(
     const emoji = catalogHit?.emoji ?? '🔄'
 
     userEntries.push(buildEntry(g.monthAmounts, twoMonthsAgoKey, {
-      key:       subKey,
-      source:    'user',
+      key:          subKey,
+      source:       'user',
       name,
       emoji,
-      cancelUrl: catalogHit?.cancelUrl,
-      normKey:   subKey,
+      cancelUrl:    catalogHit?.cancelUrl,
+      normKey:      subKey,
+      sampleDetail: g.sampleDetail,
     }))
   }
   userEntries.sort((a, b) => b.monthlyAmount - a.monthlyAmount)
@@ -244,5 +314,5 @@ export function detectSubscriptions(
       isNew:         false,
     }))
 
-  return [...autoEntries, ...userEntries, ...manualEntries]
+  return [...autoEntries, ...userEntries, ...detectedEntries, ...manualEntries]
 }
