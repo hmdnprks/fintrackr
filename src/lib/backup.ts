@@ -23,6 +23,7 @@ export type BackupData = {
     goalAdvisorHistory: Record<string, any[]>     // goalId → last 3 AI plans
     liabilities: any[]
     notifications: any[]
+    manualSubscriptions: any[]
   }
 }
 
@@ -59,8 +60,9 @@ export async function exportBackup(): Promise<BackupData> {
         Object.entries(vault.settings ?? {}).filter(([k]) => k !== 'chatApiKey')
       ),
       goalAdvisorHistory: vault.goalAdvisorHistory ?? {},
-      liabilities:        vault.liabilities ?? [],
-      notifications:      vault.notifications ?? [],
+      liabilities:          vault.liabilities ?? [],
+      notifications:        vault.notifications ?? [],
+      manualSubscriptions:  vault.manualSubscriptions ?? [],
     },
   }
 }
@@ -117,7 +119,8 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
   const backupSettings     = backup.data.settings           ?? {}
   const goalAdvisorHistory = backup.data.goalAdvisorHistory ?? {}
   const liabilities        = backup.data.liabilities        ?? []
-  const notifications      = backup.data.notifications      ?? []
+  const notifications         = backup.data.notifications         ?? []
+  const manualSubscriptions   = backup.data.manualSubscriptions   ?? []
 
   if (mode === 'replace') {
     const existingVault = await getVaultData()
@@ -142,6 +145,7 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       goalAdvisorHistory,
       liabilities,
       notifications,
+      manualSubscriptions,
     })
     return
   }
@@ -242,6 +246,13 @@ export async function restoreBackup(backup: BackupData, mode: 'replace' | 'merge
       })
       return [...merged, ...Array.from(existingMap.values())]
     })(),
+    // Merge manual subscriptions by id — backup wins on same id
+    manualSubscriptions: [
+      ...(existingVault.manualSubscriptions ?? []).filter(
+        (m: any) => !manualSubscriptions.find((b: any) => b.id === m.id)
+      ),
+      ...manualSubscriptions,
+    ],
   }
 
   await saveVaultData(newVaultState)

@@ -28,6 +28,7 @@ import CalendarSection from '@/components/dashboard/CalendarSection'
 import SavingsRateTrendSection from '@/components/dashboard/SavingsRateTrendSection'
 import SpendingBreakdownSection from '@/components/dashboard/SpendingBreakdownSection'
 import RecurringExpensesSection from '@/components/dashboard/RecurringExpensesSection'
+import SubscriptionManager from '@/components/dashboard/SubscriptionManager'
 import InvestmentRateSection from '@/components/dashboard/InvestmentRateSection'
 import FinancialHealthScore from '@/components/dashboard/FinancialHealthScore'
 import FIRENumberSection from '@/components/dashboard/FIRENumberSection'
@@ -390,6 +391,9 @@ export default function Dashboard() {
                 items={recurringExpenses}
                 avgMonthlyIncome={avgMonthlyIncome}
               />
+
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              <SubscriptionManager statements={statements as any[]} />
             </div>
           )}
 
